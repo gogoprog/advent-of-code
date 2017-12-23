@@ -13,6 +13,7 @@ int run(const char *filename) {
   std::ifstream input_file(filename);
   std::string line, str;
   std::map<std::string, int> registers;
+  int highest = std::numeric_limits<int>::min();
 
   std::map<std::string, std::function<bool(const int, const int)>> condFuncs = {
       {"==", [](const int a, const int b) { return a == b; }},
@@ -46,13 +47,24 @@ int run(const char *filename) {
       } else {
         registers[targetReg] -= targetValue;
       }
+      /* std::cout << targetReg << " is " << instruction << " by " <<
+       * targetValue */
+      /* << std::endl; */
+
+      highest = std::max(highest, registers[targetReg]);
     }
   }
 
   input_file.close();
 
-  auto result = std::min_element(registers.begin(), registers.end());
-  std::cout << "Minimum is " << result->second << std::endl;
+  for (auto &kv : registers) {
+    /* std::cout << kv.first << " = " << kv.second << std::endl; */
+  }
+  auto result =
+      std::max_element(registers.begin(), registers.end(),
+                       [](auto a, auto b) { return a.second < b.second; });
+  std::cout << "Maximum is " << result->second << std::endl;
+  std::cout << "Highest ever is " << highest << std::endl;
 }
 
 int main() {
