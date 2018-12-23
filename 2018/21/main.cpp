@@ -13,6 +13,7 @@
 
 template <class K, class V> using Map = std::map<K, V>;
 template <class V> using Vector = std::vector<V>;
+template <class V> using Set = std::set<V>;
 template <class T> using Grid = Map<int, Map<int, T>>;
 
 using Registers = std::array<int, 6>;
@@ -51,16 +52,20 @@ struct VM {
     Program program;
     int *ip;
 
-    void run(const int ipv, const int r0) {
+    ull run(const int ipv, const int r0) {
         auto size = program.size();
-        int time{0};
+        ull time{0};
         std::fill(registers.begin(), registers.end(), 0);
         registers[0] = r0;
         ip = &registers[ipv];
 
         bool debugging{false};
 
-        const auto maxTime = 1000000000000;
+        int best;
+        ull bestTime{0};
+        Set<int> targets;
+
+        const ull maxTime = 4000000000;
 
         while (*ip < size && time < maxTime) {
             auto &line = program[*ip];
@@ -70,8 +75,15 @@ struct VM {
             auto c = *ip;
 
             if (*ip == 28) {
-                debugging = true;
-                std::cout << "part1: " << registers[2] << std::endl;
+                /* debugging = true; */
+                if (targets.find(registers[2]) == targets.end()) {
+
+                    if (time > bestTime) {
+                        best = registers[2];
+                        bestTime = time;
+                    }
+                    targets.insert(registers[2]);
+                }
             }
 
             if (c < size) {
@@ -81,10 +93,11 @@ struct VM {
                 (*ip)++;
             }
 
-            /* if (debugging) { */
-            /*     log(); */
-            /*     system("read -n 1 -s -r -p ..."); */
-            /* } */
+            if (debugging) {
+                log();
+                system("read -n 1 -s -r -p ...");
+                debugging = false;
+            }
             ++time;
         }
 
@@ -92,6 +105,10 @@ struct VM {
             std::cout << "Run with " << r0 << std::endl;
             std::cout << "ended: " << time << std::endl;
         }
+
+        std::cout << "part2: " << best << std::endl;
+
+        return time;
     }
 
     void log() {
@@ -134,8 +151,8 @@ void process(const char *file) {
 
     f.close();
 
-    ull r;
-    r = 13522479;
+    ull r{0};
+
     vm.run(ip, r);
 }
 
