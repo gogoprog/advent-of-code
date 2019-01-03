@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <deque>
 #include <fstream>
 #include <functional>
@@ -13,34 +14,62 @@
 #include <sstream>
 #include <vector>
 
-int isPrime(int n) {
-    bool flag = false;
-
-    for (int i = 2; i <= n / 2; ++i) {
-        if (n % i == 0) {
-            flag = true;
-            break;
-        }
-    }
-    return flag;
-}
-
-int main() {
-    int h{1};
+void part1(const int target) {
+    int h{0};
 
     while (true) {
-        int v{0};
-        for (int i{1}; i <= h*50; ++i) {
-            if ((h % i) == 0) {
-                v += 11 * i;
+        int r{0};
+
+        auto sqrh = (int)sqrt(h);
+
+        for (int i{1}; i <= sqrh; ++i) {
+            if (h % i == 0) {
+                r += i * 10;
+                r += (h / i) * 10;
             }
         }
-        if (v >= 33100000) {
-            std::cout << "house " << h << " = " << v << std::endl;
-            exit(0);
+
+        if (r >= target) {
+            std::cout << "part1: " << h << " = " << r << std::endl;
+            return;
         }
         ++h;
     }
+}
+
+void part2(const int target) {
+    std::map<int, int> houses;
+
+    int e{1};
+    while (e < 1000000) {
+        int p{e * 11};
+
+        for (int h{e}, i{0}; i < 50; h += e, ++i) {
+            houses[h] += p;
+        }
+
+        ++e;
+    }
+
+    int best;
+
+    for (int i{1}; i < 1000000; ++i) {
+        auto hh = houses[i];
+
+        if (hh >= target) {
+            best = i;
+            break;
+        }
+    }
+
+    std::cout << "part2: " << best << std::endl;
+}
+
+int main() {
+    /* part1(33100000); */
+    /* part2(13000); */
+    part2(60);
+    part2(33100000);
 
     return 0;
 }
