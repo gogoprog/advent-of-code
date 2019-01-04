@@ -165,8 +165,9 @@ void process(const int depth, const Point target) {
 }
 
 int main(int argc, char *argv[]) {
-    process(510, {10, 10});
-    process(11739, {11, 718});
+    /* process(510, {10, 10}); */
+    /* process(11739, {11, 718}); */
+    process(5616, {10, 785});
 
     return 0;
 }
