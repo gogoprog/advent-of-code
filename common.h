@@ -20,6 +20,7 @@
 
 template <class K, class V> using Map = std::map<K, V>;
 template <class V> using Vector = std::vector<V>;
+template <class V, int size> using Array = std::array<V, size>;
 template <class V> using Set = std::set<V>;
 template <class T> using Grid = Map<int, Map<int, T>>;
 using String = std::string;
@@ -27,6 +28,15 @@ using InputStringStream = std::istringstream;
 using ull = unsigned long long;
 
 template <typename T> std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
+    if (!v.empty()) {
+        out << '[';
+        std::copy(v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
+        out << "\b\b]";
+    }
+    return out;
+}
+
+template <typename T> std::ostream &operator<<(std::ostream &out, const std::set<T> &v) {
     if (!v.empty()) {
         out << '[';
         std::copy(v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
