@@ -54,12 +54,12 @@ std::ostream &operator<<(std::ostream &out, const std::vector<int8_t> &v) {
     return out;
 }
 
-Vector<String> getFileLines(const String &filename) {
+Vector<String> getFileLines(const String &filename, const char delim = '\n') {
     Vector<String> result;
     std::ifstream f(filename);
     String line;
 
-    while (std::getline(f, line)) {
+    while (std::getline(f, line, delim)) {
         result.push_back(line);
     }
 
