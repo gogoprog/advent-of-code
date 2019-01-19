@@ -54,6 +54,7 @@ std::ostream &operator<<(std::ostream &out, const std::vector<int8_t> &v) {
     return out;
 }
 
+
 Vector<String> getFileLines(const String &filename, const char delim = '\n') {
     Vector<String> result;
     std::ifstream f(filename);
@@ -64,6 +65,18 @@ Vector<String> getFileLines(const String &filename, const char delim = '\n') {
     }
 
     f.close();
+
+    return result;
+}
+
+Vector<String> splitString(const String &input, const char delim = '\n') {
+    Vector<String> result;
+    std::istringstream iss(input);
+    String line;
+
+    while (std::getline(iss, line, delim)) {
+        result.push_back(line);
+    }
 
     return result;
 }
