@@ -14,6 +14,7 @@
 #include <set>
 #include <sstream>
 #include <vector>
+#include <queue>
 
 #define log std::cout
 #define endl std::endl
@@ -23,6 +24,7 @@ template <class V> using Vector = std::vector<V>;
 template <class V, int size> using Array = std::array<V, size>;
 template <class V> using Set = std::set<V>;
 template <class T> using Grid = Map<int, Map<int, T>>;
+template <class V> using Queue = std::queue<V>;
 using String = std::string;
 using InputStringStream = std::istringstream;
 using ull = unsigned long long;
