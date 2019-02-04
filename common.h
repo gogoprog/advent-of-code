@@ -15,14 +15,18 @@
 #include <sstream>
 #include <vector>
 #include <queue>
+#include <unordered_set>
+#include <unordered_map>
 
 #define log std::cout
 #define endl std::endl
 
 template <class K, class V> using Map = std::map<K, V>;
+template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 template <class V> using Vector = std::vector<V>;
 template <class V, int size> using Array = std::array<V, size>;
 template <class V> using Set = std::set<V>;
+template <class V> using UnorderedSet = std::unordered_set<V>;
 template <class T> using Grid = Map<int, Map<int, T>>;
 template <class V> using Queue = std::queue<V>;
 using String = std::string;
