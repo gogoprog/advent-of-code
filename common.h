@@ -11,12 +11,12 @@
 #include <map>
 #include <memory>
 #include <numeric>
+#include <queue>
 #include <set>
 #include <sstream>
-#include <vector>
-#include <queue>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 #define log std::cout
 #define endl std::endl
@@ -32,6 +32,7 @@ template <class V> using Queue = std::queue<V>;
 using String = std::string;
 using InputStringStream = std::istringstream;
 using ull = unsigned long long;
+template <class S> using Function = std::function<S>;
 
 template <typename T> std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
     if (!v.empty()) {
@@ -59,7 +60,6 @@ std::ostream &operator<<(std::ostream &out, const std::vector<int8_t> &v) {
     }
     return out;
 }
-
 
 Vector<String> getFileLines(const String &filename, const char delim = '\n') {
     Vector<String> result;
