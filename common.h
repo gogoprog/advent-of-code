@@ -8,6 +8,7 @@
 #include <istream>
 #include <iterator>
 #include <limits>
+#include <list>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -29,6 +30,7 @@ template <class V> using Set = std::set<V>;
 template <class V> using UnorderedSet = std::unordered_set<V>;
 template <class T> using Grid = Map<int, Map<int, T>>;
 template <class V> using Queue = std::queue<V>;
+template <class V> using List = std::list<V>;
 using String = std::string;
 using InputStringStream = std::istringstream;
 using ull = unsigned long long;
