@@ -1,10 +1,22 @@
 #!/bin/bash
 
 setupDir=`dirname $0`
-outDir=${1:-.}
+year=$1
+day=$2
+outDir=${3:-$setupDir/$year/$(printf "%02d" $day)}
 
 mkdir -p $outDir
 
+echo "Generating $outDir..."
+
 cp $setupDir/template.cpp $outDir/main.cpp
 cp $setupDir/template.makefile $outDir/Makefile
+
+c=`cat <<EOF
+from aocd import get_data
+print(get_data(day=$day, year=$year))
+EOF`
+python -c "$c" > $outDir/input.txt
+
+echo "Done!"
 
