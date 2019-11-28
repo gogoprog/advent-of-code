@@ -1,0 +1,10 @@
+#!/bin/bash
+
+setupDir=`dirname $0`
+outDir=${1:-.}
+
+mkdir -p $outDir
+
+cp $setupDir/template.cpp $outDir/main.cpp
+cp $setupDir/template.makefile $outDir/Makefile
+
