@@ -87,7 +87,11 @@ Vector<String> getFileLines(const String &filename, const char delim = '\n') {
     return result;
 }
 
-Vector<String> splitString(const String &input, const char delim = '\n') {
+template <typename R = String> Vector<R> splitString(const String &input, const char delim = '\n') {
+    throw "Unknown";
+}
+
+template <> Vector<String> splitString(const String &input, const char delim) {
     Vector<String> result;
     std::istringstream iss(input);
     String line;
@@ -99,3 +103,14 @@ Vector<String> splitString(const String &input, const char delim = '\n') {
     return result;
 }
 
+template <> Vector<int> splitString(const String &input, const char delim) {
+    Vector<int> result;
+    std::istringstream iss(input);
+    String line;
+
+    while (std::getline(iss, line, delim)) {
+        result.push_back(std::stoi(line));
+    }
+
+    return result;
+}
