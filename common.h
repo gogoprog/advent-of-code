@@ -87,30 +87,41 @@ Vector<String> getFileLines(const String &filename, const char delim = '\n') {
     return result;
 }
 
+template <typename A, typename B> B convert(const A a) {
+}
+
+template <> int convert(const String a) {
+    return std::stoi(a);
+}
+
+template <> String convert(const String a) {
+    return a;
+}
+
 template <typename R = String> Vector<R> splitString(const String &input, const char delim = '\n') {
-    throw "Unknown";
-}
-
-template <> Vector<String> splitString(const String &input, const char delim) {
     Vector<String> result;
-    std::istringstream iss(input);
+    InputStringStream iss(input);
     String line;
 
     while (std::getline(iss, line, delim)) {
-        result.push_back(line);
+        result.push_back(convert<String, R>(line));
     }
 
     return result;
 }
 
-template <> Vector<int> splitString(const String &input, const char delim) {
-    Vector<int> result;
-    std::istringstream iss(input);
+template <typename R, int size> Array<R, size> splitNString(const String &input, const char delim = '\n') {
+    Array<R, size> result;
+    InputStringStream iss(input);
     String line;
 
-    while (std::getline(iss, line, delim)) {
-        result.push_back(std::stoi(line));
+    int i{0};
+
+    while (std::getline(iss, line, delim) && i < size) {
+        result[i] = convert<String, R>(line);
+        ++i;
     }
 
     return result;
 }
+

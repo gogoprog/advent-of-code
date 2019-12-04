@@ -1,6 +1,6 @@
 #include "../../common.h"
 
-bool isFine(int n) {
+bool isFine(int n, const bool part2) {
     String str = std::to_string(n);
 
     Map<char, int> adjs;
@@ -21,8 +21,14 @@ bool isFine(int n) {
     }
 
     for (auto &kv : adjs) {
-        if (kv.second == 1) {
-            return true;
+        if (part2) {
+            if (kv.second == 1) {
+                return true;
+            }
+        } else {
+            if (kv.second >= 1) {
+                return true;
+            }
         }
     }
 
@@ -33,18 +39,22 @@ void process(const String filename) {
     log << "Processing " << filename << endl;
     auto lines = getFileLines(filename);
     auto line = lines[0];
-    auto r = 0;
-    auto args = splitString<int>(line, '-');
-    int a = args[0];
-    int b = args[1];
+    auto [a, b] = splitNString<int, 2>(line, '-');
 
+    auto p1 = 0;
+    auto p2 = 0;
     for (int i = a; i <= b; i++) {
-        if (isFine(i)) {
-            r++;
+        if (isFine(i, false)) {
+            p1++;
+        }
+
+        if (isFine(i, true)) {
+            p2++;
         }
     }
 
-    log << r << endl;
+    log << p1 << endl;
+    log << p2 << endl;
 }
 
 int main() {
