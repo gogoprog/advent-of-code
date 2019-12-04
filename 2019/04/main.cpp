@@ -1,56 +1,49 @@
 #include "../../common.h"
 
-bool isFine(int n, const bool part2) {
-    String str = std::to_string(n);
+inline void compute(int n, int &p1, int &p2) {
+    Array<char, 6> str;
+    Array<int, 10> adjs;
 
-    Map<char, int> adjs;
+    std::to_chars(str.begin(), str.end(), n);
+    std::fill(adjs.begin(), adjs.end(), 0);
+
     char previous = 0;
 
     for (char c : str) {
-        if (previous) {
-            if (c < previous) {
-                return false;
-            }
+        if (c < previous) {
+            return;
+        }
 
-            if (previous == c) {
-                adjs[c]++;
-            }
+        if (previous == c) {
+            adjs[c - '0']++;
         }
 
         previous = c;
     }
 
-    for (auto &kv : adjs) {
-        if (part2) {
-            if (kv.second == 1) {
-                return true;
-            }
-        } else {
-            if (kv.second >= 1) {
-                return true;
-            }
+    bool p1d{false};
+
+    for (auto v : adjs) {
+        if (v == 1) {
+            !p1d && p1++;
+            p2++;
+            return;
+        } else if (v > 1) {
+            !p1d && p1++;
+            p1d = true;
         }
     }
-
-    return false;
 }
 
-void process(const String filename) {
-    log << "Processing " << filename << endl;
+inline void process(const String filename) {
     auto lines = getFileLines(filename);
     auto line = lines[0];
     auto [a, b] = splitNString<int, 2>(line, '-');
-
     auto p1 = 0;
     auto p2 = 0;
-    for (int i = a; i <= b; i++) {
-        if (isFine(i, false)) {
-            p1++;
-        }
 
-        if (isFine(i, true)) {
-            p2++;
-        }
+    for (int i = a; i <= b; i++) {
+        compute(i, p1, p2);
     }
 
     log << p1 << endl;
