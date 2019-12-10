@@ -24,6 +24,7 @@
 #define endl std::endl
 
 template <class K, class V> using Map = std::map<K, V>;
+template <class A, class B> using Pair = std::pair<A, B>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 template <class V> using Vector = std::vector<V>;
 template <class V, int size> using Array = std::array<V, size>;
@@ -37,6 +38,8 @@ using String = std::string;
 using InputStringStream = std::istringstream;
 using ull = unsigned long long;
 template <class S> using Function = std::function<S>;
+using Point = Pair<int, int>;
+using Line = Pair<Point, Point>;
 
 template <typename T> std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
     if (!v.empty()) {
@@ -62,6 +65,15 @@ template <typename T> std::ostream &operator<<(std::ostream &out, const std::set
         std::copy(v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
         out << "\b\b]";
     }
+    return out;
+}
+
+template <typename A, typename B> std::ostream &operator<<(std::ostream &out, const std::pair<A, B> &v) {
+    out << '[';
+    out << v.first;
+    out << ", ";
+    out << v.second;
+    out << "]";
     return out;
 }
 
