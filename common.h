@@ -37,9 +37,31 @@ template <class V> using List = std::list<V>;
 using String = std::string;
 using InputStringStream = std::istringstream;
 using ull = unsigned long long;
+using lli = long long int;
 template <class S> using Function = std::function<S>;
 using Point = Pair<int, int>;
 using Line = Pair<Point, Point>;
+
+struct Vector3 {
+    union {
+        struct {
+            int x;
+            int y;
+            int z;
+        };
+        struct {
+            int coords[3];
+        };
+    };
+
+    bool operator==(const Vector3 &other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
+
+    bool operator!=(const Vector3 &other) const {
+        return !operator==(other);
+    }
+};
 
 template <typename T> std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
     if (!v.empty()) {
@@ -73,6 +95,17 @@ template <typename A, typename B> std::ostream &operator<<(std::ostream &out, co
     out << v.first;
     out << ", ";
     out << v.second;
+    out << "]";
+    return out;
+}
+
+std::ostream &operator<<(std::ostream &out, const Vector3 &v) {
+    out << '[';
+    out << v.x;
+    out << ", ";
+    out << v.y;
+    out << ", ";
+    out << v.z;
     out << "]";
     return out;
 }
@@ -137,4 +170,3 @@ template <typename R, int size> Array<R, size> splitNString(const String &input,
 
     return result;
 }
-
