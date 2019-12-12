@@ -54,6 +54,10 @@ struct Vector3 {
         };
     };
 
+    int & operator[](const int c) {
+        return coords[c];
+    }
+
     bool operator==(const Vector3 &other) const {
         return x == other.x && y == other.y && z == other.z;
     }

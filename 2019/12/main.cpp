@@ -11,38 +11,17 @@ struct Moon {
     }
 
     void load(const String line) {
-        InputStringStream iss{line};
-        char c;
-
-        iss >> c >> c >> c;
-
-        iss >> position.x;
-
-        iss >> c >> c >> c;
-
-        iss >> position.y;
-
-        iss >> c >> c >> c;
-
-        iss >> position.z;
+        std::sscanf(line.c_str(), "<x=%d, y=%d, z=%d>", &position.x, &position.y, &position.z);
 
         initial = position;
     }
 
-    int getPot() {
+    int getPot() const {
         return std::abs(position.x) + std::abs(position.y) + std::abs(position.z);
     }
 
-    int getKin() {
+    int getKin() const {
         return std::abs(velocity.x) + std::abs(velocity.y) + std::abs(velocity.z);
-    }
-
-    bool operator==(const Moon &other) const {
-        return position == other.position && velocity == other.velocity;
-    }
-
-    bool operator!=(const Moon &other) const {
-        return !operator==(other);
     }
 };
 
@@ -65,12 +44,11 @@ struct System {
         for (auto &moon : moons) {
             for (auto &other_moon : moons) {
                 if (&moon != &other_moon) {
-
                     for (int c = 0; c < 3; c++) {
-                        if (other_moon.position.coords[c] > moon.position.coords[c]) {
-                            moon.velocity.coords[c]++;
-                        } else if (other_moon.position.coords[c] < moon.position.coords[c]) {
-                            moon.velocity.coords[c]--;
+                        if (other_moon.position[c] > moon.position[c]) {
+                            moon.velocity[c]++;
+                        } else if (other_moon.position[c] < moon.position[c]) {
+                            moon.velocity[c]--;
                         }
                     }
                 }
@@ -81,7 +59,7 @@ struct System {
     void applyVelocity() {
         for (auto &moon : moons) {
             for (int c = 0; c < 3; c++) {
-                moon.position.coords[c] += moon.velocity.coords[c];
+                moon.position[c] += moon.velocity[c];
             }
         }
     }
@@ -110,7 +88,6 @@ struct System {
 
         Set<int> values;
         int count{0};
-
         Vector3 freqs = {-1, -1, -1};
 
         while (!found) {
@@ -119,10 +96,10 @@ struct System {
             ++i;
 
             for (int c = 0; c < 3; c++) {
-                if (freqs.coords[c] == -1) {
+                if (freqs[c] == -1) {
                     bool good{true};
                     for (auto &moon : moons) {
-                        if (moon.velocity.coords[c] == 0 && moon.position.coords[c] == moon.initial.coords[c]) {
+                        if (moon.velocity[c] == 0 && moon.position[c] == moon.initial[c]) {
                         } else {
                             good = false;
                             break;
@@ -130,7 +107,7 @@ struct System {
                     }
 
                     if (good) {
-                        freqs.coords[c] = i;
+                        freqs[c] = i;
                         ++count;
                         values.insert(i);
 
@@ -143,6 +120,14 @@ struct System {
         }
 
         log << values << endl;
+
+        lli n = 1;
+
+        for(auto v : values) {
+            n = std::lcm(n, v);
+        }
+
+        log << "part2: " << n << endl;
     }
 };
 
