@@ -54,7 +54,7 @@ struct Vector3 {
         };
     };
 
-    int & operator[](const int c) {
+    int &operator[](const int c) {
         return coords[c];
     }
 
@@ -173,4 +173,19 @@ template <typename R, int size> Array<R, size> splitNString(const String &input,
     }
 
     return result;
+}
+
+template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &map) {
+    Point minPoint{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
+    Point maxPoint{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()};
+
+    for (auto &kv : map) {
+        auto &pos = kv.first;
+        minPoint.first = std::min(pos.first, minPoint.first);
+        minPoint.second = std::min(pos.second, minPoint.second);
+        maxPoint.first = std::max(pos.first, maxPoint.first);
+        maxPoint.second = std::max(pos.second, maxPoint.second);
+    }
+
+    return {minPoint, maxPoint};
 }

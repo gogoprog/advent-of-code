@@ -182,8 +182,6 @@ struct Arcade {
     Machine machine;
     Map<Point, int> tiles;
     int score{0};
-    Point minPoint = {0, 0};
-    Point maxPoint = {0, 0};
 
     void load(const String line) {
         program.load(line);
@@ -216,11 +214,6 @@ struct Arcade {
                 ++count;
             }
             if (x != -1) {
-                minPoint.first = std::min(pos.first, minPoint.first);
-                minPoint.second = std::min(pos.second, minPoint.second);
-                maxPoint.first = std::max(pos.first, maxPoint.first);
-                maxPoint.second = std::max(pos.second, maxPoint.second);
-
                 if (v == 4) {
                     ballX = x;
                 }
@@ -252,6 +245,8 @@ struct Arcade {
     }
 
     void draw() {
+        const auto [minPoint, maxPoint] = getMinMax(tiles);
+
         for (int y = minPoint.second; y <= maxPoint.second; y++) {
             for (int x = minPoint.first; x <= maxPoint.first; ++x) {
 
