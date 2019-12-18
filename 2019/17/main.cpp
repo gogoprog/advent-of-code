@@ -210,6 +210,8 @@ struct Operator {
         Vector<Point> scaffolds;
         Point start;
 
+        Map<Point, bool> intersections;
+
         do {
             r = machine.run(0);
 
@@ -251,6 +253,7 @@ struct Operator {
             if (c == 4) {
                 auto [x, y] = scaffold;
                 result += x * y;
+                intersections[scaffold] = true;
             }
         }
 
@@ -312,70 +315,247 @@ struct Operator {
                 moveStr += std::to_string(move.steps);
             }
 
-            /* log << moveStr << endl; */
+            log << moveStr << endl;
 
             struct Node {
-                Point pos;
-                int dir;
-                Map<Point, bool> visited;
-                String funcs[3];
+                Array<Vector<int>, 3> funcs;
                 Vector<int> routine;
+
+                int totalVisited{0};
+                int totalDistance{0};
+
+                int value() const {
+                    return funcs[0].size() + funcs[1].size() + funcs[2].size();
+                }
 
                 String routineStr() const {
                     String result;
-                    for (int i : routine) {
-                        result += funcs[i];
+                    bool first{true};
+                    for (auto i : routine) {
+                        if (!first) {
+                            result += ',';
+                        }
+                        first = false;
+                        result += char('A' + i);
                     }
 
                     return result;
                 }
 
-                bool operator<(const Node &other) const {
-                    return routine.size() < other.routine.size();
+                String funcStr(const int f) const {
+                    String result;
+                    bool first{true};
+                    for (auto i : funcs[f]) {
+                        if (!first) {
+                            result += ',';
+                        }
+                        first = false;
+                        if (i < 10) {
+                            result += std::to_string(i);
+                        } else if (i == 10) {
+                            result += "1,0";
+                        } else {
+                            result += char(i);
+                        }
+                    }
+
+                    return result;
                 }
-            };
 
-            PriorityQueue<Node> q;
-            q.push({start, N});
+                void print() const {
+                    log << "Routine: ";
+                    for (auto i : routine) {
+                        log << char('A' + i) << " ";
+                    }
+                    log << endl;
 
-            while (!q.empty()) {
-                const auto node = q.top();
-                const auto pos = node.pos;
-                q.pop();
+                    for (int i = 0; i < 3; i++) {
 
-                if (node.visited.size() < scaffolds.size()) {
+                        log << char('A' + i) << " = ";
 
-                    for (auto f = 0; f < 3; ++f) {
-                        const auto &func = node.funcs[f];
-                        if (func.length() < 10) {
-                            for (char c = '0'; c <= '9'; c++) {
-                                auto copy = node;
-                                copy.funcs[f].push_back(c);
+                        for (int c : funcs[i]) {
+
+                            if (c > 10) {
+                                log << char(c);
+                            } else {
+                                log << c;
                             }
-                            {
-                                auto copy = node;
-                                copy.funcs[f].push_back('R');
-                            }
-                            {
-                                auto copy = node;
-                                copy.funcs[f].push_back('L');
+
+                            log << ",";
+                        }
+                        log << endl;
+                    }
+                }
+
+                bool operator<(const Node &other) const {
+
+                    if (totalVisited == other.totalVisited) {
+
+                        if (totalDistance == other.totalDistance) {
+                            return value() > other.value();
+                        }
+                        return totalDistance > other.totalDistance;
+                    }
+
+                    return totalVisited < other.totalVisited;
+                }
+
+                int process(const Point &start, Map<Point, bool> &intersections, Map<Point, char> &map) {
+                    Map<Point, bool> visited;
+
+                    Point pos = start;
+                    int dir = N;
+
+                    totalDistance = 0;
+
+                    for (int f : routine) {
+                        auto &func = funcs[f];
+
+                        for (int c : func) {
+                            if (c == 'R') {
+                                dir = getDir(dir + 1);
+                                auto &delta = deltas[dir];
+                                auto npos = pos + delta;
+                                if (map[npos] != '#') {
+                                    return -1;
+                                }
+                            } else if (c == 'L') {
+                                dir = getDir(dir - 1);
+                                auto &delta = deltas[dir];
+                                auto npos = pos + delta;
+                                if (map[npos] != '#') {
+                                    return -1;
+                                }
+                            } else {
+                                auto v = c;
+
+                                auto &delta = deltas[dir];
+
+                                for (int i = 0; i < v; ++i) {
+                                    pos = pos + delta;
+                                    if (map[pos] != '#') {
+                                        return -1;
+                                    }
+
+                                    visited[pos] = true;
+                                    totalDistance++;
+                                }
+
+                                auto npos = pos + delta;
+                                if (!intersections[pos] && map[npos] == '#') {
+                                    return -1;
+                                }
                             }
                         }
                     }
 
-                } else {
-                    log << "reached" << endl;
+                    return visited.size();
+                }
+            };
+
+            int totalScaffolds = scaffolds.size();
+
+            log << "totalScaffolds = " << totalScaffolds << endl;
+
+            PriorityQueue<Node> q;
+
+            auto n = Node{{}, {0}};
+            n.funcs[0] = {'L', 4, 'L', 4};
+            n.funcs[1] = {'R', 4, 'L', 4, 'L', 4, 'R', 8, 'R', 10};
+            q.push(n);
+
+            auto push = [&](Node &node) {
+                node.totalVisited = node.process(start, intersections, map);
+                if (node.totalVisited >= 0) {
+                    q.push(node);
+                }
+            };
+
+            int best = 0;
+            Node bestNode;
+
+            while (!q.empty()) {
+                const auto node = q.top();
+                q.pop();
+
+                auto r = node.totalVisited;
+
+                if (r >= 0) {
+
+                    if (r == totalScaffolds) {
+                        log << "goal" << endl;
+                        bestNode = node;
+                        break;
+                    }
+
+                    for (auto f = 0; f < 3; ++f) {
+                        const auto &func = node.funcs[f];
+                        if (func.size() < 10) {
+
+                            if (func.size() == 0 || func.back() <= 10) {
+                                auto copy = node;
+                                copy.funcs[f].push_back('R');
+                                push(copy);
+                            }
+
+                            if (func.size() == 0 || func.back() <= 10) {
+                                auto copy = node;
+                                copy.funcs[f].push_back('L');
+                                push(copy);
+                            }
+
+                            for (char c = 1; c <= 10; c++) {
+                                /* if (func.size() == 0 || func.back() > 10) { */
+                                if (func.size() > 0 && func.back() > 10) {
+                                    auto copy = node;
+                                    copy.funcs[f].push_back(c);
+                                    push(copy);
+                                }
+                            }
+                        }
+                    }
+
+                    if (node.routine.size() < 10) {
+
+                        for (int i = 0; i < 3; ++i) {
+                            const auto &func = node.funcs[i];
+                            if (func.size()) {
+                                auto copy = node;
+                                copy.routine.push_back(i);
+                                push(copy);
+                            }
+                        }
+                    }
                 }
             }
 
-            /* Node node; */
-            /* node.funcs[0] = "L,4,L,4,L,10"; */
-            /* node.funcs[1] = "R,4,R,4"; */
-            /* node.funcs[2] = "L,10"; */
+            log << "best node:" << endl;
+            log << bestNode.routineStr() << endl;
+            for (int i = 0; i < 3; ++i) {
+                log << bestNode.funcStr(i) << endl;
+            }
 
-            /* node.routine = {0, 0, 1, 0, 2}; */
+            {
+                program[0] = 2;
+                machine.load(program);
 
-            /* log << node.routineStr() << endl; */
+                Vector<String> strs;
+                strs.push_back(bestNode.routineStr());
+                for (int i = 0; i < 3; ++i) {
+                    strs.push_back(bestNode.funcStr(i));
+                }
+
+                for (auto &str : strs) {
+                    for (char c : str) {
+                        machine.run(c);
+                    }
+                    machine.run(10);
+                }
+
+                machine.run('n');
+                int r = machine.run(10);
+                log << r << endl;
+            }
         }
     }
 };
