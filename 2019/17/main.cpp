@@ -2,6 +2,21 @@
 
 using lli = long long int;
 
+enum { N, W, S, E };
+
+inline int getDir(int in) {
+    if (in < 0)
+        in += 4;
+    return in % 4;
+}
+
+const Vector<Point> deltas = {Point{0, -1}, Point{1, 0}, Point{0, 1}, Point{-1, 0}};
+
+struct Movement {
+    char turn;
+    int steps;
+};
+
 struct Program : Map<lli, lli> {
     void load(const String line) {
         auto inputs = splitString(line, ',');
@@ -188,14 +203,180 @@ struct Operator {
 
     void run() {
         int r;
+        int x = 0;
+        int y = 0;
+
+        Map<Point, char> map;
+        Vector<Point> scaffolds;
+        Point start;
+
         do {
             r = machine.run(0);
 
-            if(r > 0) {
+            if (r > 0) {
                 log << char(r);
+
+                if (r == 10) {
+                    y++;
+                    x = 0;
+                } else {
+                    map[{x, y}] = r;
+
+                    if (r == '#') {
+                        scaffolds.push_back({x, y});
+                    }
+
+                    if (r == '^') {
+                        start = {x, y};
+                    }
+
+                    x++;
+                }
             }
 
         } while (r != -99);
+
+        auto result = 0;
+
+        for (auto &scaffold : scaffolds) {
+            int c = 0;
+            for (auto &delta : deltas) {
+                auto p = scaffold + delta;
+
+                if (map[p] == '#') {
+                    c++;
+                }
+            }
+
+            if (c == 4) {
+                auto [x, y] = scaffold;
+                result += x * y;
+            }
+        }
+
+        log << "part1: " << result << endl;
+
+        {
+
+            Vector<Movement> moves;
+            Point pos{start};
+            int currentDir = N;
+            char turn = '?';
+            bool cont = true;
+
+            int steps = 0;
+            while (cont) {
+                auto p = pos + deltas[currentDir];
+
+                if (map[p] == '#') {
+                    steps++;
+                    pos = p;
+                } else {
+                    if (steps) {
+                        moves.push_back({turn, steps});
+                        steps = 0;
+                    }
+
+                    {
+                        auto newDir = getDir(currentDir - 1);
+                        auto newP = pos + deltas[newDir];
+
+                        if (map[newP] == '#') {
+                            turn = 'L';
+                            currentDir = newDir;
+
+                        } else {
+                            newDir = getDir(currentDir + 1);
+                            newP = pos + deltas[newDir];
+                            if (map[newP] == '#') {
+                                turn = 'R';
+                                currentDir = newDir;
+                            } else {
+                                cont = false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            String moveStr;
+
+            bool first = true;
+            for (auto &move : moves) {
+                if (!first) {
+                    moveStr += ',';
+                }
+                first = false;
+                moveStr += move.turn;
+                moveStr += ',';
+                moveStr += std::to_string(move.steps);
+            }
+
+            /* log << moveStr << endl; */
+
+            struct Node {
+                Point pos;
+                int dir;
+                Map<Point, bool> visited;
+                String funcs[3];
+                Vector<int> routine;
+
+                String routineStr() const {
+                    String result;
+                    for (int i : routine) {
+                        result += funcs[i];
+                    }
+
+                    return result;
+                }
+
+                bool operator<(const Node &other) const {
+                    return routine.size() < other.routine.size();
+                }
+            };
+
+            PriorityQueue<Node> q;
+            q.push({start, N});
+
+            while (!q.empty()) {
+                const auto node = q.top();
+                const auto pos = node.pos;
+                q.pop();
+
+                if (node.visited.size() < scaffolds.size()) {
+
+                    for (auto f = 0; f < 3; ++f) {
+                        const auto &func = node.funcs[f];
+                        if (func.length() < 10) {
+                            for (char c = '0'; c <= '9'; c++) {
+                                auto copy = node;
+                                copy.funcs[f].push_back(c);
+                            }
+                            {
+                                auto copy = node;
+                                copy.funcs[f].push_back('R');
+                            }
+                            {
+                                auto copy = node;
+                                copy.funcs[f].push_back('L');
+                            }
+                        }
+                    }
+
+                } else {
+                    log << "reached" << endl;
+                }
+            }
+
+            /* Node node; */
+            /* node.funcs[0] = "L,4,L,4,L,10"; */
+            /* node.funcs[1] = "R,4,R,4"; */
+            /* node.funcs[2] = "L,10"; */
+
+            /* node.routine = {0, 0, 1, 0, 2}; */
+
+            /* log << node.routineStr() << endl; */
+        }
     }
 };
 

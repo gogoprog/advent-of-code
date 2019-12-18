@@ -67,6 +67,10 @@ struct Vector3 {
     }
 };
 
+Point operator+(const Point &a, const Point &b) {
+    return {a.first + b.first, a.second + b.second};
+}
+
 template <typename T> std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
     if (!v.empty()) {
         out << '[';
