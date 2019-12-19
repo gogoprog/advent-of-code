@@ -35,11 +35,15 @@ struct Machine {
     Program program;
     lli cursor{0};
     lli relativeBase;
+    String inputs;
+    int inputIndex;
 
-    void load(const Program &pgm) {
+    void load(const Program &pgm, const String inputs = "none") {
         program = pgm;
         cursor = 0;
         relativeBase = 0;
+        inputIndex = 0;
+        this->inputs = inputs;
     }
 
     lli &getParam(const lli pos, const String modes) {
@@ -64,7 +68,7 @@ struct Machine {
         }
     }
 
-    lli run(const lli input) {
+    lli run() {
 
         while (cursor < program.size()) {
             auto inst = program[cursor];
@@ -104,7 +108,8 @@ struct Machine {
 
                 case 3: {
                     auto &a = getParam(1, modes);
-                    a = input;
+                    a = inputs[inputIndex];
+                    ++inputIndex;
 
                     cursor += 2;
                     break;
@@ -213,7 +218,7 @@ struct Operator {
         Map<Point, bool> intersections;
 
         do {
-            r = machine.run(0);
+            r = machine.run();
 
             if (r > 0) {
                 log << char(r);
@@ -350,10 +355,8 @@ struct Operator {
                             result += ',';
                         }
                         first = false;
-                        if (i < 10) {
+                        if (i < 11) {
                             result += std::to_string(i);
-                        } else if (i == 10) {
-                            result += "1,0";
                         } else {
                             result += char(i);
                         }
@@ -442,8 +445,10 @@ struct Operator {
                                 }
 
                                 auto npos = pos + delta;
-                                if (!intersections[pos] && map[npos] == '#') {
-                                    return -1;
+                                if (!intersections[pos]) {
+                                    if (map[npos] == '#') {
+                                        return -1;
+                                    }
                                 }
                             }
                         }
@@ -460,8 +465,10 @@ struct Operator {
             PriorityQueue<Node> q;
 
             auto n = Node{{}, {0}};
-            n.funcs[0] = {'L', 4, 'L', 4};
-            n.funcs[1] = {'R', 4, 'L', 4, 'L', 4, 'R', 8, 'R', 10};
+
+            n.funcs[0] = {'L', 4, 'L', 4, 'L', 10, 'R', 4}; // found without computer
+            n.funcs[1] = {'R', 4, 'L', 4, 'L', 4, 'R', 8}; // found without computer
+
             q.push(n);
 
             auto push = [&](Node &node) {
@@ -483,61 +490,54 @@ struct Operator {
                 if (r >= 0) {
 
                     if (r == totalScaffolds) {
-                        log << "goal" << endl;
                         bestNode = node;
                         break;
-                    }
-
-                    for (auto f = 0; f < 3; ++f) {
-                        const auto &func = node.funcs[f];
-                        if (func.size() < 10) {
-
-                            if (func.size() == 0 || func.back() <= 10) {
-                                auto copy = node;
-                                copy.funcs[f].push_back('R');
-                                push(copy);
-                            }
-
-                            if (func.size() == 0 || func.back() <= 10) {
-                                auto copy = node;
-                                copy.funcs[f].push_back('L');
-                                push(copy);
-                            }
-
-                            for (char c = 1; c <= 10; c++) {
-                                /* if (func.size() == 0 || func.back() > 10) { */
-                                if (func.size() > 0 && func.back() > 10) {
-                                    auto copy = node;
-                                    copy.funcs[f].push_back(c);
-                                    push(copy);
-                                }
-                            }
-                        }
                     }
 
                     if (node.routine.size() < 10) {
 
                         for (int i = 0; i < 3; ++i) {
                             const auto &func = node.funcs[i];
-                            if (func.size()) {
-                                auto copy = node;
-                                copy.routine.push_back(i);
-                                push(copy);
+                            auto copy = node;
+                            copy.routine.push_back(i);
+                            push(copy);
+                        }
+                    }
+
+                    for (auto f = 0; f < 3; ++f) {
+                        if (std::find(node.routine.begin(), node.routine.end(), f) != node.routine.end()) {
+                            const auto &func = node.funcs[f];
+
+                            if (func.size() < 10) {
+
+                                if (func.size() == 0 || func.back() <= 10) {
+                                    auto copy = node;
+                                    copy.funcs[f].push_back('R');
+                                    push(copy);
+                                }
+
+                                if (func.size() == 0 || func.back() <= 10) {
+                                    auto copy = node;
+                                    copy.funcs[f].push_back('L');
+                                    push(copy);
+                                }
+
+                                for (char c = 2; c <= 10; c++) {
+                                    if (func.size() == 0 || func.back() > 10) {
+                                        /* if (func.size() > 0 && func.back() > 10) { */
+                                        auto copy = node;
+                                        copy.funcs[f].push_back(c);
+                                        push(copy);
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
 
-            log << "best node:" << endl;
-            log << bestNode.routineStr() << endl;
-            for (int i = 0; i < 3; ++i) {
-                log << bestNode.funcStr(i) << endl;
-            }
-
             {
                 program[0] = 2;
-                machine.load(program);
 
                 Vector<String> strs;
                 strs.push_back(bestNode.routineStr());
@@ -545,16 +545,31 @@ struct Operator {
                     strs.push_back(bestNode.funcStr(i));
                 }
 
+                String inputs;
+
                 for (auto &str : strs) {
-                    for (char c : str) {
-                        machine.run(c);
-                    }
-                    machine.run(10);
+                    inputs += str;
+                    inputs += char(10);
                 }
 
-                machine.run('n');
-                int r = machine.run(10);
-                log << r << endl;
+                inputs += "n";
+                inputs += char(10);
+
+                int r;
+                machine.load(program, inputs);
+                do {
+                    r = machine.run();
+
+                    if (r > 0) {
+                        if (r < 256) {
+
+                            log << char(r);
+                        } else {
+                            log << "part2: " << r << endl;
+                        }
+                    }
+
+                } while (r != -99);
             }
         }
     }
