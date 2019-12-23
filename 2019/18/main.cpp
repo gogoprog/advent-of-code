@@ -8,7 +8,7 @@ const Vector<Point> deltas = {Point{0, -1}, Point{1, 0}, Point{0, 1}, Point{-1, 
 
 struct Node {
     Point pos;
-    int steps{0};
+    int steps;
     Keys keys;
 
     Node() = default;
@@ -36,15 +36,32 @@ struct Node {
         return false;
     }
 
-    inline void walk(const Point &npos, PMap &map) {
-        pos = npos;
-        ++steps;
-
+    inline bool walk(const Point &npos, PMap &map) {
         char c = map[npos];
-        if (c >= 'a' && c <= 'z') {
-            auto key = c - 'a';
-            keys[key] = true;
+        bool can_walk = false;
+
+        switch (c) {
+            case '.':
+            case '@':
+                can_walk = true;
+
+            default:
+                if (c >= 'a' && c <= 'z') {
+                    can_walk = true;
+                    auto key = c - 'a';
+                    keys[key] = true;
+                } else if (c >= 'A' && c <= 'Z') {
+                    auto key = (c - 'A');
+                    can_walk = keys[key];
+                }
         }
+
+        if (can_walk) {
+            pos = npos;
+            ++steps;
+        }
+
+        return can_walk;
     }
 
     bool operator<(const Node &other) const {
@@ -54,7 +71,6 @@ struct Node {
 
 struct Level {
     Point startPos;
-    Map<char, Point> keysPos;
     uint totalKeys;
     PMap map;
 
@@ -75,7 +91,6 @@ struct Level {
 
                 if (c >= 'a' && c <= 'z') {
                     totalKeys++;
-                    keysPos[c] = {x, y};
                 }
                 ++x;
             }
@@ -86,18 +101,18 @@ struct Level {
     void run() {
         PriorityQueue<Node> q;
 
-        Node n{startPos};
+        Node n{startPos, 0};
         q.push(n);
 
         int best{std::numeric_limits<int>::max()};
 
-        Map<Pair<Point, ull>, int> visited;
+        Map<Pair<Point, ulong>, int> visited;
 
         while (!q.empty()) {
             const auto node{q.top()};
             q.pop();
 
-            auto &vs = visited[{node.pos, node.keys.to_ullong()}];
+            auto &vs = visited[{node.pos, node.keys.to_ulong()}];
 
             if (vs != 0 && vs <= node.steps) {
                 continue;
@@ -107,12 +122,11 @@ struct Level {
 
             if (node.steps < best) {
 
-                for (auto &delta : deltas) {
-                    auto npos = node.pos + delta;
+                for (const auto &delta : deltas) {
+                    const auto & npos = node.pos + delta;
+                    auto copy = node;
 
-                    if (node.canWalk(npos, map)) {
-                        auto copy = node;
-                        copy.walk(npos, map);
+                    if (copy.walk(npos, map)) {
 
                         if (copy.keys.count() == totalKeys) {
                             best = copy.steps;
