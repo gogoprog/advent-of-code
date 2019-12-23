@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <charconv>
 #include <cmath>
 #include <deque>
@@ -16,6 +17,7 @@
 #include <queue>
 #include <set>
 #include <sstream>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -25,6 +27,7 @@
 
 template <class K, class V> using Map = std::map<K, V>;
 template <class A, class B> using Pair = std::pair<A, B>;
+template <class... Types> using Tuple = std::tuple<Types...>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 template <class V> using Vector = std::vector<V>;
 template <class V, int size> using Array = std::array<V, size>;
