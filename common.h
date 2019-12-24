@@ -133,6 +133,15 @@ template <typename T> std::ostream &operator<<(std::ostream &out, const std::set
     return out;
 }
 
+std::ostream &operator<<(std::ostream &out, const Vector2 &v) {
+    out << '[';
+    out << v.x;
+    out << ", ";
+    out << v.y;
+    out << "]";
+    return out;
+}
+
 template <typename A, typename B> std::ostream &operator<<(std::ostream &out, const std::pair<A, B> &v) {
     out << '[';
     out << v.first;
