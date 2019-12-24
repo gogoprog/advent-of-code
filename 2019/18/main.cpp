@@ -2,42 +2,27 @@
 
 #include "../../common.h"
 
-using PMap = Map<Point, char>;
-using Keys = std::bitset<32>;
+using PMap = Vector<String>;
 const Vector<Point> deltas = {Point{0, -1}, Point{1, 0}, Point{0, 1}, Point{-1, 0}};
 
-struct Node {
+struct Id {
     Point pos;
-    int steps;
-    Keys keys;
+    ulong keys;
 
-    Node() = default;
-
-    Node &operator=(const Node &other) = default;
-
-    inline bool canWalk(const Point &npos, PMap &map) const {
-        char c = map[npos];
-        switch (c) {
-            case '#':
-                return false;
-            case '.':
-            case '@':
-                return true;
-
-            default:
-                if (c >= 'a' && c <= 'z') {
-                    return true;
-                } else if (c >= 'A' && c <= 'Z') {
-                    auto key = (c - 'A');
-                    return keys[key];
-                }
+    bool operator<(const Id &other) const {
+        if (pos == other.pos) {
+            return keys < other.keys;
         }
-
-        return false;
+        return pos < other.pos;
     }
+};
+
+struct Node {
+    Id id;
+    int steps;
 
     inline bool walk(const Point &npos, PMap &map) {
-        char c = map[npos];
+        char c = map[npos.y][npos.x];
         bool can_walk = false;
 
         switch (c) {
@@ -49,15 +34,15 @@ struct Node {
                 if (c >= 'a' && c <= 'z') {
                     can_walk = true;
                     auto key = c - 'a';
-                    keys[key] = true;
+                    id.keys |= (1 << key);
                 } else if (c >= 'A' && c <= 'Z') {
                     auto key = (c - 'A');
-                    can_walk = keys[key];
+                    can_walk = id.keys & (1 << key);
                 }
         }
 
         if (can_walk) {
-            pos = npos;
+            id.pos = npos;
             ++steps;
         }
 
@@ -83,8 +68,6 @@ struct Level {
         for (auto &line : lines) {
             x = 0;
             for (auto c : line) {
-                map[{x, y}] = c;
-
                 if (c == '@') {
                     startPos = {x, y};
                 }
@@ -96,23 +79,31 @@ struct Level {
             }
             ++y;
         }
+
+        map = lines;
     }
 
     void run() {
         PriorityQueue<Node> q;
 
-        Node n{startPos, 0};
+        Node n{{startPos, 0}};
         q.push(n);
 
         int best{std::numeric_limits<int>::max()};
 
-        Map<Pair<Point, ulong>, int> visited;
+        ulong targetKeys = 0;
+
+        for (uint k = 0; k < totalKeys; ++k) {
+            targetKeys |= (1 << k);
+        }
+
+        Map<Id, int> visited;
 
         while (!q.empty()) {
             const auto node{q.top()};
             q.pop();
 
-            auto &vs = visited[{node.pos, node.keys.to_ulong()}];
+            auto &vs = visited[node.id];
 
             if (vs != 0 && vs <= node.steps) {
                 continue;
@@ -121,14 +112,15 @@ struct Level {
             }
 
             if (node.steps < best) {
+                const auto &id = node.id;
 
                 for (const auto &delta : deltas) {
-                    const auto & npos = node.pos + delta;
+                    const auto &npos = id.pos + delta;
                     auto copy = node;
 
                     if (copy.walk(npos, map)) {
 
-                        if (copy.keys.count() == totalKeys) {
+                        if (copy.id.keys == targetKeys) {
                             best = copy.steps;
                         } else {
                             q.push(copy);

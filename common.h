@@ -42,8 +42,44 @@ using InputStringStream = std::istringstream;
 using ull = unsigned long long;
 using lli = long long int;
 template <class S> using Function = std::function<S>;
-using Point = Pair<int, int>;
+
+struct Vector2 {
+    union {
+        struct {
+            int x;
+            int y;
+        };
+        struct {
+            int coords[2];
+        };
+    };
+
+    int &operator[](const int c) {
+        return coords[c];
+    }
+
+    bool operator==(const Vector2 &other) const {
+        return x == other.x && y == other.y;
+    }
+
+    bool operator!=(const Vector2 &other) const {
+        return !operator==(other);
+    }
+
+    bool operator<(const Vector2 &other) const {
+        if (x == other.x) {
+            return y < other.y;
+        }
+        return x < other.x;
+    }
+};
+
+using Point = Vector2;
 using Line = Pair<Point, Point>;
+
+Point operator+(const Point &a, const Point &b) {
+    return {a.x + b.x, a.y + b.y};
+}
 
 struct Vector3 {
     union {
@@ -69,10 +105,6 @@ struct Vector3 {
         return !operator==(other);
     }
 };
-
-Point operator+(const Point &a, const Point &b) {
-    return {a.first + b.first, a.second + b.second};
-}
 
 template <typename T> std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
     if (!v.empty()) {
@@ -188,10 +220,10 @@ template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &ma
 
     for (auto &kv : map) {
         auto &pos = kv.first;
-        minPoint.first = std::min(pos.first, minPoint.first);
-        minPoint.second = std::min(pos.second, minPoint.second);
-        maxPoint.first = std::max(pos.first, maxPoint.first);
-        maxPoint.second = std::max(pos.second, maxPoint.second);
+        minPoint.x = std::min(pos.x, minPoint.x);
+        minPoint.y = std::min(pos.y, minPoint.y);
+        maxPoint.x = std::max(pos.x, maxPoint.x);
+        maxPoint.y = std::max(pos.y, maxPoint.y);
     }
 
     return {minPoint, maxPoint};
