@@ -52,6 +52,10 @@ struct Vector2 {
         struct {
             int coords[2];
         };
+        struct {
+            int first;
+            int second;
+        };
     };
 
     int &operator[](const int c) {
