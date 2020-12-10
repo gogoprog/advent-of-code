@@ -76,7 +76,7 @@ void process(const String filename) {
 
                 lineExecutedMap[cursor]++;
 
-                if (lineExecutedMap[cursor] > 16) {
+                if (lineExecutedMap[cursor] > 1) {
                     break;
                 }
 
