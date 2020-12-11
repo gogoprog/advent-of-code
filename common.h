@@ -76,6 +76,12 @@ struct Vector2 {
         }
         return x < other.x;
     }
+
+    Vector2 &operator+=(const Vector2 &other) {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
 };
 
 using Point = Vector2;
