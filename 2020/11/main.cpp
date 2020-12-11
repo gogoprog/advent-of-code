@@ -129,40 +129,29 @@ struct System {
     }
 };
 
+template <int part> void doPart(const Vector<String> &lines) {
+    System system{lines};
+
+    system.init();
+
+    int i{0};
+
+    while (true) {
+        ++i;
+        if (system.process<part>()) {
+            auto r = system.count('#');
+            log << "Part" << part << ": " << r << endl;
+            break;
+        }
+    }
+}
+
 void process(const String filename) {
     log << "Processing " << filename << endl;
     auto lines = getFileLines(filename);
 
-    {
-        System system{lines};
-
-        system.init();
-
-        int i{0};
-        while (true) {
-            ++i;
-            if (system.process<1>()) {
-                auto r = system.count('#');
-                log << "Part1: " << r << endl;
-                break;
-            }
-        }
-    }
-    {
-        System system{lines};
-
-        system.init();
-
-        int i{0};
-        while (true) {
-            ++i;
-            if (system.process<2>()) {
-                auto r = system.count('#');
-                log << "Part2: " << r << endl;
-                break;
-            }
-        }
-    }
+    doPart<1>(lines);
+    doPart<2>(lines);
 }
 
 int main() {
