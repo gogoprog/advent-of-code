@@ -1,6 +1,8 @@
 #include "../../common.h"
 
 struct System {
+    inline static const Vector<Point> &deltas = {Point{0, 1}, Point{0, -1}, Point{-1, 0}, Point{1, 0},
+                                                 Point{1, 1}, Point{1, -1}, Point{-1, 1}, Point{-1, -1}};
     Vector<String> lines;
     int width;
     int height;
@@ -10,7 +12,7 @@ struct System {
         height = lines.size();
     }
 
-    bool process() {
+    template <int part> bool process() {
         auto copy = lines;
 
         for (int y{0}; y < lines.size(); ++y) {
@@ -20,16 +22,28 @@ struct System {
 
                 switch (seat) {
                     case 'L': {
-                        auto count = countAdjacent(x, y, '#');
+                        int count;
+                        if constexpr (part == 1) {
+                            count = countAdjacent(x, y, '#');
+                        } else {
+                            count = countVisible(x, y, '#');
+                        }
                         if (count == 0) {
                             copy[y][x] = '#';
                         }
                         break;
                     }
                     case '#': {
-                        auto count = countAdjacent(x, y, '#');
-                        if (count >= 4) {
-                            copy[y][x] = 'L';
+                        if constexpr (part == 1) {
+                            auto count = countAdjacent(x, y, '#');
+                            if (count >= 4) {
+                                copy[y][x] = 'L';
+                            }
+                        } else {
+                            auto count = countVisible(x, y, '#');
+                            if (count >= 5) {
+                                copy[y][x] = 'L';
+                            }
                         }
                         break;
                     }
@@ -62,24 +76,17 @@ struct System {
     }
 
     int countAdjacent(const int x, const int y, const char which) {
+        Point start{x, y};
+
         int result{0};
 
-        if (getSeat(x - 1, y + 0) == which)
-            result++;
-        if (getSeat(x - 1, y + 1) == which)
-            result++;
-        if (getSeat(x - 1, y - 1) == which)
-            result++;
-        if (getSeat(x + 1, y + 0) == which)
-            result++;
-        if (getSeat(x + 1, y + 1) == which)
-            result++;
-        if (getSeat(x + 1, y - 1) == which)
-            result++;
-        if (getSeat(x - 0, y + 1) == which)
-            result++;
-        if (getSeat(x - 0, y - 1) == which)
-            result++;
+        for (auto &delta : deltas) {
+            auto current = start + delta;
+
+            if (getSeat(current.x, current.y) == which) {
+                result++;
+            }
+        }
 
         return result;
     }
@@ -98,48 +105,7 @@ struct System {
         return result;
     }
 
-    bool process2() {
-        auto copy = lines;
-
-        for (int y{0}; y < lines.size(); ++y) {
-            for (int x{0}; x < width; ++x) {
-
-                auto seat = lines[y][x];
-
-                switch (seat) {
-                    case 'L': {
-                        auto count = countVisible(x, y, '#');
-                        if (count == 0) {
-                            copy[y][x] = '#';
-                        }
-                        break;
-                    }
-                    case '#': {
-                        auto count = countVisible(x, y, '#');
-                        if (count >= 5) {
-                            copy[y][x] = 'L';
-                        }
-                        break;
-                    }
-                    default:
-                        break;
-                }
-            }
-        }
-
-        if (copy == lines) {
-            return true;
-        }
-
-        lines = copy;
-
-        return false;
-    }
-
     int countVisible(const int x, const int y, const char which) {
-        static const Vector<Point> &deltas = {Point{0, 1}, Point{0, -1}, Point{-1, 0}, Point{1, 0},
-                                              Point{1, 1}, Point{1, -1}, Point{-1, 1}, Point{-1, -1}};
-
         Point start{x, y};
 
         int result{0};
@@ -175,7 +141,7 @@ void process(const String filename) {
         int i{0};
         while (true) {
             ++i;
-            if (system.process()) {
+            if (system.process<1>()) {
                 auto r = system.count('#');
                 log << "Part1: " << r << endl;
                 break;
@@ -190,7 +156,7 @@ void process(const String filename) {
         int i{0};
         while (true) {
             ++i;
-            if (system.process2()) {
+            if (system.process<2>()) {
                 auto r = system.count('#');
                 log << "Part2: " << r << endl;
                 break;
