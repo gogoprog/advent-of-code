@@ -1,9 +1,18 @@
 #include "../../common.h"
 
+#include <cstring>
+
 struct State {
-    Map<int, int> preLastSpoken;
+    /* Map<int, int> preLastSpoken; */
+    int *preLastSpoken{nullptr};
     int turn{0};
-    int last;
+    int last{0};
+
+
+    State() {
+        preLastSpoken = new int[90000000];
+        std::memset(preLastSpoken, 0, 90000000);
+    }
 
     inline void add(const int value) {
         preLastSpoken[last] = turn;
@@ -66,7 +75,7 @@ void process(const String filename) {
 }
 
 int main() {
-    process("sample.txt");
+    /* process("sample.txt"); */
     process("input.txt");
     return 0;
 }
