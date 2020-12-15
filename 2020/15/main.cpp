@@ -1,24 +1,22 @@
 #include "../../common.h"
 
 struct State {
-    Map<int, int> lastSpoken;
     Map<int, int> preLastSpoken;
     int turn{0};
-
     int last;
 
     inline void add(const int value) {
+        preLastSpoken[last] = turn;
         turn++;
-        preLastSpoken[value] = lastSpoken[value];
-        lastSpoken[value] = turn;
         last = value;
     }
 
     inline void process() {
+        auto lastv = preLastSpoken[last];
         if (preLastSpoken[last] == 0) {
             add(0);
         } else {
-            auto v = lastSpoken[last] - preLastSpoken[last];
+            auto v = turn - lastv;
             add(v);
         }
     }
@@ -28,24 +26,33 @@ void process2(const String line) {
     log << "Processing line " << line << endl;
 
     Vector<int> numbers = splitString<int>(line, ',');
+    int len = numbers.size();
 
-    State state;
+    {
+        State state;
 
-    for (auto n : numbers) {
-        state.add(n);
+        for (auto n : numbers) {
+            state.add(n);
+        }
+
+        for (int i{len}; i < 2020; ++i) {
+            state.process();
+        }
+
+        log << "Part1: " << state.last << endl;
     }
+    {
+        State state;
 
-    while (true) {
-        state.process();
-
-        if (state.turn == 2020) {
-            log << "Part1: " << state.last << endl;
+        for (auto n : numbers) {
+            state.add(n);
         }
 
-        if (state.turn == 30000000) {
-            log << "Part2: " << state.last << endl;
-            break;
+        for (int i{len}; i < 30000000; ++i) {
+            state.process();
         }
+
+        log << "Part2: " << state.last << endl;
     }
 }
 
