@@ -211,7 +211,7 @@ template <> String convert(const String a) {
 }
 
 template <typename R = String> Vector<R> splitString(const String &input, const char delim = '\n') {
-    Vector<String> result;
+    Vector<R> result;
     InputStringStream iss(input);
     String line;
 
