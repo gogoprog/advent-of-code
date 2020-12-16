@@ -147,6 +147,21 @@ template <typename T> std::ostream &operator<<(std::ostream &out, const std::set
     return out;
 }
 
+template <typename T, typename U> std::ostream &operator<<(std::ostream &out, const std::map<T, U> &v) {
+    if (!v.empty()) {
+        out << '[';
+        bool first{true};
+        for (auto &kv : v) {
+            if (!first)
+                out << ", ";
+            out << kv;
+            first = false;
+        }
+        out << "\b\b]";
+    }
+    return out;
+}
+
 std::ostream &operator<<(std::ostream &out, const Vector2 &v) {
     out << '[';
     out << v.x;
