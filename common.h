@@ -118,6 +118,68 @@ struct Vector3 {
     bool operator!=(const Vector3 &other) const {
         return !operator==(other);
     }
+
+    bool operator<(const Vector3 &other) const {
+        if (x == other.x) {
+            if (y == other.y) {
+                return z < other.z;
+            }
+
+            return y < other.y;
+        }
+        return x < other.x;
+    }
+
+    Vector3 &operator+=(const Vector3 &other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
+    }
+};
+
+struct Vector4 {
+    union {
+        struct {
+            int x;
+            int y;
+            int z;
+            int w;
+        };
+        struct {
+            int coords[4];
+        };
+    };
+
+    int &operator[](const int c) {
+        return coords[c];
+    }
+
+    bool operator==(const Vector4 &other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
+
+    bool operator!=(const Vector4 &other) const {
+        return !operator==(other);
+    }
+
+    bool operator<(const Vector4 &other) const {
+        if (x == other.x) {
+            if (y == other.y) {
+                return z < other.z;
+            }
+
+            return y < other.y;
+        }
+        return x < other.x;
+    }
+
+    Vector4 &operator+=(const Vector4 &other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
+    }
 };
 
 template <typename T> std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
