@@ -20,6 +20,18 @@ template <int D> struct Cube {
         max = {int(lines[0].length()), int(lines.size()), 0};
     }
 
+    void iterate(const Coord lmin, const Coord lmax, const int d, Coord coord,
+                 const std::function<void(const Coord &)> &func) const {
+        for (int i{lmin[d] - 1}; i <= lmax[d] + 1; ++i) {
+            coord[d] = i;
+            if (d == D - 1) {
+                func(coord);
+            } else {
+                iterate(lmin, lmax, d + 1, coord, func);
+            }
+        }
+    }
+
     void process() {
         static Coord temp;
         State nextState;
@@ -36,87 +48,31 @@ template <int D> struct Cube {
             }
         };
 
-        if constexpr (D == 3) {
-            for (int x{lmin[0] - 1}; x <= lmax[0] + 1; ++x) {
-                for (int y{lmin[1] - 1}; y <= lmax[1] + 1; ++y) {
-                    for (int z{lmin[2] - 1}; z <= lmax[2] + 1; ++z) {
-                        temp = {x, y, z};
-                        auto active = state[temp];
-                        int activeCount = countActiveNeighbors(temp);
+        iterate(lmin, lmax, 0, {}, [&](auto coord) {
+            auto active = state[coord];
+            int activeCount = countActiveNeighbors(coord);
 
-                        if (active) {
-                            write(temp, activeCount == 2 || activeCount == 3);
-                        } else {
-                            write(temp, activeCount == 3);
-                        }
-                    }
-                }
+            if (active) {
+                write(coord, activeCount == 2 || activeCount == 3);
+            } else {
+                write(coord, activeCount == 3);
             }
-        } else {
-            for (int x{lmin[0] - 1}; x <= lmax[0] + 1; ++x) {
-                for (int y{lmin[1] - 1}; y <= lmax[1] + 1; ++y) {
-                    for (int z{lmin[2] - 1}; z <= lmax[2] + 1; ++z) {
-                        for (int w{lmin[3] - 1}; w <= lmax[3] + 1; ++w) {
-                            temp = {x, y, z, w};
-                            auto active = state[temp];
-                            int activeCount = countActiveNeighbors(temp);
-
-                            if (active) {
-                                write(temp, activeCount == 2 || activeCount == 3);
-                            } else {
-                                write(temp, activeCount == 3);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        });
 
         state = nextState;
     }
 
     int countActiveNeighbors(const Coord &pos) const {
-        static Coord temp;
         int r{0};
 
-        if constexpr (D == 3) {
-            for (int x{-1}; x <= 1; ++x) {
-                temp[0] = pos[0] + x;
-                for (int y{-1}; y <= 1; ++y) {
-                    temp[1] = pos[1] + y;
-                    for (int z{-1}; z <= 1; ++z) {
-                        temp[2] = pos[2] + z;
-
-                        if (pos != temp) {
-                            auto it = state.find(temp);
-                            if (it != state.end()) {
-                                r += (it->second == true) ? 1 : 0;
-                            }
-                        }
-                    }
+        iterate(pos, pos, 0, {}, [&](auto coord) {
+            if (pos != coord) {
+                auto it = state.find(coord);
+                if (it != state.end()) {
+                    r += (it->second == true) ? 1 : 0;
                 }
             }
-        } else {
-            for (int x{-1}; x <= 1; ++x) {
-                temp[0] = pos[0] + x;
-                for (int y{-1}; y <= 1; ++y) {
-                    temp[1] = pos[1] + y;
-                    for (int z{-1}; z <= 1; ++z) {
-                        temp[2] = pos[2] + z;
-                        for (int w{-1}; w <= 1; ++w) {
-                            temp[3] = pos[3] + w;
-
-                            if (pos != temp) {
-                                auto it = state.find(temp);
-                                if (it != state.end()) {
-                                    r += (it->second == true) ? 1 : 0;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        });
 
         return r;
     }
@@ -133,30 +89,23 @@ template <int D> struct Cube {
     }
 };
 
+template <int D> void process(const Vector<String> &lines) {
+    Cube<D> cube{};
+    cube.init(lines);
+
+    for (int i{0}; i < 6; ++i) {
+        cube.process();
+    }
+
+    log << "Part" << D - 2 << " : " << cube.count() << endl;
+}
+
 void process(const String filename) {
     log << "Processing " << filename << endl;
     auto lines = getFileLines(filename);
 
-    {
-        Cube<3> cube{};
-        cube.init(lines);
-
-        for (int i{0}; i < 6; ++i) {
-            cube.process();
-        }
-
-        log << "Part1: " << cube.count() << endl;
-    }
-    {
-        Cube<4> cube{};
-        cube.init(lines);
-
-        for (int i{0}; i < 6; ++i) {
-            cube.process();
-        }
-
-        log << "Part2: " << cube.count() << endl;
-    }
+    process<3>(lines);
+    process<4>(lines);
 }
 
 int main() {
