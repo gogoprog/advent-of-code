@@ -191,6 +191,15 @@ template <typename T> std::ostream &operator<<(std::ostream &out, const std::vec
     return out;
 }
 
+template <typename T> std::ostream &operator<<(std::ostream &out, const std::list<T> &v) {
+    if (!v.empty()) {
+        out << '[';
+        std::copy(v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
+        out << "\b\b]";
+    }
+    return out;
+}
+
 template <typename T, std::size_t S> std::ostream &operator<<(std::ostream &out, const std::array<T, S> &v) {
     if (!v.empty()) {
         out << '[';
