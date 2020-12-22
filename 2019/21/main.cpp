@@ -198,63 +198,18 @@ struct System {
         for (int x = 0; x < 50; ++x) {
             for (int y = 0; y < 50; ++y) {
                 machine.load(program, {x, y});
-                auto r = machine.run();
-
-                if (r == 1) {
-                    ++count;
+                char r;
+                while((r = machine.run()) != -1) {
+                    log << r;
                 }
+                log << endl;
+
             }
         }
 
         log << "part1: " << count << endl;
     }
 
-    void run2() {
-        Map<Point, bool> map;
-
-        auto isBeam = [&](const Point &pos) {
-            auto it = map.find(pos);
-            if (it == map.end()) {
-                machine.load(program, {pos.x, pos.y});
-                auto r = machine.run();
-                auto v = r == 1;
-                map[pos] = v;
-                return v;
-            }
-
-            return it->second;
-        };
-
-        int y = 3;
-        int prevx = 10;
-        bool found{false};
-        while (!found) {
-            int x = prevx + 3;
-            while (true) {
-                if (isBeam({x, y})) {
-                    prevx = x;
-
-                    if (isBeam({x - 99, y})) {
-                        if (isBeam({x - 99, y + 99})) {
-                            if (isBeam({x, y + 99})) {
-                                auto pos = Point{x, y};
-                                auto r = (x - 99) * 10000 + y;
-                                log << "part2: " << r << endl;
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    break;
-                }
-
-                --x;
-            }
-
-            ++y;
-        }
-    }
 };
 
 void process(const String filename) {
@@ -265,7 +220,6 @@ void process(const String filename) {
     System sys;
     sys.load(line);
     sys.run();
-    sys.run2();
 }
 
 int main() {
