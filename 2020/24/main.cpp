@@ -3,26 +3,39 @@
 struct System {
     Map<Point, bool> tiles;
 
-    static Point get(const Point from, const String direction) {
+    Point min{0, 0}, max{0, 0};
 
-        if (direction == "e")
-            return {from.x + 1, from.y};
-        if (direction == "se")
-            return {from.x, from.y - 1};
-        if (direction == "ne")
-            return {from.x + 1, from.y + 1};
-        if (direction == "sw")
-            return {from.x - 1, from.y - 1};
-        if (direction == "nw")
-            return {from.x, from.y + 1};
-        if (direction == "w")
-            return {from.x - 1, from.y};
+    static Point get(const Point from, const char d, const char d2 = 0) {
+
+        switch (d) {
+            case 'w':
+                return {from.x - 1, from.y};
+            case 'e':
+                return {from.x + 1, from.y};
+
+            case 's':
+                switch (d2) {
+                    case 'e':
+                        return {from.x, from.y - 1};
+                    case 'w':
+                        return {from.x - 1, from.y - 1};
+                }
+
+            case 'n':
+                switch (d2) {
+                    case 'e':
+                        return {from.x + 1, from.y + 1};
+                    case 'w':
+                        return {from.x, from.y + 1};
+                }
+        }
 
         throw "nop";
+
         return from;
     }
 
-    int count() {
+    int count() const {
         int r{0};
         for (auto &kv : tiles) {
 
@@ -42,23 +55,29 @@ struct System {
             char c = line[i];
 
             if (c == 's' || c == 'n') {
-                point = get(point, line.substr(i, 2));
+                point = get(point, c, line[i + 1]);
                 i += 2;
             } else {
-                point = get(point, line.substr(i, 1));
+                point = get(point, c);
 
                 i++;
             }
         }
         tiles[point] = !tiles[point];
+
+        setMinMax(point);
+    }
+
+    inline void setMinMax(const Point point) {
+        min.y = std::min(min.y, point.y);
+        max.y = std::max(max.y, point.y);
+        min.x = std::min(min.x, point.x);
+        max.x = std::max(max.x, point.x);
     }
 
     void update() {
 
-        auto [min, max] = getMinMax(tiles);
-
         Map<Point, bool> newTiles;
-        auto copy = tiles;
 
         for (int x{min.x - 1}; x <= max.x + 1; ++x) {
             for (int y{min.y - 1}; y <= max.y + 1; ++y) {
@@ -68,27 +87,29 @@ struct System {
                 auto value = tiles[point];
                 int n{0};
 
-                if (tiles[get(point, "ne")])
+                if (tiles[get(point, 'n', 'e')])
                     n++;
-                if (tiles[get(point, "nw")])
+                if (tiles[get(point, 'n', 'w')])
                     n++;
-                if (tiles[get(point, "sw")])
+                if (tiles[get(point, 's', 'w')])
                     n++;
-                if (tiles[get(point, "se")])
+                if (tiles[get(point, 's', 'e')])
                     n++;
-                if (tiles[get(point, "e")])
+                if (tiles[get(point, 'e')])
                     n++;
-                if (tiles[get(point, "w")])
+                if (tiles[get(point, 'w')])
                     n++;
 
                 if (value) {
                     if (n == 0 || n > 2) {
                     } else {
                         newTiles[point] = true;
+                        setMinMax(point);
                     }
                 } else {
                     if (n == 2) {
                         newTiles[point] = true;
+                        setMinMax(point);
                     }
                 }
             }
