@@ -209,15 +209,17 @@ struct System {
         machine.load(program);
     }
 
-    void run() {
+    void run(const String scriptFilename) {
         lli r;
         lli last;
 
-        machine.setInput(getFileLines("script.txt"));
+        machine.setInput(getFileLines(scriptFilename));
 
         while ((r = machine.run()) != -1) {
             if (r == -99)
                 break;
+
+            log << char(r);
 
             last = r;
         }
@@ -226,17 +228,18 @@ struct System {
     }
 };
 
-void process(const String filename) {
+void process(const String filename, const String scriptFilename) {
     log << "Processing " << filename << endl;
     auto lines = getFileLines(filename);
     auto line = lines[0];
 
     System sys;
     sys.load(line);
-    sys.run();
+    sys.run(scriptFilename);
 }
 
 int main() {
-    process("input.txt");
+    process("input.txt", "script.txt");
+    process("input.txt", "script2.txt");
     return 0;
 }
