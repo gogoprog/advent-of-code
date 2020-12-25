@@ -4,5 +4,14 @@ OR D J
 NOT C T
 AND T J
 NOT A T
+AND H J
+##
+NOT A T
+AND D T
+OR T J
+##
+NOT B T
+AND C T
+AND D T
 OR T J
 RUN

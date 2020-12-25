@@ -224,7 +224,7 @@ struct System {
             last = r;
         }
 
-        log << "Part1: " << last << endl;
+        log << "Result: " << last << endl;
     }
 };
 
