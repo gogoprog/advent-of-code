@@ -20,15 +20,28 @@ struct Machine {
     Program program;
     lli cursor{0};
     lli relativeBase;
-    Vector<int> inputs;
+    String inputs;
     int inputIndex;
 
-    void load(const Program &pgm, const Vector<int> inputs = {}) {
+    void load(const Program &pgm) {
         program = pgm;
         cursor = 0;
         relativeBase = 0;
         inputIndex = 0;
-        this->inputs = inputs;
+    }
+
+    void setInput(const String _inputs) {
+        inputs = _inputs;
+        inputIndex = 0;
+    }
+
+    void setInput(const Vector<String> lines) {
+        inputs = "";
+        inputIndex = 0;
+        for (auto &line : lines) {
+            if (line.length() > 0 && line[0] != '#')
+                inputs += line + "\n";
+        }
     }
 
     lli &getParam(const lli pos, const String modes) {
@@ -93,7 +106,12 @@ struct Machine {
 
                 case 3: {
                     auto &a = getParam(1, modes);
-                    a = inputs[inputIndex];
+
+                    if (inputIndex >= inputs.size()) {
+                        a = 0;
+                    } else {
+                        a = inputs[inputIndex];
+                    }
                     ++inputIndex;
 
                     cursor += 2;
@@ -192,24 +210,20 @@ struct System {
     }
 
     void run() {
+        lli r;
+        lli last;
 
-        int count{0};
+        machine.setInput(getFileLines("script.txt"));
 
-        for (int x = 0; x < 50; ++x) {
-            for (int y = 0; y < 50; ++y) {
-                machine.load(program, {x, y});
-                char r;
-                while((r = machine.run()) != -1) {
-                    log << r;
-                }
-                log << endl;
+        while ((r = machine.run()) != -1) {
+            if (r == -99)
+                break;
 
-            }
+            last = r;
         }
 
-        log << "part1: " << count << endl;
+        log << "Part1: " << last << endl;
     }
-
 };
 
 void process(const String filename) {
