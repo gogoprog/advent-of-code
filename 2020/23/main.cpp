@@ -121,10 +121,10 @@ void process2(const String line, const int moves) {
 }
 
 int main() {
-    process("389125467", 10);
-    process("389125467", 100);
-    process("952316487", 100);
-    process2("389125467", 10000000);
+    /* process("389125467", 10); */
+    /* process("389125467", 100); */
+    /* process("952316487", 100); */
+    /* process2("389125467", 10000000); */
     process2("952316487", 10000000);
     return 0;
 }
