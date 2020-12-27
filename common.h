@@ -88,6 +88,10 @@ Vector2 operator*(const Vector2 &a, const int b) {
     return {a.x * b, a.y * b};
 }
 
+Vector2 operator/(const Vector2 &a, const int b) {
+    return {a.x / b, a.y / b};
+}
+
 using Point = Vector2;
 using Line = Pair<Point, Point>;
 

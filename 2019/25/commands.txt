@@ -1,0 +1,7 @@
+west
+south
+south
+south
+take asterisk
+north
+north
