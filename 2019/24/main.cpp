@@ -2,9 +2,12 @@
 
 template <bool recursive> struct System {
     using Bugs = Map<Point, bool>;
-    mutable Map<int, Bugs> bugsMap;
+    using BugsMap = Map<int, Bugs>;
+    mutable BugsMap bugsMap;
     Vector<Bugs> history;
     int size{5};
+
+    mutable int min{0}, max{0};
 
     void parse(const Vector<String> &lines) {
         for (int y{0}; y < size; ++y) {
@@ -18,32 +21,97 @@ template <bool recursive> struct System {
         }
     }
 
-    int getBugCount(const int x, const int y, const int depth = 0) const {
+    bool hasBug(const int x, const int y, const int depth) const {
+
+        if constexpr (recursive) {
+            if (x == -1) {
+                return hasBug(1, 2, depth - 1);
+            }
+            if (x == size) {
+                return hasBug(3, 2, depth - 1);
+            }
+            if (y == -1) {
+                return hasBug(2, 1, depth - 1);
+            }
+            if (y == size) {
+                return hasBug(2, 3, depth - 1);
+            }
+            if (x == 2 && y == 2) {
+                return false;
+            }
+        }
+
         if (x < 0 || y < 0 || x >= size || y >= size)
             return false;
 
-        auto it = bugsMap[depth].find({x, y});
-        if (it != bugsMap[depth].end()) {
+        auto r = bugsMap[depth][{x, y}];
 
-            return 1;
+        if (r) {
+            max = std::max(depth, max);
+            min = std::min(depth, min);
         }
 
-        return 0;
-    }
-
-    bool hasBug(const int x, const int y, const int depth) const {
-        return getBugCount(x, y, depth) > 0;
+        return r;
     }
 
     int countAdjacent(const Point point, const int depth) const {
         static const Point deltas[] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
         int r{0};
+        int d{0};
 
         for (auto &delta : deltas) {
             auto coord = point + delta;
 
-            r += getBugCount(coord.x, coord.y, depth);
+            if constexpr (recursive) {
+                if (coord == Point{2, 2}) {
+                    int c{0};
+                    switch (d) {
+                        case 0:
+                            for (int y{0}; y < size; ++y) {
+                                if (hasBug(0, y, depth + 1)) {
+                                    c++;
+                                }
+                            }
+
+                            break;
+                        case 1:
+                            for (int y{0}; y < size; ++y) {
+                                if (hasBug(size - 1, y, depth + 1)) {
+                                    c++;
+                                }
+                            }
+
+                            break;
+                        case 2:
+                            for (int x{0}; x < size; ++x) {
+                                if (hasBug(x, 0, depth + 1)) {
+                                    c++;
+                                }
+                            }
+
+                            break;
+                        case 3:
+                            for (int x{0}; x < size; ++x) {
+                                if (hasBug(x, size - 1, depth + 1)) {
+                                    c++;
+                                }
+                            }
+
+                            break;
+                    }
+
+                    r += c;
+                    d++;
+                    continue;
+                }
+            }
+
+            if (hasBug(coord.x, coord.y, depth)) {
+                r++;
+            }
+
+            d++;
         }
         return r;
     }
@@ -81,11 +149,50 @@ template <bool recursive> struct System {
         return false;
     }
 
-    void print() const {
+    void process2() {
+        BugsMap futureBugsMap;
+        for (int d{min - 1}; d <= max + 1; ++d) {
+            auto &futureBugs = futureBugsMap[d];
+
+            for (int y{0}; y < size; ++y) {
+                for (int x{0}; x < size; ++x) {
+                    if (x == 2 && y == 2)
+                        continue;
+
+                    Point p{x, y};
+
+                    int count = countAdjacent(p, d);
+
+                    if (hasBug(x, y, d)) {
+                        if (count == 1) {
+                            futureBugs[p] = true;
+                        }
+                    } else {
+                        if (count == 1 || count == 2) {
+                            futureBugs[p] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        bugsMap = futureBugsMap;
+    }
+
+    void print(const int depth = 0) const {
+        log << "Depth " << depth << endl;
+
         for (int y{0}; y < size; ++y) {
             for (int x{0}; x < size; ++x) {
 
-                if (hasBug(x, y, 0)) {
+                if constexpr (recursive) {
+                    if (x == 2 && y == 2) {
+                        log << "?";
+                        continue;
+                    }
+                }
+
+                if (hasBug(x, y, depth)) {
                     log << "#";
                 } else {
                     log << ".";
@@ -93,6 +200,12 @@ template <bool recursive> struct System {
             }
 
             log << endl;
+        }
+    }
+
+    void print2() const {
+        for (auto &kv : bugsMap) {
+            print(kv.first);
         }
     }
 
@@ -114,7 +227,17 @@ template <bool recursive> struct System {
     }
 
     lli count() const {
-        return 0;
+        int r{0};
+        for (auto &kv : bugsMap) {
+            auto &bugs = kv.second;
+
+            for (auto &kv2 : bugs) {
+                if (kv2.second) {
+                    r++;
+                }
+            }
+        }
+        return r;
     }
 };
 
@@ -140,10 +263,8 @@ void process(const String filename, const int minutes) {
         System<true> system{};
         system.parse(lines);
 
-        system.print();
-
         for (int i{0}; i < minutes; ++i) {
-            system.process();
+            system.process2();
         }
 
         log << "Part2: " << system.count() << endl;
