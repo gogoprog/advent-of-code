@@ -275,20 +275,6 @@ std::ostream &operator<<(std::ostream &out, const std::vector<int8_t> &v) {
     return out;
 }
 
-Vector<String> getFileLines(const String &filename, const char delim = '\n') {
-    Vector<String> result;
-    std::ifstream f(filename);
-    String line;
-
-    while (std::getline(f, line, delim)) {
-        result.push_back(line);
-    }
-
-    f.close();
-
-    return result;
-}
-
 template <typename A, typename B> B convert(const A a) {
 }
 
@@ -298,6 +284,20 @@ template <> int convert(const String a) {
 
 template <> String convert(const String a) {
     return a;
+}
+
+template <typename T = String> Vector<T> getFileLines(const String &filename, const char delim = '\n') {
+    Vector<T> result;
+    std::ifstream f(filename);
+    String line;
+
+    while (std::getline(f, line, delim)) {
+        result.push_back(convert<String, T>(line));
+    }
+
+    f.close();
+
+    return result;
 }
 
 template <typename R = String> Vector<R> splitString(const String &input, const char delim = '\n') {
