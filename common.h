@@ -22,8 +22,10 @@
 #include <unordered_set>
 #include <vector>
 
+#ifndef RAYLIB
 #define log std::cout
 #define endl std::endl
+#endif
 
 template <class K, class V> using Map = std::map<K, V>;
 template <class A, class B> using Pair = std::pair<A, B>;
@@ -42,6 +44,8 @@ using InputStringStream = std::istringstream;
 using ull = unsigned long long;
 using lli = long long int;
 template <class S> using Function = std::function<S>;
+
+#ifndef RAYLIB
 
 struct Vector2 {
     union {
@@ -186,6 +190,8 @@ struct Vector4 {
     }
 };
 
+#endif
+
 template <typename T> std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
     if (!v.empty()) {
         out << '[';
@@ -237,6 +243,8 @@ template <typename T, typename U> std::ostream &operator<<(std::ostream &out, co
     return out;
 }
 
+#ifndef RAYLIB
+
 std::ostream &operator<<(std::ostream &out, const Vector2 &v) {
     out << '[';
     out << v.x;
@@ -245,6 +253,8 @@ std::ostream &operator<<(std::ostream &out, const Vector2 &v) {
     out << "]";
     return out;
 }
+
+#endif
 
 template <typename A, typename B> std::ostream &operator<<(std::ostream &out, const std::pair<A, B> &v) {
     out << '[';
@@ -255,6 +265,7 @@ template <typename A, typename B> std::ostream &operator<<(std::ostream &out, co
     return out;
 }
 
+#ifndef RAYLIB
 std::ostream &operator<<(std::ostream &out, const Vector3 &v) {
     out << '[';
     out << v.x;
@@ -265,6 +276,7 @@ std::ostream &operator<<(std::ostream &out, const Vector3 &v) {
     out << "]";
     return out;
 }
+#endif
 
 std::ostream &operator<<(std::ostream &out, const std::vector<int8_t> &v) {
     if (!v.empty()) {
@@ -327,6 +339,7 @@ template <typename R, int size> Array<R, size> splitNString(const String &input,
     return result;
 }
 
+#ifndef RAYLIB
 template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &map) {
     Point minPoint{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
     Point maxPoint{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()};
@@ -341,3 +354,4 @@ template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &ma
 
     return {minPoint, maxPoint};
 }
+#endif

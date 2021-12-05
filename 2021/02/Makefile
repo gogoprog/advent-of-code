@@ -1,3 +1,7 @@
+visual:
+	g++ main2.cpp -lraylib -o outv -DRAYLIB
+	# g++ ../../backward.cpp main2.cpp -std=c++17 -lraylib -o outv -DRAYLIB -g -lbfd -ldl -D BACKWARD_HAS_BFD=1
+
 debug:
 	g++ ../../backward.cpp main.cpp -std=c++17 -o outd -g -lbfd -ldl -D BACKWARD_HAS_BFD=1
 
@@ -7,6 +11,6 @@ release:
 retail:
 	g++ main.cpp -std=c++17 -o outr -O3
 
-all: release retail debug
+all: release retail debug visual
 
 
