@@ -8,14 +8,6 @@ struct VentLine {
         return a.x == b.x || a.y == b.y;
     }
 
-    bool isHorizontal() const {
-        return a.y == b.y;
-    }
-
-    bool isVertical() const {
-        return a.x == b.x;
-    }
-
     Point getStep() const {
         auto dx = b.x - a.x;
         auto dy = b.y - a.y;
@@ -47,7 +39,6 @@ template <int part> void process(const String filename) {
     }
 
     Map<Point, int> grid;
-    Map<Point, int> grid2;
 
     for (auto &line : ventLines) {
         if (part == 2 || line.isAxisAligned()) {
