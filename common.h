@@ -22,6 +22,12 @@
 #include <unordered_set>
 #include <vector>
 
+#if __cplusplus >= 202002L
+#include <ranges>
+namespace rs = std::ranges;
+namespace rv = std::ranges::views;
+#endif
+
 #ifndef RAYLIB
 #define log std::cout
 #define endl std::endl
@@ -354,4 +360,20 @@ template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &ma
 
     return {minPoint, maxPoint};
 }
+#endif
+
+#if __cplusplus >= 202002L
+namespace std::ranges {
+struct __accumulate {
+    template <input_range _Range, class T, class BinaryOperation>
+    requires indirectly_copyable_storable < iterator_t<_Range>, range_value_t<_Range>
+    * > constexpr T operator()(_Range &&__r, T init, BinaryOperation op) const {
+        auto __first = ranges::begin(__r);
+        auto __last = ranges::end(__r);
+        return std::accumulate(__first, __last + 1, init, op);
+    }
+};
+
+inline constexpr __accumulate accumulate{};
+} // namespace std::ranges
 #endif

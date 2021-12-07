@@ -1,10 +1,6 @@
 #include "../../common.h"
 #include <limits>
 #include <numeric>
-#include <ranges>
-
-namespace rs = std::ranges;
-namespace rv = std::ranges::views;
 
 struct Crab {
     int position;
@@ -32,7 +28,7 @@ struct Context {
 
     void compute() {
         auto compute_cost = [this](auto position) {
-            return std::accumulate(crabs.begin(), crabs.end(), 0ull, [position](auto res, auto crab) {
+            return rs::accumulate(crabs, 0ull, [position](auto res, auto crab) {
                 return res + std::abs(position - crab.position) * crab.count;
             });
         };
@@ -45,7 +41,7 @@ struct Context {
 
     void compute2() {
         auto compute_cost = [this](auto position) {
-            return std::accumulate(crabs.begin(), crabs.end(), 0ull, [position](auto res, auto crab) {
+            return rs::accumulate(crabs, 0ull, [position](auto res, auto crab) {
                 ull delta = std::abs(position - crab.position);
                 ull value = delta * (delta + 1) / 2;
                 return res + value * crab.count;
