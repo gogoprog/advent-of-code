@@ -1,9 +1,71 @@
 package;
 
+#if !macro
 import js.Browser;
 import coroutine.Routine;
 import coroutine.Routine.RoutineInstruction.WaitDelay;
 import coroutine.CoroutineRunner;
+#end
+
+#if macro
+import haxe.io.Path;
+import haxe.macro.Context;
+import haxe.macro.Expr;
+import haxe.macro.Type;
+#end
+
+class Macros {
+    public static macro function getFileContent(filePath:String):ExprOf<String> {
+        if(sys.FileSystem.exists(filePath)) {
+            var fileContent:String = sys.io.File.getContent(filePath);
+            return macro $v {fileContent};
+        }  else {
+            return macro null;
+        }
+    }
+}
+
+#if !macro
+
+class Point {
+    public var x:Int;
+    public var y:Int;
+
+    public function new(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+class VentLine {
+    public var a:Point;
+    public var b:Point;
+
+    public function new(a, b) {
+        this.a = a;
+        this.b = b;
+    }
+
+    public function isAxisAligned() {
+        return a.x == b.x || a.y == b.y;
+    }
+
+    public function getStep():Point {
+        var dx = b.x - a.x;
+        var dy = b.y - a.y;
+
+        if(dx != 0) {
+            dx = Std.int(dx / Math.abs(dx));
+        }
+
+        if(dy != 0) {
+            dy = Std.int(dy / Math.abs(dy));
+        }
+
+        return new Point(dx, dy);
+    }
+}
+
 
 class Main {
     var width:Int = 1024;
@@ -12,6 +74,8 @@ class Main {
     var coroutineRunner = new CoroutineRunner();
 
     function delay():Routine {
+
+        trace(Macros.getFileContent("input.txt"));
 
         trace("coucou");
         @yield return WaitDelay(2);
@@ -66,3 +130,4 @@ class Main {
         new Main();
     }
 }
+#end
