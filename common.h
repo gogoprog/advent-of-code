@@ -318,13 +318,16 @@ template <typename T = String> Vector<T> getFileLines(const String &filename, co
     return result;
 }
 
-template <typename R = String> Vector<R> splitString(const String &input, const char delim = '\n') {
+template <typename R = String>
+Vector<R> splitString(const String &input, const char delim = '\n', const bool skip_empty = true) {
     Vector<R> result;
     InputStringStream iss(input);
     String line;
 
     while (std::getline(iss, line, delim)) {
-        result.push_back(convert<String, R>(line));
+        if (!skip_empty || !line.empty()) {
+            result.push_back(convert<String, R>(line));
+        }
     }
 
     return result;
