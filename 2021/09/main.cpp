@@ -6,6 +6,9 @@ struct Context {
         Point point;
         int value;
     };
+    struct Basin {
+        Vector<Point> points;
+    };
     Vector<String> data;
     Vector<Data> dataAsVector;
     int width;
@@ -32,6 +35,24 @@ struct Context {
         return data[p.y][p.x];
     }
 
+    void expandBasin(Basin &basin, const Point &point) {
+        for (auto &delta : directions) {
+            auto next_point = point + delta;
+
+            if (exists(next_point)) {
+                auto current_value = get(point);
+                auto next_value = get(next_point);
+
+                if (next_value != '9' && next_value > current_value) {
+                    if (rs::find(basin.points, next_point) == basin.points.end()) {
+                        basin.points.push_back(next_point);
+                        expandBasin(basin, next_point);
+                    }
+                }
+            }
+        }
+    }
+
     void run() {
         auto isLowPoint = [this](auto data) {
             return std::all_of(directions.begin(), directions.end(), [this, data](auto delta) {
@@ -42,10 +63,35 @@ struct Context {
 
         auto computeRisk = [](auto data) { return data.value - '0' + 1; };
 
-        auto view = dataAsVector | rv::filter(isLowPoint) | rv::transform(computeRisk);
-        auto risk_level = std::reduce(view.begin(), view.end(), 0);
+        {
+            auto view = dataAsVector | rv::filter(isLowPoint) | rv::transform(computeRisk);
+            auto risk_level = std::reduce(view.begin(), view.end(), 0);
 
-        log << "Part1: " << risk_level << endl;
+            log << "Part1: " << risk_level << endl;
+        }
+        {
+            auto findBasin = [this](auto data) {
+                Basin basin{};
+                basin.points.push_back(data.point);
+                expandBasin(basin, data.point);
+                return basin;
+            };
+
+            auto getSize = [](auto basin) { return basin.points.size(); };
+
+            auto view = dataAsVector | rv::filter(isLowPoint) | rv::transform(findBasin) | rv::transform(getSize);
+            Vector<int> sizes(view.begin(), view.end());
+            rs::sort(sizes);
+            auto view2 = sizes | rv::reverse | rv::take(3);
+
+            for (auto i : view2) {
+                log << i << endl;
+            }
+
+            auto result = std::reduce(view2.begin(), view2.end(), 1ull, std::multiplies<ull>());
+
+            log << "Part2: " << result << endl;
+        }
     }
 };
 
