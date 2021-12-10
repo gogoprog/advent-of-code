@@ -64,8 +64,8 @@ struct Context {
         auto computeRisk = [](auto data) { return data.value - '0' + 1; };
 
         {
-            auto view = dataAsVector | rv::filter(isLowPoint) | rv::transform(computeRisk);
-            auto risk_level = std::reduce(view.begin(), view.end(), 0);
+            auto risk_level =
+                dataAsVector | rv::filter(isLowPoint) | rv::transform(computeRisk) | ra::reduce(0, std::plus());
 
             log << "Part1: " << risk_level << endl;
         }
@@ -79,16 +79,8 @@ struct Context {
 
             auto getSize = [](auto basin) { return basin.points.size(); };
 
-            auto view = dataAsVector | rv::filter(isLowPoint) | rv::transform(findBasin) | rv::transform(getSize);
-            Vector<int> sizes(view.begin(), view.end());
-            rs::sort(sizes);
-            auto view2 = sizes | rv::reverse | rv::take(3);
-
-            for (auto i : view2) {
-                log << i << endl;
-            }
-
-            auto result = std::reduce(view2.begin(), view2.end(), 1ull, std::multiplies<ull>());
+            auto result = dataAsVector | rv::filter(isLowPoint) | rv::transform(findBasin) | rv::transform(getSize) |
+                          ra::sort | rv::reverse | rv::take(3) | ra::reduce(1ull, std::multiplies<ull>());
 
             log << "Part2: " << result << endl;
         }

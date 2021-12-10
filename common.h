@@ -367,6 +367,7 @@ template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &ma
 
 #if __cplusplus >= 202002L
 namespace std::ranges {
+
 struct __accumulate {
     template <input_range _Range, class T, class BinaryOperation>
     requires indirectly_copyable_storable < iterator_t<_Range>, range_value_t<_Range>
@@ -378,5 +379,40 @@ struct __accumulate {
 };
 
 inline constexpr __accumulate accumulate{};
+
+namespace actions {
+
+struct __sort {};
+inline constexpr __sort sort{};
+
+// :WARNING: `sort` is leaking.
+template <input_range _Range> auto &&operator|(_Range &&__r, __sort s) {
+    auto *new_vector = new std::vector(ranges::begin(__r), ranges::end(__r));
+    std::ranges::sort(*new_vector);
+    return *new_vector;
+}
+
+template <class T, class BinaryOperation> struct __reduce_view {
+    T init;
+    BinaryOperation op;
+};
+
+struct __reduce {
+    template <class T, class BinaryOperation> auto operator()(T init, BinaryOperation op) const {
+        return __reduce_view{init, op};
+    }
+};
+
+inline constexpr __reduce reduce{};
+
+template <input_range _Range, class T, class BinaryOperation>
+auto operator|(_Range &&__r, __reduce_view<T, BinaryOperation> _rv) {
+    auto result = std::reduce(ranges::begin(__r), ranges::end(__r), _rv.init, _rv.op);
+    return result;
+}
+
+} // namespace actions
+
 } // namespace std::ranges
+namespace ra = std::ranges::actions;
 #endif
