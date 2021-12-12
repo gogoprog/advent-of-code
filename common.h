@@ -6,6 +6,7 @@
 #include <deque>
 #include <fstream>
 #include <functional>
+#include <initializer_list>
 #include <iostream>
 #include <istream>
 #include <iterator>
@@ -364,6 +365,51 @@ template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &ma
     return {minPoint, maxPoint};
 }
 #endif
+
+template <class T, int max_size> class SmallVector {
+    Array<T, max_size> data;
+    int dataCount{0};
+
+  public:
+    SmallVector(std::initializer_list<T> il) {
+        for (auto value : il) {
+            push_back(value);
+        }
+    }
+
+    void push_back(const T value) {
+        data[dataCount] = value;
+        ++dataCount;
+    }
+
+    inline int size() const {
+        return dataCount;
+    }
+
+    T &back() {
+        return data[dataCount - 1];
+    }
+
+    const T &back() const {
+        return data[dataCount - 1];
+    }
+
+    auto begin() {
+        return data.begin();
+    }
+
+    auto end() {
+        return data.begin() + dataCount;
+    }
+
+    auto begin() const {
+        return data.begin();
+    }
+
+    auto end() const {
+        return data.begin() + dataCount;
+    }
+};
 
 #if __cplusplus >= 202002L
 namespace std::ranges {

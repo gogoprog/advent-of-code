@@ -2,7 +2,8 @@
 
 struct Cave {
     String name;
-    Vector<String> connections;
+    Vector<int> connections;
+    bool small;
 };
 
 static bool isSmallCave(const String &name) {
@@ -10,68 +11,67 @@ static bool isSmallCave(const String &name) {
 }
 
 struct Node {
-    Vector<String> names;
+    SmallVector<int, 16> path;
     bool didTheTrick{false};
 
-    bool hasVisited(const String &name) const {
-        return std::find(names.begin(), names.end(), name) != names.end();
-    }
-
-    int count(const String &name) const {
-        auto count = std::count_if(names.begin(), names.end(), [name](auto &other) { return other == name; });
+    inline int count(const int id) const {
+        auto count = std::count_if(path.begin(), path.end(), [id](auto &other) { return other == id; });
         return count;
-    }
-
-    String toString() const {
-        String result;
-
-        for (auto &name : names) {
-            result += name;
-            result += "-";
-        }
-        return result;
-    }
-
-    template <int part> void visit(const String &name) {
-        auto count = std::count_if(names.begin(), names.end(), [name](auto &other) { return other == name; });
     }
 };
 
 struct Context {
-    Map<String, String> connections;
-    Map<String, Cave> caves;
+    Vector<Cave> caves;
 
     void parse(const String &line) {
         auto [a, b] = splitNString<String, 2>(line, '-');
 
+        addConnection(a, b);
+        addConnection(b, a);
+    }
+
+    void addConnection(const String &a, const String &b) {
+        auto a_id = getCaveId(a);
+        auto b_id = getCaveId(b);
         if (b != "start") {
-            caves[a].connections.push_back(b);
+            caves[a_id].connections.push_back(b_id);
+        }
+    }
+
+    int getCaveId(const String &name) {
+        for (int i = 0; i < caves.size(); ++i) {
+            if (caves[i].name == name) {
+                return i;
+            }
         }
 
-        if (a != "start") {
-            caves[b].connections.push_back(a);
-        }
+        caves.push_back({name});
+        caves.back().small = isSmallCave(name);
+        return caves.size() - 1;
     }
 
     template <int part> void compute() {
         Vector<Node> solutions;
         std::queue<Node> q;
-        q.push(Node{{"start"}});
+        q.push(Node{{getCaveId("start")}});
+
+        auto end_id = getCaveId("end");
 
         while (!q.empty()) {
             const auto node = q.front();
             q.pop();
 
-            auto &name = node.names.back();
+            auto &last_cave_id = node.path.back();
 
-            if (name != "end") {
-                const auto &cave = caves[name];
+            if (last_cave_id != end_id) {
+                const auto &cave = caves[last_cave_id];
 
                 for (const auto &connection : cave.connections) {
+                    auto &next_cave = caves[connection];
 
-                    if (!isSmallCave(connection)) {
+                    if (!next_cave.small) {
                         auto copy = node;
-                        copy.names.push_back(connection);
+                        copy.path.push_back(connection);
                         q.push(copy);
                     } else {
                         auto count = node.count(connection);
@@ -79,7 +79,7 @@ struct Context {
 
                         if (condition) {
                             auto copy = node;
-                            copy.names.push_back(connection);
+                            copy.path.push_back(connection);
                             if (count == 1) {
                                 copy.didTheTrick = true;
                             }
