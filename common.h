@@ -110,6 +110,15 @@ Point operator+(const Point &a, const Point &b) {
     return {a.x + b.x, a.y + b.y};
 }
 
+Point parsePoint(const String &input) {
+    Point result;
+    InputStringStream iss{input};
+    char c;
+    iss >> result.x >> c >> result.y;
+
+    return result;
+}
+
 struct Vector3 {
     union {
         struct {
