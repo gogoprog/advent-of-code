@@ -47,6 +47,7 @@ template <class V> using Queue = std::queue<V>;
 template <class V> using PriorityQueue = std::priority_queue<V>;
 template <class V> using List = std::list<V>;
 using String = std::string;
+using StringView = std::string_view;
 using InputStringStream = std::istringstream;
 using ull = unsigned long long;
 using lli = long long int;
