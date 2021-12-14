@@ -1,9 +1,11 @@
 #include "../../common.h"
 
 struct Context {
-    String current;
-    String next;
+    String initial;
     Map<String, char> rules;
+
+    Map<String, ull> pairCount;
+    Map<String, ull> nextPairCount;
 
     void addRule(const String &rule) {
         InputStringStream iss{rule};
@@ -14,41 +16,35 @@ struct Context {
         rules[pair] = c;
     }
 
+    void init() {
+        for (int i = 0; i < initial.size() - 1; ++i) {
+            pairCount[{initial[i], initial[i + 1]}] += 1;
+        }
+    }
+
     void step() {
+        nextPairCount.clear();
 
-        next.resize(0);
-        next += current[0];
+        for (auto &kv : pairCount) {
+            auto &key = kv.first;
+            auto value = kv.second;
 
-        for (int i = 0; i < current.size() - 1; ++i) {
-
-            StringView sv{current.begin() + i, current.begin() + i + 2};
-
-            auto rule = std::find_if(rules.begin(), rules.end(), [&](auto &kv) { return kv.first == sv; });
-
-            if (rule != rules.end()) {
-                next += rule->second;
-            }
-
-            next += sv[1];
+            nextPairCount[{key[0], rules[key]}] += value;
+            nextPairCount[{rules[key], key[1]}] += value;
         }
 
-        std::swap(current, next);
+        std::swap(nextPairCount, pairCount);
     }
 
     ull compute() {
-        Set<char> chars;
-
-        for (auto &kv : rules) {
-            chars.insert(kv.first[0]);
-            chars.insert(kv.first[1]);
-            chars.insert(kv.second);
-        }
-
         Map<char, ull> counts;
 
-        for (auto ch : chars) {
-            counts[ch] = std::count(current.begin(), current.end(), ch);
+        for (auto &kv : pairCount) {
+            char ch = kv.first[0];
+            counts[ch] += kv.second;
         }
+
+        counts[initial.back()]++;
 
         auto [min, max] =
             std::minmax_element(counts.begin(), counts.end(), [](auto &a, auto &b) { return a.second < b.second; });
@@ -67,27 +63,23 @@ void process(const String filename) {
         ctx.addRule(line);
     }
 
-    ull previous = 1;
+    ctx.init();
 
-    for (auto i : rs::iota_view(0, 20)) {
+    for (auto i : rs::iota_view(0, 10)) {
         ctx.step();
-        auto now = ctx.compute();
-
-        log << now / (double)previous << endl;
-        previous = now;
     }
 
-    /* ctx.compute(); */
+    log << "Part1: " << ctx.compute() << endl;
 
-    /* for (auto i : rs::iota_view(0, 30)) { */
-    /*     ctx.step(); */
-    /* } */
+    for (auto i : rs::iota_view(0, 30)) {
+        ctx.step();
+    }
 
-    /* ctx.compute(); */
+    log << "Part2: " << ctx.compute() << endl;
 }
 
 int main() {
     process("sample.txt");
-    /* process("input.txt"); */
+    process("input.txt");
     return 0;
 }
