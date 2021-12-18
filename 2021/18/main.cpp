@@ -5,6 +5,21 @@ struct SFN {
     SFN *left{0};
     SFN *right{0};
 
+    inline static Vector<SFN *> instances{};
+
+    static SFN *create(const int value = -1) {
+        instances.push_back(new SFN{value});
+        return instances.back();
+    }
+
+    static void clear() {
+        for (auto instance : instances) {
+            delete instance;
+        }
+
+        instances.resize(0);
+    }
+
     void print() {
         if (value != -1) {
             log << value;
@@ -33,8 +48,8 @@ struct SFN {
 
             value = -1;
 
-            left = new SFN(a);
-            right = new SFN(b);
+            left = create(a);
+            right = create(b);
         }
     }
 
@@ -128,7 +143,7 @@ struct SFN {
 
     static SFN *add(SFN *left, SFN *right) {
         SFN *result;
-        result = new SFN();
+        result = create();
 
         result->left = left;
         result->right = right;
@@ -146,7 +161,7 @@ struct SFN {
         for (auto c : line) {
             switch (c) {
                 case '[': {
-                    auto new_sfn = new SFN();
+                    auto new_sfn = create();
 
                     if (current) {
                         if (current->left == nullptr) {
@@ -172,7 +187,7 @@ struct SFN {
 
                 default:
                     auto value = c - '0';
-                    auto new_sfn = new SFN{value};
+                    auto new_sfn = create(value);
 
                     if (current->left == nullptr) {
                         current->left = new_sfn;
@@ -192,14 +207,37 @@ void process(const String filename) {
     log << "Processing " << filename << endl;
     auto lines = getFileLines(filename);
 
-    auto sfn = SFN::parse(lines[0]);
+    {
+        auto sfn = SFN::parse(lines[0]);
 
-    for (auto line : lines | rv::drop(1)) {
-        auto sfn2 = SFN::parse(line);
-        sfn = SFN::add(sfn, sfn2);
+        for (auto line : lines | rv::drop(1)) {
+            auto sfn2 = SFN::parse(line);
+            sfn = SFN::add(sfn, sfn2);
+        }
+
+        log << "Part1: " << sfn->magnitude() << endl;
     }
 
-    log << "Part1: " << sfn->magnitude() << endl;
+    {
+        auto best = 0;
+        auto len = lines.size();
+
+        for (int x = 0; x < len; ++x) {
+            for (int y = 0; y < len; ++y) {
+                if (x != y) {
+                    SFN::clear();
+
+                    auto a = SFN::parse(lines[x]);
+                    auto b = SFN::parse(lines[y]);
+
+                    auto sum1 = SFN::add(a, b);
+                    best = std::max(best, sum1->magnitude());
+                }
+            }
+        }
+
+        log << "Part2: " << best << endl;
+    }
 }
 
 int main() {
