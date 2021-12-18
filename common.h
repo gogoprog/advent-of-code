@@ -52,6 +52,7 @@ using InputStringStream = std::istringstream;
 using ull = unsigned long long;
 using lli = long long int;
 template <class S> using Function = std::function<S>;
+template <class V> using UniquePtr = std::unique_ptr<V>;
 
 #ifndef RAYLIB
 
