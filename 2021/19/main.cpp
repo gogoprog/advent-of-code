@@ -90,59 +90,46 @@ struct Context {
     }
 
     void run() {
-        struct Node {
+        struct Solution {
             Map<int, Vector3> positions;
             Map<int, Transform> transforms;
         };
 
+        Map<int, Vector<int>> no_overlap;
+
         Transform transform;
         Vector3 delta;
 
-        Queue<Node> q;
+        Solution solution;
+        solution.positions[0] = {0, 0, 0};
+        solution.transforms[0] = {axisPermutations[0], axisDirections[0]};
 
-        Node start;
-        Node solution;
-        start.positions[0] = {0, 0, 0};
-        start.transforms[0] = {axisPermutations[0], axisDirections[0]};
+        while (solution.positions.size() < scanners.size()) {
 
-        q.push(start);
+            for (auto &kv : solution.positions) {
+                auto &scanner_a = scanners[kv.first];
+                auto &scanner_a_position = kv.second;
+                auto &scanner_a_transform = solution.transforms[kv.first];
+                auto &scanner_a_forbidden = no_overlap[scanner_a.id];
 
-        while (!q.empty()) {
-            const auto node = q.front();
-            q.pop();
+                for (auto &scanner_b : scanners) {
 
-            if (node.positions.size() == scanners.size()) {
-                solution = node;
-            } else {
-                auto copy = node;
-                bool mustPush = false;
+                    if (solution.positions.find(scanner_b.id) == solution.positions.end() &&
+                        rs::find(scanner_a_forbidden, scanner_b.id) == scanner_a_forbidden.end()) {
+                        auto found = findOverlap(scanner_b, scanner_a, scanner_a_transform, delta, transform);
 
-                for (auto &kv : node.positions) {
-                    auto &scanner_a = scanners[kv.first];
-                    auto scanner_a_position = kv.second;
-                    auto scanner_a_transform = copy.transforms[kv.first];
+                        if (found) {
+                            Vector3 result = delta;
 
-                    for (auto &scanner_b : scanners) {
+                            result = result + scanner_a_position;
 
-                        if (node.positions.find(scanner_b.id) == node.positions.end()) {
-                            auto found = findOverlap(scanner_b, scanner_a, scanner_a_transform, delta, transform);
-
-                            if (found) {
-                                Vector3 result = delta;
-
-                                result = result + scanner_a_position;
-
-                                copy.positions[scanner_b.id] = result;
-                                copy.transforms[scanner_b.id] = transform;
-
-                                mustPush = true;
-                            }
+                            solution.positions[scanner_b.id] = result;
+                            solution.transforms[scanner_b.id] = transform;
+                        } else {
+                            no_overlap[scanner_a.id].push_back(scanner_b.id);
+                            no_overlap[scanner_b.id].push_back(scanner_a.id);
                         }
                     }
-                }
-
-                if (mustPush) {
-                    q.push(copy);
                 }
             }
         }
@@ -152,8 +139,8 @@ struct Context {
 
             for (auto &scanner : scanners) {
                 auto sid = scanner.id;
-                auto transform = solution.transforms[sid];
-                auto position = solution.positions[sid];
+                auto &transform = solution.transforms[sid];
+                auto &position = solution.positions[sid];
 
                 for (auto &beacon : scanner.beacons) {
                     auto result = transformVector3(beacon, transform);
