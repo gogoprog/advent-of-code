@@ -137,6 +137,10 @@ struct Vector3 {
         return coords[c];
     }
 
+    const int &operator[](const int c) const {
+        return coords[c];
+    }
+
     bool operator==(const Vector3 &other) const {
         return x == other.x && y == other.y && z == other.z;
     }
@@ -163,6 +167,23 @@ struct Vector3 {
         return *this;
     }
 };
+
+Vector3 operator-(const Vector3 &a, const Vector3 &b) {
+    return {a.x - b.x, a.y - b.y, a.z - b.z};
+}
+
+Vector3 operator+(const Vector3 &a, const Vector3 &b) {
+    return {a.x + b.x, a.y + b.y, a.z + b.z};
+}
+
+Vector3 parseVector3(const String &input) {
+    Vector3 result;
+    InputStringStream iss{input};
+    char c;
+    iss >> result.x >> c >> result.y >> c >> result.z;
+
+    return result;
+}
 
 struct Vector4 {
     union {
