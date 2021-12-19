@@ -13,49 +13,12 @@ struct Transform {
     Vector3 direction;
 };
 
-int getIndex(const Vector3 &input, int value) {
-    for (int i = 0; i < 3; ++i) {
-        if (input[i] == value) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-Transform getInverted(const Transform &transform) {
-    auto &p = transform.permutation;
-    auto &d = transform.direction;
-
-    auto ip = Vector3{getIndex(p, 0), getIndex(p, 1), getIndex(p, 2)};
-
-    return {ip, {d[ip[0]], d[ip[1]], d[ip[2]]}};
-}
-
 Vector3 transformVector3(const Vector3 &input, const Vector3 &perm, const Vector3 &dir) {
     return {input[perm[0]] * dir[0], input[perm[1]] * dir[1], input[perm[2]] * dir[2]};
 }
 
 Vector3 transformVector3(const Vector3 &input, const Transform &transform) {
     return transformVector3(input, transform.permutation, transform.direction);
-}
-
-Transform getTransformed(const Transform &a, const Transform &b) {
-
-    Vector3 tmp{1, 2, 3};
-
-    tmp = transformVector3(tmp, a);
-    tmp = transformVector3(tmp, b);
-
-    Transform result;
-
-    for (int i = 0; i < 3; i++) {
-        auto v = std::abs(tmp[i]) - 1;
-        result.permutation[i] = v;
-        result.direction[v] = tmp[i] / std::abs(tmp[i]);
-    }
-
-    return result;
 }
 
 struct Scanner {
@@ -80,29 +43,30 @@ struct Context {
         }
     }
 
-    bool findOverlap(const Scanner &scanner_a, const Scanner &scanner_b, const Transform &transform,
-                     Vector3 &delta_result, Transform &transform_result) {
+    bool findOverlap(const Scanner &scanner_a, const Scanner &scanner_b, const Transform &tt, Vector3 &delta_result,
+                     Transform &transform_result) {
 
-        bool found = false;
         for (auto &permutation : axisPermutations) {
             for (auto &direction : axisDirections) {
 
                 auto this_transform = Transform{permutation, direction};
                 for (auto &beacon_a : scanner_a.beacons) {
-                    auto transformed_beacon = transformVector3(beacon_a, transform);
-                    transformed_beacon = transformVector3(transformed_beacon, this_transform);
+                    auto transformed_beacon = transformVector3(beacon_a, this_transform);
 
                     for (auto &beacon_b : scanner_b.beacons) {
-                        auto delta = beacon_b - transformed_beacon;
+
+                        auto transformed_beacon_b = transformVector3(beacon_b, tt);
+                        auto delta = transformed_beacon_b - transformed_beacon;
 
                         auto matching = 0;
 
                         for (auto &other_beacon_a : scanner_a.beacons) {
-                            auto other_transformed_beacon = transformVector3(other_beacon_a, transform);
-                            other_transformed_beacon = transformVector3(other_transformed_beacon, this_transform);
+                            auto other_transformed_beacon = transformVector3(other_beacon_a, this_transform);
                             for (auto &other_beacon_b : scanner_b.beacons) {
                                 if (other_beacon_b != beacon_b && other_beacon_a != beacon_a) {
-                                    auto other_delta = other_beacon_b - other_transformed_beacon;
+
+                                    auto other_transformed_beacon_b = transformVector3(other_beacon_b, tt);
+                                    auto other_delta = other_transformed_beacon_b - other_transformed_beacon;
 
                                     if (delta == other_delta) {
                                         matching++;
@@ -112,26 +76,15 @@ struct Context {
                         }
 
                         if (matching >= 11) {
-
-                            if (found) {
-
-                                if (permutation != transform_result.permutation ||
-                                    direction != transform_result.direction) {
-                                    log << "Hey it is different" << endl;
-                                }
-                            }
                             transform_result = {permutation, direction};
                             delta_result = delta;
 
                             return true;
-                            found = true;
                         }
                     }
                 }
             }
         }
-
-        return found;
 
         return false;
     }
@@ -175,20 +128,13 @@ struct Context {
                             auto found = findOverlap(scanner_b, scanner_a, scanner_a_transform, delta, transform);
 
                             if (found) {
-                                Vector3 result;
-
-                                result = transformVector3(delta, (scanner_a_transform));
+                                Vector3 result = delta;
 
                                 result = result + scanner_a_position;
 
-                                log << "=> " << result << endl;
-
                                 copy.positions[scanner_b.id] = result;
-
-                                transform = getTransformed(transform ,getInverted(scanner_a_transform));
-                                /* transform = getTransformed((scanner_a_transform), transform); */
-
                                 copy.transforms[scanner_b.id] = transform;
+
                                 mustPush = true;
                             }
                         }
@@ -208,8 +154,9 @@ struct Context {
                 auto sid = scanner.id;
                 auto transform = solution.transforms[sid];
                 auto position = solution.positions[sid];
+
                 for (auto &beacon : scanner.beacons) {
-                    auto result = transformVector3(beacon, getInverted(transform));
+                    auto result = transformVector3(beacon, transform);
                     result = result + position;
 
                     all_beacons.insert(result);
@@ -217,6 +164,22 @@ struct Context {
             }
 
             log << "Part1: " << all_beacons.size() << endl;
+        }
+
+        {
+
+            ull best = 0;
+
+            for (auto &kv : solution.positions) {
+                for (auto &kv2 : solution.positions) {
+                    auto delta = kv2.second - kv.second;
+                    ull manhattan = std::abs(delta.x) + std::abs(delta.y) + std::abs(delta.z);
+
+                    best = std::max(best, manhattan);
+                }
+            }
+
+            log << "Part2: " << best << endl;
         }
     }
 };
@@ -233,6 +196,6 @@ void process(const String filename) {
 
 int main() {
     process("sample.txt");
-    /* process("input.txt"); */
+    process("input.txt");
     return 0;
 }
