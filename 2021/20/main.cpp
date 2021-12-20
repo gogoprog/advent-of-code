@@ -18,7 +18,7 @@ template <typename T> std::tuple<Point, Point> getMinMax2(const Map<Point, T> &m
     return {minPoint, maxPoint};
 }
 
-struct Context {
+template <bool blink> struct Context {
     String algo;
     Map<Point, bool> grid;
     Map<Point, bool> nextGrid;
@@ -31,6 +31,24 @@ struct Context {
         }
     }
 
+    bool getValue(const Point &p) {
+        auto it = grid.find(p);
+
+        if (it == grid.end()) {
+            if constexpr (blink) {
+                if ((index % 2)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        return it->second;
+    }
+
     uint getAlgoNumber(const Point &p) {
         std::bitset<9> bits;
 
@@ -38,7 +56,8 @@ struct Context {
         for (int y = p.y - 1; y <= p.y + 1; ++y) {
             for (int x = p.x - 1; x <= p.x + 1; ++x) {
                 auto p2 = Point{x, y};
-                bits.set(8 - i, grid[p2]);
+
+                bits.set(8 - i, getValue(p2));
                 ++i;
             }
         }
@@ -49,11 +68,12 @@ struct Context {
     void step() {
         const auto [minPoint, maxPoint] = getMinMax(grid);
 
-        int extra = 3;
+        int extra = 2;
 
         for (int y = minPoint.second - extra; y <= maxPoint.second + extra; y++) {
             for (int x = minPoint.first - extra; x <= maxPoint.first + extra; ++x) {
                 auto p = Point{x, y};
+
                 auto algon = getAlgoNumber(p);
 
                 auto next_value = (algo[algon] == '#');
@@ -63,8 +83,6 @@ struct Context {
 
         std::swap(grid, nextGrid);
 
-        removeBorder();
-
         index++;
     }
 
@@ -72,14 +90,13 @@ struct Context {
         auto result = 0;
         const auto [minPoint, maxPoint] = getMinMax(grid);
 
-        int intra = 2;
-
-        nextGrid.clear();
+        int intra = 0;
 
         for (int y = minPoint.second + intra; y <= maxPoint.second - intra; y++) {
             for (int x = minPoint.first + intra; x <= maxPoint.first - intra; ++x) {
+                auto p = Point{x, y};
 
-                if (grid[{x, y}]) {
+                if (grid[p]) {
                     result++;
                 }
             }
@@ -88,32 +105,7 @@ struct Context {
         return result;
     }
 
-    void removeBorder() {
-        auto result = 0;
-        const auto [minPoint, maxPoint] = getMinMax(grid);
-
-        if(index % 2 == 0) {
-            return;
-        }
-
-        int intra = 3;
-
-        nextGrid.clear();
-
-        for (int y = minPoint.second + intra; y <= maxPoint.second - intra; y++) {
-            for (int x = minPoint.first + intra; x <= maxPoint.first - intra; ++x) {
-
-                if (grid[{x, y}]) {
-                    nextGrid[{x, y}] = true;
-                }
-            }
-        }
-
-        grid = nextGrid;
-    }
-
     void draw() {
-
         const auto [minPoint, maxPoint] = getMinMax(grid);
         for (int y = minPoint.second; y <= maxPoint.second; y++) {
             for (int x = minPoint.first; x <= maxPoint.first; ++x) {
@@ -124,11 +116,11 @@ struct Context {
     }
 };
 
-void process(const String filename) {
+template <bool blink> void process(const String filename) {
     log << "Processing " << filename << endl;
     auto lines = getFileLines(filename);
 
-    Context ctx{lines[0]};
+    Context<blink> ctx{lines[0]};
 
     int y = 0;
     for (auto &line : lines | rv::drop(2)) {
@@ -139,22 +131,17 @@ void process(const String filename) {
     ctx.step();
     ctx.step();
 
-    ctx.draw();
-
     log << "Part1: " << ctx.compute() << endl;
-
 
     for (auto i : rs::iota_view(2, 50)) {
         ctx.step();
-        ctx.draw();
-        system("read");
     }
 
     log << "Part2: " << ctx.compute() << endl;
 }
 
 int main() {
-    /* process("sample.txt"); */
-    process("input.txt");
+    process<false>("sample.txt");
+    process<true>("input.txt");
     return 0;
 }
