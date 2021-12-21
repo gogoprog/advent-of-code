@@ -450,6 +450,56 @@ template <class T, int max_size> class SmallVector {
     }
 };
 
+template <class K, class V> class Dictionary {
+  private:
+    Vector<K> keys;
+    Vector<V> values;
+
+    int getIndex(const K &key) const {
+        auto it = std::find(keys.begin(), keys.end(), key);
+        return it - keys.begin();
+    }
+
+  public:
+    V &operator[](const K &key) {
+        auto it = std::find(keys.begin(), keys.end(), key);
+        auto index = 0;
+        if (it == keys.end()) {
+            keys.push_back(key);
+            values.push_back({});
+            index = keys.size() - 1;
+        } else {
+            index = it - keys.begin();
+        }
+
+        return values[index];
+    }
+
+    const V &operator[](const K &key) const {
+        auto it = std::find(keys.begin(), keys.end(), key);
+        auto index = 0;
+        if (it == keys.end()) {
+            throw "No key found";
+        } else {
+            index = it - keys.begin();
+        }
+
+        return values[index];
+    }
+
+    int getSize() const {
+        return keys.size();
+    }
+
+    K &getKeyFromIndex(const int index) {
+        return keys[index];
+    }
+
+    V &getValueFromIndex(const int index) {
+        return values[index];
+    }
+};
+
 #if __cplusplus >= 202002L
 namespace std::ranges {
 
