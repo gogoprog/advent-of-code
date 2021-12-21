@@ -86,9 +86,17 @@ struct Context {
     }
 
     void run2() {
-        Dictionary<State, ull> games;
+        struct Count {
+            ull current{0};
+            ull change{0};
+        };
 
-        games[{players, 0}]++;
+
+        Dictionary<State, Count> games;
+        games.reserve(100000);
+
+        games[{players, 0}].current = 1;
+        games[{players, 0}].change = 0;
 
         bool playing{true};
 
@@ -96,17 +104,17 @@ struct Context {
 
             playing = false;
 
-            auto games_copy = games;
+            auto len = games.getSize();
 
-            log << games_copy.getSize() << endl;
+            log << len << endl;
 
-            for (int i{0}; i < games_copy.getSize(); ++i) {
-                const auto &state = games_copy.getKeyFromIndex(i);
-                const auto count = games_copy.getValueFromIndex(i);
+            for (int i{0}; i < len; ++i) {
+                const auto &state = games.getKeyFromIndex(i);
+                auto &count = games.getValueFromIndex(i);
 
-                if (state.finished == false && count > 0) {
-
-                    games[state] -= count;
+                if (state.finished == false && count.current > 0) {
+                    auto current = count.current;
+                    count.change -= current;
 
                     for (int i = 1; i <= 3; ++i) {
                         for (int j = 1; j <= 3; ++j) {
@@ -123,13 +131,19 @@ struct Context {
 
                                 copy.turn = 1 - copy.turn;
 
-                                games[copy] += count;
+                                games[copy].change += current;
 
                                 playing = true;
                             }
                         }
                     }
                 }
+            }
+
+            for (int i{0}; i < games.getSize(); ++i) {
+                auto &count = games.getValueFromIndex(i);
+                count.current += count.change;
+                count.change = 0;
             }
         }
 
@@ -141,15 +155,13 @@ struct Context {
             const auto count = games.getValueFromIndex(i);
 
             if (state.players[0].score >= 21) {
-                p1wins += count;
+                p1wins += count.current;
             } else {
-                p2wins += count;
+                p2wins += count.current;
             }
         }
 
-        log << "Part2: " << endl;
-        log << p1wins << endl;
-        log << p2wins << endl;
+        log << "Part2: " << std::max(p1wins, p2wins) << endl;
     }
 };
 

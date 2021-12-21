@@ -498,6 +498,16 @@ template <class K, class V> class Dictionary {
     V &getValueFromIndex(const int index) {
         return values[index];
     }
+
+    void clear() {
+        keys.resize(0);
+        values.resize(0);
+    }
+
+    void reserve(const int value) {
+        keys.reserve(value);
+        values.reserve(value);
+    }
 };
 
 #if __cplusplus >= 202002L
