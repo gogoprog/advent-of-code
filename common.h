@@ -44,6 +44,7 @@ template <class V> using Set = std::set<V>;
 template <class V> using UnorderedSet = std::unordered_set<V>;
 template <class T> using Grid = Map<int, Map<int, T>>;
 template <class V> using Queue = std::queue<V>;
+template <class V> using Dequeu = std::deque<V>;
 template <class V> using PriorityQueue = std::priority_queue<V>;
 template <class V> using List = std::list<V>;
 using String = std::string;
@@ -410,6 +411,8 @@ template <class T, int max_size> class SmallVector {
     int dataCount{0};
 
   public:
+    SmallVector() = default;
+
     SmallVector(std::initializer_list<T> il) {
         for (auto value : il) {
             push_back(value);
