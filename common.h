@@ -490,6 +490,28 @@ template <class K, class V> class Dictionary {
         return values[index];
     }
 
+    void set(const K &key, const V &value) {
+        auto it = std::find(keys.begin(), keys.end(), key);
+        auto index = 0;
+        if (it == keys.end()) {
+            keys.push_back(key);
+            values.push_back({});
+            index = keys.size() - 1;
+        } else {
+            index = it - keys.begin();
+        }
+        values[index] = value;
+    }
+
+    bool has(const K &key) const {
+        auto it = std::find(keys.begin(), keys.end(), key);
+        if (it == keys.end()) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     int getSize() const {
         return keys.size();
     }
