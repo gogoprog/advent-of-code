@@ -8,10 +8,6 @@ struct Pod {
         return position.y == 1;
     }
 
-    bool operator==(const Pod &other) const {
-        return type == other.type && position == other.position;
-    }
-
     bool operator<(const Pod &other) const {
 
         if (type == other.type) {
@@ -21,7 +17,7 @@ struct Pod {
     }
 };
 
-struct Context {
+template <int depth> struct Context {
     Map<Point, bool> walls;
     Vector<Pod> pods;
 
@@ -49,8 +45,6 @@ struct Context {
         Vector<Pod> pods;
         int cost = 0;
 
-        Vector<int> history;
-
         bool operator<(const Node &other) const {
 
             if (cost == other.cost) {
@@ -75,14 +69,15 @@ struct Context {
                 return false;
             }
 
-            if (pod.position.y == 3)
-                return true;
+            for (int d = 0; d < depth; d++) {
+                auto t = getPodTypeAtPosition({roomx, 2 + d});
 
-            if (getPodTypeAtPosition({roomx, 3}) == pod.type) {
-                return true;
+                if (t && t != pod.type) {
+                    return false;
+                }
             }
 
-            return false;
+            return true;
         }
 
         bool canCrossTo(const Pod &pod, const int x) const {
@@ -114,11 +109,15 @@ struct Context {
             if (!canCrossTo(pod, x))
                 return false;
 
-            if (pod.position.y == 2 || getPodTypeAtPosition({pod.position.x, 2}) == 0) {
-                return true;
+            for (int y = pod.position.y - 1; y >= 2; y--) {
+                auto t = getPodTypeAtPosition({pod.position.x, y});
+
+                if (t) {
+                    return false;
+                }
             }
 
-            return false;
+            return true;
         }
 
         bool canMoveToItsRoom(const Pod &pod, Point &target) const {
@@ -126,7 +125,6 @@ struct Context {
 
             auto roomx = roomXs[pod.type - 'A'];
 
-            /* if (pod.position.y == 1 || canMoveToHallway(pod, roomx)) { */
             if (pod.position.y == 1) {
 
                 if (pod.position.x == roomx)
@@ -136,18 +134,22 @@ struct Context {
                     return false;
                 }
 
-                auto r2 = getPodTypeAtPosition({roomx, 2});
-                auto r3 = getPodTypeAtPosition({roomx, 3});
+                bool found = false;
 
-                if (!r2 && !r3) {
-                    target = {roomx, 3};
-                    return true;
+                for (int y = 2; y < 2 + depth; y++) {
+                    auto t = getPodTypeAtPosition({roomx, y});
+                    if (!t) {
+                        found = true;
+                        target = {roomx, y};
+                    } else {
+                        if (t != pod.type) {
+                            found = false;
+                            break;
+                        }
+                    }
                 }
 
-                if (!r2 && r3 == pod.type) {
-                    target = {roomx, 2};
-                    return true;
-                }
+                return found;
             }
 
             return false;
@@ -171,7 +173,7 @@ struct Context {
 
                 auto expected = 'A' + t;
 
-                for (int c = 0; c < 2; ++c) {
+                for (int c = 0; c < depth; ++c) {
                     auto pos = Point{3 + t * 2, 2 + c};
 
                     if (expected != getPodTypeAtPosition(pos)) {
@@ -202,7 +204,7 @@ struct Context {
 
     void draw(const Vector<Pod> &pods) {
 
-        for (int y = 0; y < 5; ++y) {
+        for (int y = 0; y < 3 + depth; ++y) {
             for (int x = 0; x < 13; ++x) {
 
                 auto pos = Point{x, y};
@@ -234,7 +236,6 @@ struct Context {
     }
 
     void run() {
-
         const auto hallwayXs = {1, 2, 4, 6, 8, 10, 11};
         Node start;
         Node best;
@@ -246,12 +247,10 @@ struct Context {
         PriorityQueue<Node> q;
         q.push(start);
 
-        /* Vector<Vector<Pod>> visited; */
-        /* Map<Vector<Pod>, int> ivisited; */
+        Vector<Vector<Pod>> visited;
+        Map<Vector<Pod>, int> ivisited;
 
         Map<Vector<Pod>, int> visitedCosts;
-
-        draw(start);
 
         while (!q.empty()) {
             const auto node = q.top();
@@ -263,19 +262,10 @@ struct Context {
                 continue;
             }
 
-            /* if (visitedCosts[node.pods] == 0) { */
-            /*     visited.push_back(node.pods); */
-            /*     ivisited[node.pods] = visited.size() - 1; */
-            /* } */
-
             visitedCosts[node.pods] = node.cost;
 
             if (best.cost < node.cost)
                 continue;
-
-            /* log << node.cost << endl; */
-            /* draw(node); */
-            /* system("read"); */
 
             if (!node.isCompleted()) {
 
@@ -287,14 +277,12 @@ struct Context {
 
                             if (node.canMoveToItsRoom(pod, target)) {
                                 auto copy = node;
-                                /* copy.history.push_back(ivisited[node.pods]); */
                                 copy.moveTo(pod_index, target);
                                 q.push(copy);
                             }
 
                             else if (node.canMoveToHallway(pod, x)) {
                                 auto copy = node;
-                                /* copy.history.push_back(ivisited[node.pods]); */
                                 copy.moveTo(pod_index, {x, 1});
                                 q.push(copy);
                             }
@@ -310,21 +298,23 @@ struct Context {
             }
         }
 
-        log << "Part1: " << best.cost << endl;
+        log << "Result: " << best.cost << endl;
     }
 };
 
-void process(const String filename) {
+template <int depth> void process(const String filename) {
     log << "Processing " << filename << endl;
     auto lines = getFileLines(filename);
 
-    Context ctx;
+    Context<depth> ctx;
     ctx.init(lines);
     ctx.run();
 }
 
 int main() {
-    process("sample.txt");
-    process("input.txt");
+    process<2>("sample.txt");
+    process<2>("input.txt");
+    process<4>("sample2.txt");
+    process<4>("input2.txt");
     return 0;
 }
