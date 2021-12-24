@@ -271,20 +271,23 @@ template <int depth> struct Context {
 
                 int pod_index = 0;
                 for (auto &pod : node.pods) {
-                    for (auto x : hallwayXs) {
 
-                        if (!node.isArrived(pod)) {
+                    if (!node.isArrived(pod)) {
 
-                            if (node.canMoveToItsRoom(pod, target)) {
-                                auto copy = node;
-                                copy.moveTo(pod_index, target);
-                                q.push(copy);
-                            }
+                        if (node.canMoveToItsRoom(pod, target)) {
+                            auto copy = node;
+                            copy.moveTo(pod_index, target);
+                            q.push(copy);
+                        }
 
-                            else if (node.canMoveToHallway(pod, x)) {
-                                auto copy = node;
-                                copy.moveTo(pod_index, {x, 1});
-                                q.push(copy);
+                        else {
+
+                            for (auto x : hallwayXs) {
+                                if (node.canMoveToHallway(pod, x)) {
+                                    auto copy = node;
+                                    copy.moveTo(pod_index, {x, 1});
+                                    q.push(copy);
+                                }
                             }
                         }
                     }
