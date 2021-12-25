@@ -163,9 +163,9 @@ void process(Context &ctx, const Array<Set<int>, 15> &true_zs, const Vector<int>
         for (auto i : current)
             log << i;
         log << endl;
+        return;
     }
 
-    /* for (int i = 9; i >= 1; i--) { */
     for (int i = 1; i <= 9; ++i) {
 
         ctx.registers['z'] = 0;
