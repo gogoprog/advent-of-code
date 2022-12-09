@@ -1,7 +1,88 @@
-#include "raylib.h"
-#include "raymath.h"
-
 #include "../../common.h"
+
+using Visited = Map<Coord, bool>;
+
+#ifdef RAYLIB
+namespace renderer {
+const int screenWidth = 1280;
+const int screenHeight = 720;
+Camera3D camera = {0};
+
+void initialize() {
+    InitWindow(screenWidth, screenHeight, "day02");
+    camera.position = {60.0f, 150.0f, 120.0f};
+    camera.target = {60.0f, 0.0f, 50.0f};
+    camera.up = {0.0f, 1.0f, 0.0f};
+    camera.fovy = 45.0f;
+    camera.projection = CAMERA_PERSPECTIVE;
+
+    SetTargetFPS(144);
+}
+
+template <int size> struct Context {
+    Array<Coord, size> sources;
+    Array<Coord, size> destinations;
+    Array<Vector2, size> items;
+
+    void init() {
+
+        for (int i = 0; i < size; ++i) {
+            destinations[i].x = 0;
+            destinations[i].y = 0;
+        }
+
+        Visited v{};
+        draw(v);
+
+        sleep(3);
+    }
+
+    void step(Visited &visited, const Array<Coord, size> &targets) {
+        static int skip = 0;
+
+        if (skip++ % 10)
+            return;
+
+        sources = destinations;
+        destinations = targets;
+
+        for (int i = 0; i < size; ++i) {
+            items[i].x = destinations[i].x;
+            items[i].y = destinations[i].y;
+        }
+
+        draw(visited);
+
+        /* sleep(1); */
+    }
+
+    void draw(Visited &visited) {
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        camera.target = Vector3Lerp(camera.target, {items[0].x, 0, items[0].y}, 0.01f);
+        BeginMode3D(camera);
+
+        DrawGrid(1000, 10.0f);
+
+        for (auto &kv : visited) {
+            if (kv.second) {
+                DrawSphere({kv.first.x, 0, kv.first.y}, 0.3, {100, 5, 5, 255});
+            }
+        }
+
+        for (auto &item : items) {
+            DrawSphere({item.x, 0, item.y}, 1, {20, 20, 200, 255});
+        }
+
+        EndMode3D();
+        EndDrawing();
+    }
+};
+
+} // namespace renderer
+
+#endif
 
 Map<char, Coord> deltas{{'R', Coord{1, 0}}, {'L', {-1, 0}}, {'U', {0, -1}}, {'D', {0, 1}}};
 
@@ -9,12 +90,20 @@ template <int size> struct Context {
     Map<Coord, bool> visited;
     Array<Coord, size> knots;
 
+#ifdef RAYLIB
+    renderer::Context<size> renderer;
+#endif
+
     void init() {
         visited[{0, 0}] = true;
 
         for (auto &knot : knots) {
             knot.set(0, 0);
         }
+
+#ifdef RAYLIB
+        renderer.init();
+#endif
     }
 
     void follow(const int index, const Coord parent_move) {
@@ -66,6 +155,10 @@ template <int size> struct Context {
             visited[knots.back()] = true;
 
             /* draw(); */
+
+#if RAYLIB
+            renderer.step(visited, knots);
+#endif
         }
     }
 
@@ -143,6 +236,9 @@ void process(const String filename) {
 }
 
 int main() {
+#ifdef RAYLIB
+    renderer::initialize();
+#endif
     process("sample.txt");
     process("sample2.txt");
     process("input.txt");

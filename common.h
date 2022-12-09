@@ -1,3 +1,8 @@
+#ifdef RAYLIB
+#include "raylib.h"
+#include "raymath.h"
+#endif
+
 #include <algorithm>
 #include <array>
 #include <bitset>
