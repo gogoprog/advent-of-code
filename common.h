@@ -29,10 +29,8 @@ namespace rs = std::ranges;
 namespace rv = std::ranges::views;
 #endif
 
-#ifndef RAYLIB
 #define log std::cout
 #define endl std::endl
-#endif
 
 template <class K, class V> using Map = std::map<K, V>;
 template <class A, class B> using Pair = std::pair<A, B>;
@@ -55,9 +53,7 @@ using lli = long long int;
 template <class S> using Function = std::function<S>;
 template <class V> using UniquePtr = std::unique_ptr<V>;
 
-#ifndef RAYLIB
-
-struct Vector2 {
+struct Point {
     union {
         struct {
             int x;
@@ -76,15 +72,15 @@ struct Vector2 {
         return coords[c];
     }
 
-    bool operator==(const Vector2 &other) const {
+    bool operator==(const Point &other) const {
         return x == other.x && y == other.y;
     }
 
-    bool operator!=(const Vector2 &other) const {
+    bool operator!=(const Point &other) const {
         return !operator==(other);
     }
 
-    bool operator<(const Vector2 &other) const {
+    bool operator<(const Point &other) const {
         if (x == other.x) {
             return y < other.y;
         }
@@ -96,7 +92,7 @@ struct Vector2 {
         this->y = y;
     }
 
-    Vector2 &operator+=(const Vector2 &other) {
+    Point &operator+=(const Point &other) {
         x += other.x;
         y += other.y;
         return *this;
@@ -107,23 +103,22 @@ struct Vector2 {
     }
 };
 
-Vector2 operator+(const Vector2 &a, const Vector2 &b) {
+Point operator+(const Point &a, const Point &b) {
     return {a.x + b.x, a.y + b.y};
 }
 
-Vector2 operator-(const Vector2 &a, const Vector2 &b) {
+Point operator-(const Point &a, const Point &b) {
     return {a.x - b.x, a.y - b.y};
 }
 
-Vector2 operator*(const Vector2 &a, const int b) {
+Point operator*(const Point &a, const int b) {
     return {a.x * b, a.y * b};
 }
 
-Vector2 operator/(const Vector2 &a, const int b) {
+Point operator/(const Point &a, const int b) {
     return {a.x / b, a.y / b};
 }
 
-using Point = Vector2;
 using Line = Pair<Point, Point>;
 
 Point parsePoint(const String &input) {
@@ -135,7 +130,7 @@ Point parsePoint(const String &input) {
     return result;
 }
 
-struct Vector3 {
+struct Point3 {
     union {
         struct {
             int x;
@@ -155,15 +150,15 @@ struct Vector3 {
         return coords[c];
     }
 
-    bool operator==(const Vector3 &other) const {
+    bool operator==(const Point3 &other) const {
         return x == other.x && y == other.y && z == other.z;
     }
 
-    bool operator!=(const Vector3 &other) const {
+    bool operator!=(const Point3 &other) const {
         return !operator==(other);
     }
 
-    bool operator<(const Vector3 &other) const {
+    bool operator<(const Point3 &other) const {
         if (x == other.x) {
             if (y == other.y) {
                 return z < other.z;
@@ -174,14 +169,14 @@ struct Vector3 {
         return x < other.x;
     }
 
-    Vector3 &operator+=(const Vector3 &other) {
+    Point3 &operator+=(const Point3 &other) {
         x += other.x;
         y += other.y;
         z += other.z;
         return *this;
     }
 
-    Vector3 &operator-=(const Vector3 &other) {
+    Point3 &operator-=(const Point3 &other) {
         x -= other.x;
         y -= other.y;
         z -= other.z;
@@ -189,16 +184,16 @@ struct Vector3 {
     }
 };
 
-Vector3 operator-(const Vector3 &a, const Vector3 &b) {
+Point3 operator-(const Point3 &a, const Point3 &b) {
     return {a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
-Vector3 operator+(const Vector3 &a, const Vector3 &b) {
+Point3 operator+(const Point3 &a, const Point3 &b) {
     return {a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
-Vector3 parseVector3(const String &input) {
-    Vector3 result;
+Point3 parsePoint3(const String &input) {
+    Point3 result;
     InputStringStream iss{input};
     char c;
     iss >> result.x >> c >> result.y >> c >> result.z;
@@ -206,7 +201,7 @@ Vector3 parseVector3(const String &input) {
     return result;
 }
 
-struct Vector4 {
+struct Point4 {
     union {
         struct {
             int x;
@@ -223,15 +218,15 @@ struct Vector4 {
         return coords[c];
     }
 
-    bool operator==(const Vector4 &other) const {
+    bool operator==(const Point4 &other) const {
         return x == other.x && y == other.y && z == other.z;
     }
 
-    bool operator!=(const Vector4 &other) const {
+    bool operator!=(const Point4 &other) const {
         return !operator==(other);
     }
 
-    bool operator<(const Vector4 &other) const {
+    bool operator<(const Point4 &other) const {
         if (x == other.x) {
             if (y == other.y) {
                 return z < other.z;
@@ -242,7 +237,7 @@ struct Vector4 {
         return x < other.x;
     }
 
-    Vector4 &operator+=(const Vector4 &other) {
+    Point4 &operator+=(const Point4 &other) {
         x += other.x;
         y += other.y;
         z += other.z;
@@ -250,6 +245,15 @@ struct Vector4 {
     }
 };
 
+using Coord = Point;
+using Coord2 = Point;
+using Coord3 = Point3;
+using Coord4 = Point4;
+
+#ifndef RAYLIB
+using Vector2 = Point;
+using Vector3 = Point3;
+using Vector4 = Point4;
 #endif
 
 template <typename T> std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
@@ -303,9 +307,7 @@ template <typename T, typename U> std::ostream &operator<<(std::ostream &out, co
     return out;
 }
 
-#ifndef RAYLIB
-
-std::ostream &operator<<(std::ostream &out, const Vector2 &v) {
+std::ostream &operator<<(std::ostream &out, const Point &v) {
     out << '[';
     out << v.x;
     out << ", ";
@@ -313,8 +315,6 @@ std::ostream &operator<<(std::ostream &out, const Vector2 &v) {
     out << "]";
     return out;
 }
-
-#endif
 
 template <typename A, typename B> std::ostream &operator<<(std::ostream &out, const std::pair<A, B> &v) {
     out << '[';
@@ -325,8 +325,7 @@ template <typename A, typename B> std::ostream &operator<<(std::ostream &out, co
     return out;
 }
 
-#ifndef RAYLIB
-std::ostream &operator<<(std::ostream &out, const Vector3 &v) {
+std::ostream &operator<<(std::ostream &out, const Point3 &v) {
     out << '[';
     out << v.x;
     out << ", ";
@@ -336,7 +335,6 @@ std::ostream &operator<<(std::ostream &out, const Vector3 &v) {
     out << "]";
     return out;
 }
-#endif
 
 std::ostream &operator<<(std::ostream &out, const std::vector<int8_t> &v) {
     if (!v.empty()) {
@@ -402,7 +400,6 @@ template <typename R, int size> Array<R, size> splitNString(const String &input,
     return result;
 }
 
-#ifndef RAYLIB
 template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &map) {
     Point minPoint{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
     Point maxPoint{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()};
@@ -417,7 +414,6 @@ template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &ma
 
     return {minPoint, maxPoint};
 }
-#endif
 
 template <class T, int max_size> class SmallVector {
     Array<T, max_size> data;

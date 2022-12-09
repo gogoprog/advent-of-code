@@ -1,3 +1,6 @@
+visual:
+	g++ main.cpp -std=c++20 -lraylib -o outv -DRAYLIB
+
 debug:
 	g++ ../../backward.cpp main.cpp -std=c++20 -o outd -g -lbfd -ldl -D BACKWARD_HAS_BFD=1
 

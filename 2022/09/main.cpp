@@ -1,10 +1,13 @@
+#include "raylib.h"
+#include "raymath.h"
+
 #include "../../common.h"
 
-Map<char, Vector2> deltas{{'R', Vector2{1, 0}}, {'L', {-1, 0}}, {'U', {0, -1}}, {'D', {0, 1}}};
+Map<char, Coord> deltas{{'R', Coord{1, 0}}, {'L', {-1, 0}}, {'U', {0, -1}}, {'D', {0, 1}}};
 
 template <int size> struct Context {
-    Map<Vector2, bool> visited;
-    Array<Vector2, size> knots;
+    Map<Coord, bool> visited;
+    Array<Coord, size> knots;
 
     void init() {
         visited[{0, 0}] = true;
@@ -14,13 +17,13 @@ template <int size> struct Context {
         }
     }
 
-    void follow(const int index, const Vector2 parent_move) {
+    void follow(const int index, const Coord parent_move) {
         auto parent = knots[index - 1];
         auto &current = knots[index];
 
         auto diff = parent - current;
 
-        Vector2 move{0, 0};
+        Coord move{0, 0};
 
         /* log << index << " " << diff << endl; */
 
@@ -73,7 +76,7 @@ template <int size> struct Context {
 
         for (int y = minPoint.y - size; y <= maxPoint.y + size; y++) {
             for (int x = minPoint.x - size; x <= maxPoint.x + size; ++x) {
-                auto pos = Vector2{x, y};
+                auto pos = Coord{x, y};
                 bool found = false;
 
                 for (auto i : rs::iota_view(0, size)) {
@@ -86,7 +89,7 @@ template <int size> struct Context {
 
                 if (!found) {
 
-                    if (pos == Vector2{0, 0}) {
+                    if (pos == Coord{0, 0}) {
                         log << 's';
                     } else {
                         log << '.';

@@ -1,7 +1,7 @@
-#include "../../common.h"
 #include "raylib.h"
 #include "raymath.h"
-#include <unistd.h>
+
+#include "../../common.h"
 
 const int screenWidth = 1280;
 const int screenHeight = 720;
@@ -47,7 +47,7 @@ void process(const String filename) {
 
     Vector<Vector3> history;
 
-    sleep(10);
+//    sleep(10);
 
     while (!WindowShouldClose()) {
         BeginDrawing();
