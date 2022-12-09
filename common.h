@@ -91,12 +91,29 @@ struct Vector2 {
         return x < other.x;
     }
 
+    void set(const int x, const int y) {
+        this->x = x;
+        this->y = y;
+    }
+
     Vector2 &operator+=(const Vector2 &other) {
         x += other.x;
         y += other.y;
         return *this;
     }
+
+    int manhattan() const {
+        return std::abs(x) + std::abs(y);
+    }
 };
+
+Vector2 operator+(const Vector2 &a, const Vector2 &b) {
+    return {a.x + b.x, a.y + b.y};
+}
+
+Vector2 operator-(const Vector2 &a, const Vector2 &b) {
+    return {a.x - b.x, a.y - b.y};
+}
 
 Vector2 operator*(const Vector2 &a, const int b) {
     return {a.x * b, a.y * b};
@@ -108,10 +125,6 @@ Vector2 operator/(const Vector2 &a, const int b) {
 
 using Point = Vector2;
 using Line = Pair<Point, Point>;
-
-Point operator+(const Point &a, const Point &b) {
-    return {a.x + b.x, a.y + b.y};
-}
 
 Point parsePoint(const String &input) {
     Point result;
