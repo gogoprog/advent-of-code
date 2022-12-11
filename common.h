@@ -357,6 +357,10 @@ template <> int convert(const String a) {
     return std::stoi(a);
 }
 
+template <> ull convert(const String a) {
+    return std::stoi(a);
+}
+
 template <> String convert(const String a) {
     return a;
 }
