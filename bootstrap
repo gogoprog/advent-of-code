@@ -11,6 +11,7 @@ echo "Generating $outDir..."
 
 cp $setupDir/template.cpp $outDir/main.cpp
 cp $setupDir/template.makefile $outDir/Makefile
+touch $outDir/sample.txt
 
 c=`cat <<EOF
 from aocd import get_data
