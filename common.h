@@ -188,6 +188,10 @@ struct Point3 {
         z -= other.z;
         return *this;
     }
+
+    int manhattan() const {
+        return std::abs(x) + std::abs(y) + std::abs(z);
+    }
 };
 
 Point3 operator-(const Point3 &a, const Point3 &b) {
