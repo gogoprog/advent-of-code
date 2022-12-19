@@ -7,6 +7,7 @@
 #include <array>
 #include <bitset>
 #include <charconv>
+#include <cassert>
 #include <cmath>
 #include <deque>
 #include <fstream>
