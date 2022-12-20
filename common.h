@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
-#include <charconv>
 #include <cassert>
+#include <charconv>
 #include <cmath>
 #include <deque>
 #include <fstream>
@@ -23,6 +23,7 @@
 #include <numeric>
 #include <queue>
 #include <set>
+#include <source_location>
 #include <sstream>
 #include <tuple>
 #include <unordered_map>
@@ -610,3 +611,14 @@ auto operator|(_Range &&__r, __reduce_view<T, BinaryOperation> _rv) {
 } // namespace std::ranges
 namespace ra = std::ranges::actions;
 #endif
+
+template <typename T> void myassert(T a, T b, const std::source_location location = std::source_location::current()) {
+#ifndef NDEBUG
+    if (a != b) {
+        std::cerr << "file: " << location.file_name() << "(" << location.line() << ":" << location.column() << ") `"
+                  << location.function_name() << "`: ";
+        std::cerr << "Assertion failed: " << a << " " << b << endl;
+        exit(-1);
+    }
+#endif
+}
