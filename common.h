@@ -616,9 +616,9 @@ template <typename T> void myassert(T a, T b, const std::source_location locatio
 #ifndef NDEBUG
     if (a != b) {
         std::cerr << "file: " << location.file_name() << "(" << location.line() << ":" << location.column() << ") `"
-                  << location.function_name() << "`: ";
-        std::cerr << "Assertion failed: " << a << " " << b << endl;
-        exit(-1);
+                  << location.function_name() << "`: " << endl;
+        std::cerr << "Assertion failed: " << endl << a << " == " << b << endl;
+        assert(0);
     }
 #endif
 }
