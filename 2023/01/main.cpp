@@ -1,93 +1,45 @@
 #include "../../common.h"
 
 struct Context {
-
-    Vector<Vector<int>> iLines;
     Strings lines;
 
     void parse(const Strings &lines) {
         this->lines = lines;
+    }
 
-        for (auto &line : lines) {
+    int compute(Strings spellings) {
+        auto result{0};
 
-            auto &iline = iLines.emplace_back();
+        auto computeLineValue = [&](String line) {
+            auto view1 = rv::zip(rv::iota(0), spellings) | rv::transform([&](auto pair) {
+                             return std::pair{(pair.first % 9) + 1, line.find(pair.second)};
+                         }) |
+                         rv::filter([&](auto pair) { return pair.second != String::npos; });
 
-            for (char c : line) {
+            auto view2 = rv::zip(rv::iota(0), spellings) | rv::transform([&](auto pair) {
+                             return std::pair{(pair.first % 9) + 1, line.rfind(pair.second)};
+                         }) |
+                         rv::filter([&](auto pair) { return pair.second != String::npos; });
 
-                if (std::isdigit(c)) {
-                    iline.push_back(c - '0');
-                }
-            }
-        }
+            auto min = rs::min(view1, [](auto a, auto b) { return a.second < b.second; });
+
+            auto max = rs::max(view2, [](auto a, auto b) { return a.second < b.second; });
+
+            return min.first * 10 + max.first;
+        };
+
+        return rs::fold_left(lines | rv::transform(computeLineValue), 0, std::plus<int>());
     }
 
     void part1() {
-        auto result{0};
-
-        for (auto iline : iLines) {
-
-            result += iline.back();
-            result += iline.front() * 10;
-        }
+        auto result = compute({"1", "2", "3", "4", "5", "6", "7", "8", "9"});
 
         log << "Part1: " << result << endl;
     }
 
     void part2() {
-        Strings spells{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
-        Strings digits{"1", "2", "3", "4", "5", "6", "7", "8", "9"};
-        auto result{0};
-
-        for (auto &line : lines) {
-
-            int val = 0;
-            int bestpos = 1000;
-            int val2 = 0;
-            int bestpos2 = -1;
-
-            for (int i = 0; i < 9; ++i) {
-
-                {
-                    int it = line.find(spells[i]);
-                    int it2 = line.find(digits[i]);
-
-                    if (it != String::npos) {
-                        if (it < bestpos) {
-                            bestpos = it;
-                            val = i+1;
-                        }
-                    }
-
-                    if (it2 != String::npos) {
-                        if (it2 < bestpos) {
-                            bestpos = it2;
-                            val = i+1;
-                        }
-                    }
-                }
-                {
-                    int it = line.rfind(spells[i]);
-                    int it2 = line.rfind(digits[i]);
-
-                    if (it != String::npos) {
-                        if (it > bestpos2) {
-                            bestpos2 = it;
-                            val2 = i+1;
-                        }
-                    }
-
-                    if (it2 != String::npos) {
-                        if (it2 > bestpos2) {
-                            bestpos2 = it2;
-                            val2 = i+1;
-                        }
-                    }
-                }
-            }
-
-            result += val * 10 + val2;
-        }
-
+        auto result = compute({"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "1", "2", "3",
+                               "4", "5", "6", "7", "8", "9"});
         log << "Part2: " << result << endl;
     }
 };
@@ -96,11 +48,10 @@ void process(const String filename) {
     log << "Processing " << filename << endl;
     auto lines = getFileLines(filename);
     {
-        Context context;
-        context.parse(lines);
-        context.part1();
-    }
-    {
+        /* Context context; */
+        /* context.parse(lines); */
+        /* context.part1(); */
+    } {
         Context context;
         context.parse(lines);
         context.part2();
@@ -108,7 +59,7 @@ void process(const String filename) {
 }
 
 int main() {
-    /* process("sample.txt"); */
+    process("sample.txt");
     process("input.txt");
     return 0;
 }

@@ -610,7 +610,6 @@ auto operator|(_Range &&__r, __reduce_view<T, BinaryOperation> _rv) {
 
 } // namespace std::ranges
 namespace ra = std::ranges::actions;
-#endif
 
 template <typename T> void myassert(T a, T b, const std::source_location location = std::source_location::current()) {
 #ifndef NDEBUG
@@ -622,3 +621,5 @@ template <typename T> void myassert(T a, T b, const std::source_location locatio
     }
 #endif
 }
+
+#endif
