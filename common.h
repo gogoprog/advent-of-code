@@ -411,6 +411,8 @@ String getFileContent(const String &filename, const char delim = '\n') {
 
     f.close();
 
+    contents.pop_back();
+
     return contents;
 }
 
@@ -622,6 +624,7 @@ auto operator|(_Range &&__r, __reduce_view<T, BinaryOperation> _rv) {
 } // namespace actions
 
 } // namespace std::ranges
+
 namespace ra = std::ranges::actions;
 
 template <typename T> void myassert(T a, T b, const std::source_location location = std::source_location::current()) {
@@ -633,6 +636,11 @@ template <typename T> void myassert(T a, T b, const std::source_location locatio
         assert(0);
     }
 #endif
+}
+
+
+inline StringView getStringView(auto range) {
+    return StringView(&*range.begin(), rs::distance(range));
 }
 
 #endif
