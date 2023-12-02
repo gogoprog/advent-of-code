@@ -392,6 +392,8 @@ Vector<R> splitString(const String &input, const char delim = '\n', const bool s
     InputStringStream iss(input);
     String line;
 
+    result.reserve(1024);
+
     while (std::getline(iss, line, delim)) {
         if (!skip_empty || !line.empty()) {
             result.push_back(convert<String, R>(line));
@@ -399,6 +401,17 @@ Vector<R> splitString(const String &input, const char delim = '\n', const bool s
     }
 
     return result;
+}
+
+String getFileContent(const String &filename, const char delim = '\n') {
+
+    std::ifstream f(filename);
+
+    std::string contents((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+
+    f.close();
+
+    return contents;
 }
 
 template <typename R, int size> Array<R, size> splitNString(const String &input, const char delim = '\n') {
@@ -565,8 +578,8 @@ namespace std::ranges {
 
 struct __accumulate {
     template <input_range _Range, class T, class BinaryOperation>
-    requires indirectly_copyable_storable < iterator_t<_Range>, range_value_t<_Range>
-    * > constexpr T operator()(_Range &&__r, T init, BinaryOperation op) const {
+        requires indirectly_copyable_storable<iterator_t<_Range>, range_value_t<_Range> *>
+    constexpr T operator()(_Range &&__r, T init, BinaryOperation op) const {
         auto __first = ranges::begin(__r);
         auto __last = ranges::end(__r);
         return std::accumulate(__first, __last + 1, init, op);
