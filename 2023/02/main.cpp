@@ -1,6 +1,8 @@
 #include "../../common.h"
 
 using Grab = Map<char, int>;
+auto colors = Vector<char>{'r', 'g', 'b'};
+auto maxs = Vector<int>{12, 13, 14};
 
 struct Game {
     int id;
@@ -11,8 +13,12 @@ struct Game {
     bool isValid() {
 
         for (auto &grab : grabs) {
-            if (grab['r'] > 12 || grab['g'] > 13 || grab['b'] > 14) {
-                return false;
+
+            for (int i = 0; i < 3; i++) {
+
+                if (grab[colors[i]] > maxs[i]) {
+                    return false;
+                }
             }
         }
 
@@ -23,27 +29,29 @@ struct Game {
         minimumGrab = grabs[0];
 
         for (auto &grab : grabs) {
-            minimumGrab['r'] = std::max(grab['r'], minimumGrab['r']);
-            minimumGrab['g'] = std::max(grab['g'], minimumGrab['g']);
-            minimumGrab['b'] = std::max(grab['b'], minimumGrab['b']);
+            for (auto c : colors) {
+                minimumGrab[c] = std::max(grab[c], minimumGrab[c]);
+            }
         }
 
-        return minimumGrab['r'] * minimumGrab['g'] * minimumGrab['b'];
+        auto result = 1;
+
+        for (auto c : colors) {
+            result *= minimumGrab[c];
+        }
+
+        return result;
     }
 };
 
 struct Context {
-
-    Vector<Game> games;
-
-    void parse(const Strings &lines) {
-        String str;
-        char ch;
-        for (auto &line : lines) {
-
-            auto &game = games.emplace_back();
-
-            InputStringStream iss(line);
+    void parse(const StringView content) {
+        auto toGame = [&](auto range) {
+            auto line = getStringView(range);
+            InputStringStream iss{String(line)};
+            String str;
+            char ch;
+            Game game;
 
             iss >> str >> game.id >> ch;
 
@@ -67,49 +75,36 @@ struct Context {
                     grab[letter] = count;
                 }
             }
-        }
-    }
 
-    void part1() {
-        auto result{0};
+            return game;
+        };
 
-        for (auto &game : games) {
-            if (game.isValid()) {
-                result += game.id;
-            }
-        }
+        auto view = rs::split_view(content, '\n') | rv::transform(toGame);
 
-        log << "Part1: " << result << endl;
-    }
+        auto part1view = view | rv::filter([](auto game) { return game.isValid(); }) |
+                         rv::transform([](auto game) { return game.id; });
+        auto part1 = rs::fold_left(part1view, 0, std::plus());
 
-    void part2() {
-        auto result{0};
+        log << "Part1: " << part1 << endl;
 
-        for (auto &game : games) {
-            result += game.compute();
-        }
+        auto part2view = view | rv::transform([](auto game) { return game.compute(); });
+        auto part2 = rs::fold_left(part2view, 0, std::plus());
 
-        log << "Part2: " << result << endl;
+        log << "Part2: " << part2 << endl;
     }
 };
 
 void process(const String filename) {
     log << "Processing " << filename << endl;
-    auto lines = getFileLines(filename);
+    auto content = getFileContent(filename);
     {
         Context context;
-        context.parse(lines);
-        context.part1();
-    }
-    {
-        Context context;
-        context.parse(lines);
-        context.part2();
+        context.parse(content);
     }
 }
 
 int main() {
-    process("sample.txt");
+    /* process("sample.txt"); */
     process("input.txt");
     return 0;
 }
