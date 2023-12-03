@@ -403,17 +403,30 @@ Vector<R> splitString(const String &input, const char delim = '\n', const bool s
     return result;
 }
 
-String getFileContent(const String &filename, const char delim = '\n') {
-
+StringView getFileContent(const String &filename, const char delim = '\n') {
     std::ifstream f(filename);
-
-    std::string contents((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-
+    static std::string contents((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
     f.close();
-
     contents.pop_back();
-
     return contents;
+}
+
+StringView getFileContentFast(const char *filename, const char delim = '\n') {
+
+    static char buffer[32 * 1024];
+    long length;
+    FILE *f = fopen(filename, "rb"); // was "rb"
+
+    if (f) {
+        fseek(f, 0, SEEK_END);
+        length = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        fread(buffer, sizeof(char), length, f);
+        fclose(f);
+    }
+    buffer[length] = '\0';
+
+    return StringView(buffer, length);
 }
 
 template <typename R, int size> Array<R, size> splitNString(const String &input, const char delim = '\n') {
@@ -637,7 +650,6 @@ template <typename T> void myassert(T a, T b, const std::source_location locatio
     }
 #endif
 }
-
 
 inline StringView getStringView(auto range) {
     return StringView(&*range.begin(), rs::distance(range));

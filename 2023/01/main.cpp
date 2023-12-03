@@ -174,8 +174,8 @@ struct Context {
                 auto ch = getChar(c);
 
                 auto is = [&](int i, char value) {
-                    if (c - i - 1 <= 0)
-                        return false;
+                    /* if (c - i - 1 <= 0) */
+                    /*     return false; */
 
                     return getChar(c - i - 1) == value;
                 };
@@ -227,13 +227,13 @@ struct Context {
                     } break;
 
                     case 'r': {
-                        if (accept(1, 'u') && is(0, 'o') && is(1, 'f')) {
+                        if (accept(1, 'u') && is(0, 'o') && accept(2, 'f')) {
                             set(4);
                         }
                     } break;
 
                     case 'x': {
-                        if (is(0, 'i') && is(1, 's')) {
+                        if (accept(1, 'i') && accept(1, 's')) {
                             set(6);
                         }
                     } break;
