@@ -41,19 +41,48 @@ struct Context {
 
     Vector<Card> cards;
 
-    void parse(const Strings &lines) {
-        for (auto &line : lines) {
-            auto &card = cards.emplace_back();
-            card.id = cards.size();
+    void parse(const StringView lines) {
+        int index = 0;
 
-            auto split = splitString(line, ':');
-            auto str = split[1];
+        auto filterEmpty = [](auto range) {
+            auto line = getStringView(range);
+            return line.size() > 0;
+        };
 
-            auto parts = splitString(str, '|');
+        auto toInt = [](auto range) {
+            auto line = getStringView(range);
 
-            card.winningNumbers = splitString<int>(parts[0], ' ');
-            card.numbers = splitString<int>(parts[1], ' ');
-        }
+            int result;
+
+            std::from_chars(line.data(), line.data() + line.size(), result);
+            return result;
+        };
+
+        auto toCard = [&](auto range) {
+            auto line = getStringView(range);
+            Card card;
+
+            card.id = ++index;
+
+            auto split = rs::split_view(line, ':');
+            auto it = std::next(split.begin());
+            auto str = getStringView(*it);
+
+            auto parts = rs::split_view(str, '|');
+
+            auto first = getStringView(*parts.begin());
+            auto second = getStringView(*std::next(parts.begin()));
+
+            std::ranges::copy(rs::split_view(first, ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
+                              std::back_inserter(card.winningNumbers));
+            std::ranges::copy(rs::split_view(second, ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
+                              std::back_inserter(card.numbers));
+
+            return card;
+        };
+
+        auto view = rs::split_view(lines, '\n') | rv::transform(toCard);
+        std::ranges::copy(view, std::back_inserter(cards));
     }
 
     void part1() {
@@ -68,25 +97,21 @@ struct Context {
     }
 
     void part2() {
-        Map<int, int> copies;
+        Vector<int> copies(cards.size(), 0);
 
         for (auto &card : cards) {
-            copies[card.id] += 1;
-
-            auto repeats = copies[card.id];
+            auto repeats = copies[card.id - 1] + 1;
 
             auto wins = card.wins();
 
             for (int w = 0; w < wins; w++) {
-                copies[card.id + w + 1] += repeats;
+                copies[card.id + w + 1 - 1] += repeats;
             }
         }
 
-        auto result{0};
-        for (auto kv : copies) {
+        auto result = std::accumulate(copies.begin(), copies.end(), 0);
 
-            result += kv.second;
-        }
+        result += cards.size();
 
         log << "Part2: " << result << endl;
     }
@@ -94,7 +119,7 @@ struct Context {
 
 void process(const String filename) {
     log << "Processing " << filename << endl;
-    auto lines = getFileLines(filename);
+    auto lines = getFileContentFast(filename.c_str());
     {
         Context context;
         context.parse(lines);

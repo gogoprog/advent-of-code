@@ -424,7 +424,7 @@ StringView getFileContentFast(const char *filename, const char delim = '\n') {
         fread(buffer, sizeof(char), length, f);
         fclose(f);
     }
-    buffer[length] = '\0';
+    buffer[length - 1] = '\0';
 
     return StringView(buffer, length);
 }
