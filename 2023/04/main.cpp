@@ -68,34 +68,27 @@ struct Context {
     }
 
     void part2() {
-        auto result{0};
-        auto originalCards = cards;
-        Vector<Card> list{cards.begin(), cards.end()};
-        Vector<Card> temp;
+        Map<int, int> copies;
 
-        for (int i = 0; i < list.size(); ++i) {
+        for (auto &card : cards) {
+            copies[card.id] += 1;
 
-            auto &card = list[i];
+            auto repeats = copies[card.id];
 
             auto wins = card.wins();
 
-            temp = {originalCards.begin() + card.id , originalCards.begin() + card.id + wins};
-
-            /* log << "[" << card.id << "] " <<  temp.size() << endl; */
-
-            /* log << " wins "; */
-            /* for(auto t : temp) { */
-            /*     log << t.id << " "; */
-
-            /* } */
-            /* log << endl; */
-
-
-            list.insert(list.begin() + i + 1, temp.begin(), temp.end());
-
+            for (int w = 0; w < wins; w++) {
+                copies[card.id + w + 1] += repeats;
+            }
         }
 
-        log << "Part2: " << list.size() << endl;
+        auto result{0};
+        for (auto kv : copies) {
+
+            result += kv.second;
+        }
+
+        log << "Part2: " << result << endl;
     }
 };
 
@@ -106,16 +99,12 @@ void process(const String filename) {
         Context context;
         context.parse(lines);
         context.part1();
-    }
-    {
-        Context context;
-        context.parse(lines);
         context.part2();
     }
 }
 
 int main() {
-    process("sample.txt");
+    /* process("sample.txt"); */
     process("input.txt");
     return 0;
 }
