@@ -1,4 +1,4 @@
-#include "../../common.h"
+#include "../../common_fast.h"
 
 struct Card {
     int id;
@@ -42,7 +42,7 @@ struct Context {
     Vector<Card> cards;
 
     void parse(const StringView lines) {
-        int index = 0;
+        int card_index = 0;
 
         auto filterEmpty = [](auto range) {
             auto line = getStringView(range);
@@ -59,29 +59,28 @@ struct Context {
         };
 
         auto toCard = [&](auto range) {
-            auto line = getStringView(range);
+            auto line = range;
             Card card;
 
-            card.id = ++index;
+            card.id = ++card_index;
 
-            auto split = rs::split_view(line, ':');
+            auto split = rs::split_string_view(line, ':');
             auto it = std::next(split.begin());
-            auto str = getStringView(*it);
 
-            auto parts = rs::split_view(str, '|');
+            auto parts = rs::split_string_view(*it, '|');
 
-            auto first = getStringView(*parts.begin());
-            auto second = getStringView(*std::next(parts.begin()));
+            auto first = *parts.begin();
+            auto second = *std::next(parts.begin());
 
-            std::ranges::copy(rs::split_view(first, ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
+            std::ranges::copy(rs::split_string_view(first, ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
                               std::back_inserter(card.winningNumbers));
-            std::ranges::copy(rs::split_view(second, ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
+            std::ranges::copy(rs::split_string_view(second, ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
                               std::back_inserter(card.numbers));
 
             return card;
         };
 
-        auto view = rs::split_view(lines, '\n') | rv::transform(toCard);
+        auto view = rs::split_string_view(lines, '\n') | rv::transform(toCard);
         std::ranges::copy(view, std::back_inserter(cards));
     }
 
@@ -89,7 +88,6 @@ struct Context {
         auto result{0};
 
         for (auto &card : cards) {
-
             result += card.compute();
         }
 
@@ -101,7 +99,6 @@ struct Context {
 
         for (auto &card : cards) {
             auto repeats = copies[card.id - 1] + 1;
-
             auto wins = card.wins();
 
             for (int w = 0; w < wins; w++) {
@@ -119,7 +116,7 @@ struct Context {
 
 void process(const String filename) {
     log << "Processing " << filename << endl;
-    auto lines = getFileContentFast(filename.c_str());
+    auto lines = getFileContent(filename.c_str());
     {
         Context context;
         context.parse(lines);
@@ -127,6 +124,8 @@ void process(const String filename) {
         context.part2();
     }
 }
+
+#include <chrono>
 
 int main() {
     /* process("sample.txt"); */

@@ -1,37 +1,27 @@
-#include "../../common.h"
+#include "../../common_fast.h"
 
 struct Context {
 
-    void parse(const Strings &lines) {
-        for (auto &line : lines) {
-        }
-    }
-
-    void part1() {
+    void part1(auto lines) {
         auto result{0};
 
         log << "Part1: " << result << endl;
     }
 
-    void part2() {
+    void part2(auto lines) {
         auto result{0};
 
         log << "Part2: " << result << endl;
     }
 };
 
-void process(const String filename) {
+void process(const char *filename) {
     log << "Processing " << filename << endl;
-    auto lines = getFileLines(filename);
+    auto lines = rs::split_string_view(getFileContent(filename), '\n');
     {
         Context context;
-        context.parse(lines);
-        context.part1();
-    }
-    {
-        Context context;
-        context.parse(lines);
-        context.part2();
+        context.part1(lines);
+        context.part2(lines);
     }
 }
 
