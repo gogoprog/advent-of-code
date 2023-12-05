@@ -39,11 +39,9 @@ struct Card {
 
 struct Context {
 
-    Vector<Card> cards;
+    inline static int cardIndex{0};
 
-    void parse(const StringView lines) {
-        int card_index = 0;
-
+    auto getView(const StringView lines) {
         auto filterEmpty = [](auto range) {
             auto line = getStringView(range);
             return line.size() > 0;
@@ -58,11 +56,10 @@ struct Context {
             return result;
         };
 
-        auto toCard = [&](auto range) {
-            auto line = range;
+        auto toCard = [&](auto line) {
             Card card;
 
-            card.id = ++card_index;
+            card.id = ++cardIndex;
 
             auto split = rs::split_string_view(line, ':');
             auto it = std::next(split.begin());
@@ -81,23 +78,26 @@ struct Context {
         };
 
         auto view = rs::split_string_view(lines, '\n') | rv::transform(toCard);
-        std::ranges::copy(view, std::back_inserter(cards));
+        return view;
     }
 
-    void part1() {
-        auto result{0};
-
-        for (auto &card : cards) {
-            result += card.compute();
-        }
+    void part1(auto lines) {
+        auto result =
+            rs::fold_left(getView(lines) | rv::transform([](auto card) { return card.compute(); }), 0, std::plus());
 
         log << "Part1: " << result << endl;
     }
 
-    void part2() {
-        Vector<int> copies(cards.size(), 0);
+    void part2(auto lines) {
+        auto cards = getView(lines);
 
-        for (auto &card : cards) {
+        auto len = std::distance(cards.begin(), cards.end());
+
+        cardIndex = 0;
+
+        Vector<int> copies(len, 0);
+
+        for (auto card : cards) {
             auto repeats = copies[card.id - 1] + 1;
             auto wins = card.wins();
 
@@ -108,7 +108,7 @@ struct Context {
 
         auto result = std::accumulate(copies.begin(), copies.end(), 0);
 
-        result += cards.size();
+        result += len;
 
         log << "Part2: " << result << endl;
     }
@@ -119,9 +119,8 @@ void process(const String filename) {
     auto lines = getFileContent(filename.c_str());
     {
         Context context;
-        context.parse(lines);
-        context.part1();
-        context.part2();
+        context.part1(lines);
+        context.part2(lines);
     }
 }
 
