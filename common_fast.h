@@ -446,6 +446,11 @@ class Logger {
         return *this;
     }
 
+    Logger &operator<<(ull i) {
+        printf("%lld", i);
+        return *this;
+    }
+
     static inline Logger &getInstance() {
         static Logger logger;
         return logger;
