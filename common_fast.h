@@ -413,11 +413,30 @@ inline StringView getStringView(auto range) {
 
 namespace std::ranges {
 
-auto const split_string_view = [](auto view, char delim) {
-    return rs::split_view(view, delim) | rv::transform([](auto range) { return getStringView(range); });
-};
+namespace views {
+auto to_string_view = rv::transform([](auto range) { return getStringView(range); });
 
-}
+auto filter_empty = rv::filter([](auto range) {
+    auto line = getStringView(range);
+    return line.size() > 0;
+});
+
+auto to_int = rv::transform([](auto range) {
+    auto line = getStringView(range);
+
+    int result;
+
+    std::from_chars(line.data(), line.data() + line.size(), result);
+    return result;
+});
+
+auto split_string_view = [](auto delim) { return rv::split(delim) | to_string_view; };
+
+} // namespace views
+
+auto const split_string_view = [](auto view, char delim) { return rs::split_view(view, delim) | rv::to_string_view; };
+
+} // namespace std::ranges
 
 class Logger {
   public:
