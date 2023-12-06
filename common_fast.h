@@ -470,6 +470,11 @@ class Logger {
         return *this;
     }
 
+    Logger &operator<<(float v) {
+        printf("%.6f", v);
+        return *this;
+    }
+
     static inline Logger &getInstance() {
         static Logger logger;
         return logger;
