@@ -423,14 +423,21 @@ auto filter_empty = rv::filter([](auto range) {
 
 auto to_ints = rv::transform([](auto range) {
     auto line = getStringView(range);
-
-    int result;
-
+    int64_t result;
     std::from_chars(line.data(), line.data() + line.size(), result);
     return result;
 });
 
 auto split_string_view = [](auto delim) { return rv::split(delim) | to_string_views; };
+
+template <typename T> auto __convert(T v) {
+    return StringView(v);
+}
+template <> auto __convert(char v) {
+    return v;
+}
+
+auto split_sv = [](auto delim) { return rv::split(__convert(delim)) | to_string_views; };
 
 template <int index> struct __get {};
 inline constexpr __get<0> get0{};
@@ -513,3 +520,4 @@ class Logger {
 
 #define log Logger::getInstance()
 #define endl '\n'
+

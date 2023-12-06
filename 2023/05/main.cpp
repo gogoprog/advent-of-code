@@ -14,10 +14,12 @@ auto toInt = [](auto range) {
     return result;
 };
 
+using Range = Array<ull, 3>;
+
 struct Recipe {
     StringView source;
     StringView destination;
-    Vector<Vector<ull>> ranges;
+    Vector<Range> ranges;
 
     ull convert(ull input) {
 
@@ -58,53 +60,38 @@ struct Context {
     Vector<Recipe> recipes;
 
     void parse(auto content) {
-        auto lines = rs::split_string_view(content, '\n');
 
-        Vector<Vector<StringView>> blocks;
-        blocks.resize(1);
-        auto current = 0;
+        auto parts = content | rv::split_sv("\n\n");
+        auto view = parts | rv::get0 | rv::split_string_view(':') | rv::get1 | rv::split_sv(' ') | rv::filter_empty |
+                    rv::to_ints;
+        rs::copy(view, std::back_inserter(seeds));
 
-        for (auto line : lines) {
-            blocks[current].push_back(line);
+        auto block_view = parts | rv::drop(1);
 
-            if (line.empty()) {
-                current++;
-                blocks.push_back({});
-            }
-        }
+        auto to_recipe = [](auto block) {
+            Recipe result;
+            auto lines = block | rv::split_sv('\n');
 
-        {
+            auto to_range = [](auto line) {
+                Range result;
+                auto ints = line | rv::split_sv(' ') | rv::filter_empty | rv::to_ints;
 
-            auto split = rs::split_string_view(blocks[0][0], ':');
-            auto it = std::next(split.begin());
-            std::ranges::copy(rs::split_string_view(*it, ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
-                              std::back_inserter(seeds));
-        }
+                rs::copy(ints, result.begin());
 
-        for (int b = 1; b < blocks.size(); b++) {
-            auto &block = blocks[b];
+                return result;
+            };
 
-            auto split = rs::split_string_view(block[0], ' ');
-            auto split2 = rs::split_string_view(*split.begin(), '-');
-            auto source = *split2.begin();
-            auto dest = *(std::next(std::next(split2.begin())));
+            auto view = lines | rv::drop(1) | rv::transform(to_range);
+            rs::copy(view, std::back_inserter(result.ranges));
 
-            auto &recipe = recipes.emplace_back();
-            recipe.destination = dest;
+            return result;
+        };
 
-            for (int l = 1; l < block.size(); l++) {
-                Vector<ull> ints;
-                std::ranges::copy(rs::split_string_view(block[l], ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
-                                  std::back_inserter(ints));
-
-                if (ints.size()) {
-                    recipe.ranges.push_back(ints);
-                }
-            }
-        }
+        auto recipe_view = block_view | rv::transform(to_recipe);
+        rs::copy(recipe_view, std::back_inserter(recipes));
     }
 
-    void part1(auto lines) {
+    void part1() {
         ull min{std::numeric_limits<ull>::max()};
 
         for (auto seed : seeds) {
@@ -123,7 +110,7 @@ struct Context {
         log << "Part1: " << min << endl;
     }
 
-    void part2(auto lines) {
+    void part2() {
         auto is_seed = [&](auto input) {
             for (int s = 0; s < seeds.size(); s += 2) {
                 auto start = seeds[s];
@@ -160,13 +147,13 @@ struct Context {
 
 void process(const char *filename) {
     log << "Processing " << filename << endl;
-    /* auto lines = rs::split_string_view(getFileContent(filename), '\n'); */
     auto lines = getFileContent(filename);
+
     {
         Context context;
         context.parse(lines);
-        context.part1(lines);
-        context.part2(lines);
+        context.part1();
+        context.part2();
     }
 }
 
