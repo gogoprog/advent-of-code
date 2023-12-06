@@ -39,8 +39,6 @@ struct Card {
 
 struct Context {
 
-    inline static int cardIndex{0};
-
     auto getView(const StringView lines) {
         auto filterEmpty = [](auto range) {
             auto line = getStringView(range);
@@ -59,20 +57,15 @@ struct Context {
         auto toCard = [&](auto line) {
             Card card;
 
-            card.id = ++cardIndex;
+            card.id = line | rv::split_sv(':') | rv::get0 | rv::split(' ') | rv::filter_empty | rv::get1 | rv::to_int;
 
-            auto split = rs::split_string_view(line, ':');
-            auto it = std::next(split.begin());
+            auto wins = line | rv::split_sv(':') | rv::get1 | rv::split_sv('|') | rv::get0 | rv::split_sv(' ') |
+                        rv::filter_empty | rv::to_ints;
+            rs::copy(wins, std::back_inserter(card.winningNumbers));
 
-            auto parts = rs::split_string_view(*it, '|');
-
-            auto first = *parts.begin();
-            auto second = *std::next(parts.begin());
-
-            std::ranges::copy(rs::split_string_view(first, ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
-                              std::back_inserter(card.winningNumbers));
-            std::ranges::copy(rs::split_string_view(second, ' ') | rv::filter(filterEmpty) | rv::transform(toInt),
-                              std::back_inserter(card.numbers));
+            auto nums = line | rv::split_sv(':') | rv::get1 | rv::split_sv('|') | rv::get1 | rv::split_sv(' ') |
+                        rv::filter_empty | rv::to_ints;
+            rs::copy(nums, std::back_inserter(card.numbers));
 
             return card;
         };
@@ -92,8 +85,6 @@ struct Context {
         auto cards = getView(lines);
 
         auto len = std::distance(cards.begin(), cards.end());
-
-        cardIndex = 0;
 
         Vector<int> copies(len, 0);
 
@@ -124,10 +115,8 @@ void process(const String filename) {
     }
 }
 
-#include <chrono>
-
 int main() {
-    /* process("sample.txt"); */
+    process("sample.txt");
     process("input.txt");
     return 0;
 }

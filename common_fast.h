@@ -469,6 +469,17 @@ template <input_range _Range> auto operator|(_Range &&__r, __to_string s) {
     return str;
 }
 
+struct __to_int{};
+inline constexpr __to_int to_int{};
+template <input_range _Range> auto operator|(_Range &&__r, __to_int s) {
+    int64_t result;
+    auto line = getStringView(__r);
+    std::from_chars(line.data(), line.data() + line.size(), result);
+    /* return int64_t(6); */
+
+    return result;
+}
+
 } // namespace views
 
 auto const split_string_view = [](auto view, char delim) { return rs::split_view(view, delim) | rv::to_string_views; };
