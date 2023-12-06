@@ -414,14 +414,14 @@ inline StringView getStringView(auto range) {
 namespace std::ranges {
 
 namespace views {
-auto to_string_view = rv::transform([](auto range) { return getStringView(range); });
+auto to_string_views = rv::transform([](auto range) { return getStringView(range); });
 
 auto filter_empty = rv::filter([](auto range) {
     auto line = getStringView(range);
     return line.size() > 0;
 });
 
-auto to_int = rv::transform([](auto range) {
+auto to_ints = rv::transform([](auto range) {
     auto line = getStringView(range);
 
     int result;
@@ -430,11 +430,26 @@ auto to_int = rv::transform([](auto range) {
     return result;
 });
 
-auto split_string_view = [](auto delim) { return rv::split(delim) | to_string_view; };
+auto split_string_view = [](auto delim) { return rv::split(delim) | to_string_views; };
+
+template <int index> struct __get {};
+inline constexpr __get<0> get{};
+inline constexpr __get<1> get1{};
+inline constexpr __get<2> get2{};
+inline constexpr __get<3> get3{};
+
+template <input_range _Range, int index> auto operator|(_Range &&__r, __get<index> s) {
+    auto it = (__r.begin());
+
+    for (int i = 0; i < index; i++) {
+        it = std::next(it);
+    }
+    return *it;
+}
 
 } // namespace views
 
-auto const split_string_view = [](auto view, char delim) { return rs::split_view(view, delim) | rv::to_string_view; };
+auto const split_string_view = [](auto view, char delim) { return rs::split_view(view, delim) | rv::to_string_views; };
 
 } // namespace std::ranges
 

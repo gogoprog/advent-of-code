@@ -17,17 +17,11 @@ auto toInt = [](auto range) {
 struct Context {
 
     void part1(auto lines) {
-        auto first = *((lines | rv::take(1)).begin());
-        auto second = *(std::next((lines | rv::take(2)).begin()));
+        auto times = lines | rv::get | rv::split_string_view(':') | rv::get1 | rv::split_string_view(' ') |
+                     rv::filter_empty | rv::to_ints;
 
-        auto split = rs::split_string_view(first, ':');
-        auto numbers = *(std::next((split | rv::take(2)).begin()));
-
-        auto split2 = rs::split_string_view(second, ':');
-        auto numbers2 = *(std::next((split2 | rv::take(2)).begin()));
-
-        auto times = numbers | rv::split_string_view(' ') | rv::filter_empty | rv::to_int;
-        auto distances = numbers2 | rv::split_string_view(' ') | rv::filter_empty | rv::to_int;
+        auto distances = lines | rv::get1 | rv::split_string_view(':') | rv::get1 | rv::split_string_view(' ') |
+                         rv::filter_empty | rv::to_ints;
 
         auto compute = rv::transform([](auto entry) {
             auto result = 0;
@@ -90,7 +84,7 @@ struct Context {
 
 void process(const char *filename) {
     log << "Processing " << filename << endl;
-    auto lines = rs::split_string_view(getFileContent(filename), '\n');
+    auto lines = getFileContent(filename) | rv::split_string_view('\n');
     {
         Context context;
         context.part1(lines);
