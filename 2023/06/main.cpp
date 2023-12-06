@@ -34,19 +34,37 @@ struct Context {
             auto time = std::get<0>(entry);
             auto distance = std::get<1>(entry);
 
-            auto brktime = 0;
+            auto speed = 1;
 
-            while (brktime <= time) {
-                auto speed = brktime;
-
-                auto newdistance = speed * (time - brktime);
+            while (speed <= time) {
+                auto newdistance = speed * (time - speed);
 
                 if (newdistance > distance) {
                     result++;
                 }
 
-                brktime++;
+                speed++;
             }
+
+            /*
+            {
+                auto result2 = 0;
+                auto a = 1;
+                auto b = -time;
+                auto c = distance;
+
+                int speed = (-b - std::sqrt(b * b - 4 * a * c)) / 2;
+                int speed2 = (-b + std::sqrt(b * b - 4 * a * c)) / 2;
+
+                result2 = speed2 - speed;
+
+                if (result2 != result) {
+                    log << time << endl;
+                    log << speed << endl;
+                    log << speed2 << endl;
+                }
+            }
+            */
 
             return result;
         });
@@ -79,23 +97,15 @@ struct Context {
         auto compute = [](auto time, auto distance) {
             auto result = 0;
 
-            auto brktime = 0;
+            auto a = 1;
+            auto b = -time;
+            auto c = distance;
 
-            while (brktime <= time) {
-                auto speed = brktime;
+            int speed = (-b - std::sqrt(b * b - 4 * a * c)) / 2;
+            int speed2 = (-b + std::sqrt(b * b - 4 * a * c)) / 2;
 
-                auto newdistance = speed * (time - brktime);
-
-                if (newdistance > distance) {
-                    result++;
-                }
-
-                brktime++;
-            }
-
-            return result;
+            return speed2 - speed;
         };
-
 
         auto result = compute(std::stol(strtime), std::stol(strdist));
 
