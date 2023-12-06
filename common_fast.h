@@ -433,7 +433,7 @@ auto to_ints = rv::transform([](auto range) {
 auto split_string_view = [](auto delim) { return rv::split(delim) | to_string_views; };
 
 template <int index> struct __get {};
-inline constexpr __get<0> get{};
+inline constexpr __get<0> get0{};
 inline constexpr __get<1> get1{};
 inline constexpr __get<2> get2{};
 inline constexpr __get<3> get3{};
@@ -445,6 +445,21 @@ template <input_range _Range, int index> auto operator|(_Range &&__r, __get<inde
         it = std::next(it);
     }
     return *it;
+}
+
+struct __to_string {};
+inline constexpr __to_string to_string{};
+template <input_range _Range> auto operator|(_Range &&__r, __to_string s) {
+    String str;
+
+#ifdef __circle_lang__
+    puts("circle does not support std::ranges::views::to_string");
+    throw "unsupported";
+#else
+    std::ranges::copy(__r, std::back_inserter(str));
+#endif
+
+    return str;
 }
 
 } // namespace views

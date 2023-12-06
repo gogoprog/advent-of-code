@@ -17,17 +17,13 @@ auto toInt = [](auto range) {
 struct Context {
 
     void part1(auto lines) {
-        auto times = lines | rv::get | rv::split_string_view(':') | rv::get1 | rv::split_string_view(' ') |
+        auto times = lines | rv::get0 | rv::split_string_view(':') | rv::get1 | rv::split_string_view(' ') |
                      rv::filter_empty | rv::to_ints;
 
         auto distances = lines | rv::get1 | rv::split_string_view(':') | rv::get1 | rv::split_string_view(' ') |
                          rv::filter_empty | rv::to_ints;
 
-        auto compute = rv::transform([](auto entry) {
-            auto result = 0;
-            auto time = std::get<0>(entry);
-            auto distance = std::get<1>(entry);
-
+        auto compute = [](auto time, auto distance) {
             auto b = -time;
             auto c = distance;
 
@@ -39,32 +35,20 @@ struct Context {
             }
 
             return speed2 - speed;
-        });
+        };
 
-        auto view = rs::zip_view(times, distances) | compute;
+        auto view = rv::zip_transform(compute, times, distances);
 
         auto result = rs::fold_left(view, 1, std::multiplies<int>());
         log << "Part1: " << result << endl;
     }
 
     void part2(auto lines) {
-        auto first = *((lines | rv::take(1)).begin());
-        auto second = *(std::next((lines | rv::take(2)).begin()));
 
-        auto split = rs::split_string_view(first, ':');
-        auto numbers = *(std::next((split | rv::take(2)).begin()));
-
-        auto split2 = rs::split_string_view(second, ':');
-        auto numbers2 = *(std::next((split2 | rv::take(2)).begin()));
-
-        auto vtime = numbers | rv::filter([](auto c) { return c != ' '; });
-        auto vdist = numbers2 | rv::filter([](auto c) { return c != ' '; });
-
-        String strtime;
-        String strdist;
-
-        std::ranges::copy(vtime, std::back_inserter(strtime));
-        std::ranges::copy(vdist, std::back_inserter(strdist));
+        auto strtime =
+            lines | rv::get0 | rv::split_string_view(':') | rv::get1 | rv::split(' ') | rv::join | rv::to_string;
+        auto strdist =
+            lines | rv::get1 | rv::split_string_view(':') | rv::get1 | rv::split(' ') | rv::join | rv::to_string;
 
         auto compute = [](auto time, auto distance) {
             auto b = -time;
