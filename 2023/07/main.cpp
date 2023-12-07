@@ -44,13 +44,14 @@ struct Hand {
 
         int jokers = cardcounts['J'];
 
-        if(jokers == 5) return Kind5;
+        if (jokers == 5)
+            return Kind5;
 
         cardcounts['J'] = 0;
 
         for (int i = 4; i >= 1; --i) {
             for (auto kv : cardcounts) {
-                if(kv.second == i) {
+                if (kv.second == i) {
                     cardcounts[kv.first] += jokers;
                     i = 0;
                     break;
@@ -162,8 +163,6 @@ struct Context {
             result += ranked_hands[i].bid * (i + 1);
         }
 
-        // 252219277 too high
-        
         log << "Part2: " << result << endl;
     }
 };
