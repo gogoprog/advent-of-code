@@ -411,6 +411,19 @@ inline StringView getStringView(auto range) {
     return StringView(&*range.begin(), rs::distance(range));
 }
 
+inline int64_t parseInt(StringView line) {
+    int64_t result;
+    char c = *line.data();
+
+    if (c == '-') {
+        std::from_chars(line.data() + 1, line.data() + line.size(), result);
+        return -result;
+    }
+
+    std::from_chars(line.data(), line.data() + line.size(), result);
+    return result;
+}
+
 namespace std::ranges {
 
 namespace views {
@@ -423,9 +436,7 @@ auto filter_empty = rv::filter([](auto range) {
 
 auto to_ints = rv::transform([](auto range) {
     auto line = getStringView(range);
-    int64_t result;
-    std::from_chars(line.data(), line.data() + line.size(), result);
-    return result;
+    return parseInt(line);
 });
 
 auto split_string_view = [](auto delim) { return rv::split(delim) | to_string_views; };
@@ -469,15 +480,11 @@ template <input_range _Range> auto operator|(_Range &&__r, __to_string s) {
     return str;
 }
 
-struct __to_int{};
+struct __to_int {};
 inline constexpr __to_int to_int{};
 template <input_range _Range> auto operator|(_Range &&__r, __to_int s) {
-    int64_t result;
     auto line = getStringView(__r);
-    std::from_chars(line.data(), line.data() + line.size(), result);
-    /* return int64_t(6); */
-
-    return result;
+    return parseInt(line);
 }
 
 } // namespace views
@@ -523,6 +530,21 @@ class Logger {
         return *this;
     }
 
+    template <typename T> Logger &operator<<(Vector<T> vs) {
+        printf("[");
+        auto first = true;
+        for (auto v : vs) {
+            if (!first) {
+                printf(", ");
+            } else {
+                first = false;
+            }
+            *this << v;
+        }
+        printf("]");
+        return *this;
+    }
+
     static inline Logger &getInstance() {
         static Logger logger;
         return logger;
@@ -531,4 +553,3 @@ class Logger {
 
 #define log Logger::getInstance()
 #define endl '\n'
-
