@@ -545,6 +545,11 @@ class Logger {
         return *this;
     }
 
+    Logger &operator<<(Coord c) {
+        printf("(%d, %d)", c.x, c.y);
+        return *this;
+    }
+
     static inline Logger &getInstance() {
         static Logger logger;
         return logger;
