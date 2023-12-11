@@ -42,6 +42,7 @@ template <class V> using List = std::list<V>;
 using String = std::string;
 using StringView = std::string_view;
 using Strings = Vector<String>;
+using StringViews = Vector<StringView>;
 using ull = unsigned long long;
 using lli = long long int;
 template <class S> using Function = std::function<S>;
