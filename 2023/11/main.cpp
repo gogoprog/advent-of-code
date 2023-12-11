@@ -1,42 +1,33 @@
 #include "../../common_fast.h"
 
 struct Context {
-    Vector<String> lines;
-    int width, height;
     Vector<Coord> galaxies;
-
     Vector<int> expRows;
     Vector<int> expCols;
 
-    static void draw(Vector<String> &lines) {
-        auto width = lines[0].size();
-        auto height = lines.size();
-        log << "drawing " << width << "x" << height << "\n";
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                log << lines[y][x];
-            }
-            log << endl;
-        }
-    }
+    void parse(auto _lines) {
+        int width, height;
 
-    void parse(auto str) {
-        StringViews svs;
+        StringViews lines;
+        rs::copy(_lines, std::back_inserter(lines));
 
-        rs::copy(str, std::back_inserter(svs));
+        auto first_line = lines | rv::get0;
 
-        for (auto line : svs) {
-            lines.push_back(String(line));
-        }
+        width = first_line.size();
+        height = rs::distance(lines.begin(), lines.end());
 
-        /* draw(lines); */
-
-        width = lines[0].size();
-        height = lines.size();
+        auto get_line = [&](auto i) {
+            auto line = *(std::next(lines.begin(), i));
+            return line;
+        };
+        auto get_char = [&](auto x, auto y) {
+            auto line = get_line(y);
+            return line[x];
+        };
 
         auto empty_col = [&](auto col) {
             for (int y = 0; y < height; y++) {
-                char ch = lines[y][col];
+                char ch = get_char(col, y);
 
                 if (ch != '.')
                     return false;
@@ -46,7 +37,8 @@ struct Context {
         };
 
         for (int y = height - 1; y >= 0; y--) {
-            bool empty = std::all_of(lines[y].begin(), lines[y].end(), [](char c) { return c == '.'; });
+            auto line = get_line(y);
+            bool empty = std::all_of(line.begin(), line.end(), [](char c) { return c == '.'; });
 
             if (empty) {
                 expRows.push_back(y);
@@ -63,11 +55,9 @@ struct Context {
 
         /* draw(lines); */
 
-        width = lines[0].size();
-
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if (lines[y][x] == '#') {
+                if (get_char(x, y) == '#') {
                     galaxies.push_back(Coord{x, y});
                 }
             }
