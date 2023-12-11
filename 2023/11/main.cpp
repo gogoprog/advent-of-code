@@ -10,6 +10,7 @@ struct Context {
 
         StringViews lines;
         rs::copy(_lines, std::back_inserter(lines));
+        /* auto lines = _lines; */
 
         auto first_line = lines | rv::get0;
 
@@ -56,8 +57,9 @@ struct Context {
         /* draw(lines); */
 
         for (int y = 0; y < height; y++) {
+            auto line = get_line(y);
             for (int x = 0; x < width; x++) {
-                if (get_char(x, y) == '#') {
+                if (line[x] == '#') {
                     galaxies.push_back(Coord{x, y});
                 }
             }
