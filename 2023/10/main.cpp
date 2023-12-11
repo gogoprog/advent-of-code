@@ -303,16 +303,6 @@ struct Context {
             }
         }
 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (capturedMap[{x, y}])
-                    log << "I";
-                else
-                    log << lines[y][x];
-            }
-            log << endl;
-        }
-
         log << "Part2: " << result << endl;
     }
 };
@@ -329,13 +319,11 @@ void process(const char *filename) {
 }
 
 int main() {
-    /* process("sample0.txt"); */
-    /* process("sample.txt"); */
-    /* process("sample2.txt"); */
-    /* process("sample3.txt"); */
-    /* process("sample4.txt"); */
+    process("sample0.txt");
+    process("sample.txt");
+    process("sample2.txt");
+    process("sample3.txt");
+    process("sample4.txt");
     process("input.txt");
-    // too high 4944
-    // too high 2243
     return 0;
 }

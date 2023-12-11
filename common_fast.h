@@ -425,6 +425,72 @@ inline int64_t parseInt(StringView line) {
     return result;
 }
 
+class Logger {
+  public:
+    Logger &operator<<(StringView str) {
+        printf("%.*s", int(str.size()), str.data());
+        return *this;
+    }
+
+    Logger &operator<<(char c) {
+        printf("%c", c);
+        return *this;
+    }
+
+    Logger &operator<<(int i) {
+        printf("%d", i);
+        return *this;
+    }
+
+    Logger &operator<<(uint64_t i) {
+        printf("%ld", i);
+        return *this;
+    }
+
+    Logger &operator<<(long i) {
+        printf("%ld", i);
+        return *this;
+    }
+
+    Logger &operator<<(ull i) {
+        printf("%lld", i);
+        return *this;
+    }
+
+    Logger &operator<<(float v) {
+        printf("%.6f", v);
+        return *this;
+    }
+
+    template <typename T> Logger &operator<<(Vector<T> vs) {
+        printf("[");
+        auto first = true;
+        for (auto v : vs) {
+            if (!first) {
+                printf(", ");
+            } else {
+                first = false;
+            }
+            *this << v;
+        }
+        printf("]");
+        return *this;
+    }
+
+    Logger &operator<<(Coord c) {
+        printf("(%d, %d)", c.x, c.y);
+        return *this;
+    }
+
+    static inline Logger &getInstance() {
+        static Logger logger;
+        return logger;
+    }
+};
+
+#define log Logger::getInstance()
+#define endl '\n'
+
 namespace std::ranges {
 
 namespace views {
@@ -493,69 +559,3 @@ template <input_range _Range> auto operator|(_Range &&__r, __to_int s) {
 auto const split_string_view = [](auto view, char delim) { return rs::split_view(view, delim) | rv::to_string_views; };
 
 } // namespace std::ranges
-
-class Logger {
-  public:
-    Logger &operator<<(StringView str) {
-        printf("%.*s", int(str.size()), str.data());
-        return *this;
-    }
-
-    Logger &operator<<(char c) {
-        printf("%c", c);
-        return *this;
-    }
-
-    Logger &operator<<(int i) {
-        printf("%d", i);
-        return *this;
-    }
-
-    Logger &operator<<(uint64_t i) {
-        printf("%ld", i);
-        return *this;
-    }
-
-    Logger &operator<<(long i) {
-        printf("%ld", i);
-        return *this;
-    }
-
-    Logger &operator<<(ull i) {
-        printf("%lld", i);
-        return *this;
-    }
-
-    Logger &operator<<(float v) {
-        printf("%.6f", v);
-        return *this;
-    }
-
-    template <typename T> Logger &operator<<(Vector<T> vs) {
-        printf("[");
-        auto first = true;
-        for (auto v : vs) {
-            if (!first) {
-                printf(", ");
-            } else {
-                first = false;
-            }
-            *this << v;
-        }
-        printf("]");
-        return *this;
-    }
-
-    Logger &operator<<(Coord c) {
-        printf("(%d, %d)", c.x, c.y);
-        return *this;
-    }
-
-    static inline Logger &getInstance() {
-        static Logger logger;
-        return logger;
-    }
-};
-
-#define log Logger::getInstance()
-#define endl '\n'
