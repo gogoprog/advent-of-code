@@ -5,6 +5,9 @@ struct Context {
     int width, height;
     Vector<Coord> galaxies;
 
+    Vector<int> expRows;
+    Vector<int> expCols;
+
     static void draw(Vector<String> &lines) {
         auto width = lines[0].size();
         auto height = lines.size();
@@ -31,19 +34,6 @@ struct Context {
         width = lines[0].size();
         height = lines.size();
 
-        for (int y = height - 1; y >= 0; y--) {
-            bool empty = std::all_of(lines[y].begin(), lines[y].end(), [](char c) { return c == '.'; });
-
-            if (empty) {
-                String newline;
-                newline.resize(width);
-                std::fill(newline.begin(), newline.end(), '.');
-                lines.insert(lines.begin() + y, newline);
-            }
-        }
-
-        height = lines.size();
-
         auto empty_col = [&](auto col) {
             for (int y = 0; y < height; y++) {
                 char ch = lines[y][col];
@@ -55,14 +45,19 @@ struct Context {
             return true;
         };
 
+        for (int y = height - 1; y >= 0; y--) {
+            bool empty = std::all_of(lines[y].begin(), lines[y].end(), [](char c) { return c == '.'; });
+
+            if (empty) {
+                expRows.push_back(y);
+            }
+        }
+
         for (int x = width - 1; x >= 0; x--) {
             bool empty = empty_col(x);
 
             if (empty) {
-                for (int y = 0; y < height; y++) {
-                    auto &line = lines[y];
-                    line.insert(line.begin() + x, '.');
-                }
+                expCols.push_back(x);
             }
         }
 
@@ -81,25 +76,44 @@ struct Context {
         log << galaxies.size() << " galaxies\n";
     }
 
-    void part1() {
-        auto result{0};
+    int64_t compute(Coord start, Coord end, int64_t expand) {
+        int64_t result;
+
+        result = (end - start).manhattan();
+
+        auto mincol = std::min(start.x, end.x);
+        auto maxcol = std::max(start.x, end.x);
+        auto minrow = std::min(start.y, end.y);
+        auto maxrow = std::max(start.y, end.y);
+
+        for (auto c : expCols) {
+            if (c >= mincol && c <= maxcol) {
+                result += expand;
+            }
+        }
+
+        for (auto r : expRows) {
+            if (r >= minrow && r <= maxrow) {
+                result += expand;
+            }
+        }
+
+        return result;
+    }
+
+    void execute(int expand) {
+        int64_t result{0};
 
         for (int g = 0; g < galaxies.size(); g++) {
             for (int g2 = 0; g2 < galaxies.size(); g2++) {
-                if(g != g2) {
-                    auto r = (galaxies[g2] - galaxies[g]).manhattan();
+                if (g != g2) {
+                    auto r = compute(galaxies[g], galaxies[g2], expand - 1);
                     result += r;
                 }
             }
         }
 
-        log << "Part1: " << result/2 << endl;
-    }
-
-    void part2() {
-        auto result{0};
-
-        log << "Part2: " << result << endl;
+        log << "Execute expand x " << expand << " : " << result / 2 << endl;
     }
 };
 
@@ -109,8 +123,10 @@ void process(const char *filename) {
     {
         Context context;
         context.parse(lines);
-        context.part1();
-        context.part2();
+        context.execute(2);
+        context.execute(10);
+        context.execute(100);
+        context.execute(1000000);
     }
 }
 
