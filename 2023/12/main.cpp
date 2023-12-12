@@ -2,6 +2,12 @@
 
 using Ints = Vector<int>;
 
+int64_t factorial(int64_t n) {
+    if (n == 0 || n == 1)
+        return 1;
+    return n * factorial(n - 1);
+}
+
 auto compute_groups = [](auto row, Ints &groups) {
     int current = 0;
 
@@ -16,11 +22,6 @@ auto compute_groups = [](auto row, Ints &groups) {
 
     for (auto c : row) {
         switch (c) {
-            case '?':
-                check();
-                return;
-
-                break;
             case '#':
                 current++;
                 break;
@@ -32,62 +33,78 @@ auto compute_groups = [](auto row, Ints &groups) {
 
     check();
 };
+auto compute_groups2 = [](auto row, Ints &groups, const String &values) {
+    int current = 0;
+    int v = 0;
 
-void doit(StringView row, const Ints &groups, String values, int64_t &count) {
-    String str;
-    int i = 0;
-    bool complete = true;
+    groups.resize(0);
+
+    auto check = [&]() {
+        if (current) {
+            groups.push_back(current);
+            current = 0;
+        }
+    };
+
+    auto len = values.length();
 
     for (auto c : row) {
-
+        if (c == '?') {
+            if (v >= len) {
+                return false;
+            }
+            c = values[v++];
+        }
         switch (c) {
-            case '?':
-                if (i < values.length()) {
-                    str += values[i];
-                    i++;
-                } else {
-                    str += c;
-                    complete = false;
-                }
-
-                break;
             case '#':
+                current++;
+                break;
             case '.':
-                str += c;
+                check();
                 break;
         }
     }
 
-    if (complete) {
-        Ints test_groups;
-        compute_groups(str, test_groups);
+    check();
+
+    return true;
+};
+
+void doit(StringView row, const Ints &groups, String values, int64_t &count) {
+
+    Ints test_groups;
+    auto full = compute_groups2(row, test_groups, values);
+
+    if (full) {
 
         if (test_groups == groups) {
             count++;
+            return;
         }
-    } else {
-        Ints test_groups;
-        compute_groups(str, test_groups);
 
-        bool cancel = false;
+        return;
+    }
 
-        if (test_groups.size() <= groups.size()) {
+    bool cancel = false;
 
-            if (test_groups.size() > 1) {
+    if (test_groups.size() < groups.size()) {
 
-                for (int i = 0; i < test_groups.size() - 1; i++) {
-                    if (test_groups[i] != groups[i]) {
-                        cancel = true;
-                        break;
-                    }
+        if (test_groups.size() > 1) {
+
+            for (int i = 0; i < test_groups.size() - 1; i++) {
+                if (test_groups[i] != groups[i]) {
+                    cancel = true;
+                    break;
                 }
             }
-
-            if (!cancel) {
-                doit(row, groups, values + ".", count);
-                doit(row, groups, values + "#", count);
-            }
         }
+
+        if (!cancel) {
+            doit(row, groups, values + "#", count);
+            doit(row, groups, values + ".", count);
+        }
+    } else {
+        doit(row, groups, values + ".", count);
     }
 };
 
@@ -110,7 +127,12 @@ struct Context {
         };
 
         for (auto line : lines) {
-            result += compute_arrangements(line);
+
+            auto r = compute_arrangements(line);
+
+            log << line << " : " << r << endl;
+
+            result += r;
         }
 
         log << "Part1: " << result << endl;
@@ -143,7 +165,7 @@ struct Context {
             }
 
             int64_t count = 0;
-            /* doit2(final_row, final_groups, "", count); */
+            doit(final_row, final_groups, "", count);
 
             return count;
         };
@@ -151,7 +173,7 @@ struct Context {
         for (auto line : lines) {
             auto r = compute_arrangements(line);
 
-            /* log << line << " : " << r << endl; */
+            log << line << " : " << r << endl;
 
             result += r;
         }
@@ -171,6 +193,6 @@ void process(const char *filename) {
 
 int main() {
     process("sample.txt");
-    process("input.txt");
+    /* process("input.txt"); */
     return 0;
 }
