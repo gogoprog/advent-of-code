@@ -1,6 +1,7 @@
 #include "../../common_fast.h"
 
 using Ints = Vector<int>;
+using BitSet = std::bitset<128>;
 
 int64_t factorial(int64_t n) {
     if (n == 0 || n == 1)
@@ -33,7 +34,7 @@ auto compute_groups = [](auto row, Ints &groups) {
 
     check();
 };
-auto compute_groups2 = [](auto row, Ints &groups, const String &values) {
+auto compute_groups2 = [](auto row, Ints &groups, const BitSet values, const int vlen) {
     int current = 0;
     int v = 0;
 
@@ -46,14 +47,12 @@ auto compute_groups2 = [](auto row, Ints &groups, const String &values) {
         }
     };
 
-    auto len = values.length();
-
     for (auto c : row) {
         if (c == '?') {
-            if (v >= len) {
+            if (v >= vlen) {
                 return false;
             }
-            c = values[v++];
+            c = values[v++] ? '#' : '.';
         }
         switch (c) {
             case '#':
@@ -70,10 +69,10 @@ auto compute_groups2 = [](auto row, Ints &groups, const String &values) {
     return true;
 };
 
-void doit(StringView row, const Ints &groups, String values, int64_t &count) {
+void doit(StringView row, const Ints &groups, BitSet values, const int vlen, int64_t &count) {
 
     Ints test_groups;
-    auto full = compute_groups2(row, test_groups, values);
+    auto full = compute_groups2(row, test_groups, values, vlen);
 
     if (full) {
 
@@ -100,11 +99,16 @@ void doit(StringView row, const Ints &groups, String values, int64_t &count) {
         }
 
         if (!cancel) {
-            doit(row, groups, values + "#", count);
-            doit(row, groups, values + ".", count);
+            auto nv = values;
+            nv.set(vlen, true);
+            doit(row, groups, nv, vlen + 1, count);
+            nv.set(vlen, false);
+            doit(row, groups, nv, vlen + 1, count);
         }
     } else {
-        doit(row, groups, values + ".", count);
+        auto nv = values;
+        nv.set(vlen, false);
+        doit(row, groups, nv, vlen + 1, count);
     }
 };
 
@@ -121,7 +125,7 @@ struct Context {
             rs::copy(groups_v, std::back_inserter(groups));
 
             int64_t count = 0;
-            doit(row, groups, "", count);
+            doit(row, groups, {}, 0, count);
 
             return count;
         };
@@ -165,7 +169,7 @@ struct Context {
             }
 
             int64_t count = 0;
-            doit(final_row, final_groups, "", count);
+            doit(final_row, final_groups, {}, 0, count);
 
             return count;
         };
