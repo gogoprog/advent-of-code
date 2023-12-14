@@ -21,6 +21,8 @@ auto compute_group = [](auto row, const BitSet values, const int vlen, int &pos)
                 break;
             case '.':
                 if (current) {
+                    pos++;
+
                     return current;
                 }
         }
@@ -56,41 +58,32 @@ void doit2(StringView row, int offset, const Ints &groups, int group_index, int 
         offset++;
     }
 
-    if (offset >= row.size())
+    if (offset >= row.size()) {
         return;
-
-    /* for (int n = 1; offset + n <= row.size(); n++) { */
+    }
 
     auto str = row.substr(offset);
-    /* log << str << endl; */
-    int64_t new_count = 0;
 
     Map<int, int> counts;
 
     match(str, groups[group_index], {}, 0, counts);
 
     for (auto &kv : counts) {
-        /* log << kv.first << " " << kv.second << "\n"; */
+        /* log << str << " -> " << kv.first << " " << kv.second << "\n"; */
         auto ncount = count * kv.second;
+
         if (group_index < groups.size() - 1) {
-            doit2(row, offset + kv.first + 1, groups, group_index + 1, ncount, final_count);
+            doit2(row, offset + kv.first, groups, group_index + 1, ncount, final_count);
         } else {
-            /* log << "yep!" << count << endl; */
-            final_count += ncount;
+
+            auto rest = row.substr(offset + kv.first);
+
+            if (rest.find('#') == StringView::npos) {
+
+                final_count += ncount;
+            }
         }
     }
-    /* log << str << " | " << groups[group_index] << " = " << new_count << endl; */
-
-    /* if (new_count) { */
-    /*     count *= new_count; */
-    /*     if (group_index < groups.size() - 1) { */
-    /*         doit2(row, offset + n + 1, groups, group_index + 1, count, final_count); */
-    /*     } else { */
-    /*         /1* log << "yep!" << count << endl; *1/ */
-    /*         final_count += count; */
-    /*     } */
-    /* } */
-    /* } */
 };
 
 struct Context {
@@ -180,7 +173,8 @@ void process(const char *filename) {
 }
 
 int main() {
+    process("sample2.txt");
     process("sample.txt");
-    /* process("input.txt"); */
+    process("input.txt");
     return 0;
 }
