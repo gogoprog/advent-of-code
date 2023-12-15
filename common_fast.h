@@ -477,6 +477,21 @@ class Logger {
         return *this;
     }
 
+    template <typename A,typename B> Logger &operator<<(Map<A, B> map) {
+        printf("[");
+        auto first = true;
+        for (auto kv : map) {
+            if (!first) {
+                printf(", ");
+            } else {
+                first = false;
+            }
+            *this << kv.first << " => " << kv.second;
+        }
+        printf("]");
+        return *this;
+    }
+
     Logger &operator<<(Coord c) {
         printf("(%d, %d)", c.x, c.y);
         return *this;

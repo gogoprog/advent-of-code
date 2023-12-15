@@ -32,7 +32,10 @@ auto compute_group = [](auto row, const BitSet values, const int vlen, int &pos)
     return current;
 };
 
-void match(StringView row, const int group, BitSet values, const int vlen, Map<int, int> &counts) {
+using Counts = Map<int, int64_t>;
+
+void match(const StringView row, const int group, BitSet values, const int vlen, Counts &counts) {
+
     int pos;
     auto test_group = compute_group(row, values, vlen, pos);
 
@@ -48,40 +51,67 @@ void match(StringView row, const int group, BitSet values, const int vlen, Map<i
     auto nv = values;
     nv.set(vlen, true);
     match(row, group, nv, vlen + 1, counts);
-    nv.set(vlen, false);
-    match(row, group, nv, vlen + 1, counts);
+    /* nv.set(vlen, false); */
+    /* match(row, group, nv, vlen + 1, counts); */
 };
+
+bool can_match(StringView row, const int group) {
+
+    int i = 0;
+    int current = 0;
+
+    while (row[i] != '.') {
+        current++;
+
+        if (current == group) {
+
+            return row[i + 1] != '#';
+        }
+
+        ++i;
+    }
+
+    return false;
+}
 
 void doit2(StringView row, int offset, const Ints &groups, int group_index, int count, int64_t &final_count) {
 
-    while (row[offset] == '.') {
-        offset++;
-    }
+    /* static Map<int, Map<String, CacheEntry>> cache; */
 
     if (offset >= row.size()) {
         return;
     }
 
-    auto str = row.substr(offset);
+    auto group = *(groups.begin() + group_index);
 
-    Map<int, int> counts;
+    for (int i = offset; i < row.size(); i++) {
 
-    match(str, groups[group_index], {}, 0, counts);
+        if (row[i] == '.') {
+            continue;
+        }
 
-    for (auto &kv : counts) {
-        /* log << str << " -> " << kv.first << " " << kv.second << "\n"; */
-        auto ncount = count * kv.second;
+        if (row[i - 1] != '#') {
 
-        if (group_index < groups.size() - 1) {
-            doit2(row, offset + kv.first, groups, group_index + 1, ncount, final_count);
-        } else {
+            auto str = row.substr(i);
 
-            auto rest = row.substr(offset + kv.first);
+            auto match = can_match(str, group);
+            /* log << str << " match " << group << "(" << group_index << ") = " << match << endl; */
 
-            if (rest.find('#') == StringView::npos) {
+            if (match) {
 
-                final_count += ncount;
+                if (group_index == groups.size() - 1) {
+
+                    auto rest = row.substr(i + group + 1);
+
+                    if (rest.find('#') == StringView::npos) {
+                        ++final_count;
+                    }
+                } else {
+                    doit2(row, i + group + 1, groups, group_index + 1, count, final_count);
+                }
             }
+            if (row[i] == '#')
+                break;
         }
     }
 };
@@ -99,7 +129,10 @@ struct Context {
             rs::copy(groups_v, std::back_inserter(groups));
 
             int64_t count = 0;
-            doit2(row, 0, groups, 0, 1, count);
+            String final_row = String(row);
+
+            final_row = '.' + final_row + '.';
+            doit2(final_row, 0, groups, 0, 1, count);
 
             return count;
         };
@@ -142,6 +175,8 @@ struct Context {
                 final_groups.insert(final_groups.end(), groups.begin(), groups.end());
             }
 
+            final_row = '.' + final_row + '.';
+
             int64_t count = 0;
             doit2(final_row, 0, final_groups, 0, 1, count);
 
@@ -173,7 +208,7 @@ void process(const char *filename) {
 }
 
 int main() {
-    process("sample2.txt");
+    /* process("sample2.txt"); */
     process("sample.txt");
     process("input.txt");
     return 0;
