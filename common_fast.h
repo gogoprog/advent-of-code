@@ -497,6 +497,12 @@ class Logger {
         return *this;
     }
 
+    template<typename A, typename B>
+    Logger &operator<<(Pair<A,B> c) {
+        printf("(%d, %d)", c.first, c.second);
+        return *this;
+    }
+
     static inline Logger &getInstance() {
         static Logger logger;
         return logger;
