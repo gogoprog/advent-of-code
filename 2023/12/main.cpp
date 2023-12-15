@@ -1,59 +1,6 @@
 #include "../../common_fast.h"
 
 using Ints = Vector<int>;
-using BitSet = std::bitset<128>;
-
-auto compute_group = [](auto row, const BitSet values, const int vlen, int &pos) {
-    int current = 0;
-    int v = 0;
-    pos = 0;
-
-    for (auto c : row) {
-        if (c == '?') {
-            if (v >= vlen) {
-                return -1;
-            }
-            c = values[v++] ? '#' : '.';
-        }
-        switch (c) {
-            case '#':
-                current++;
-                break;
-            case '.':
-                if (current) {
-                    pos++;
-
-                    return current;
-                }
-        }
-        pos++;
-    }
-
-    return current;
-};
-
-using Counts = Map<int, int64_t>;
-
-void match(const StringView row, const int group, BitSet values, const int vlen, Counts &counts) {
-
-    int pos;
-    auto test_group = compute_group(row, values, vlen, pos);
-
-    if (test_group != -1) {
-
-        if (test_group == group) {
-            counts[pos]++;
-        }
-
-        return;
-    }
-
-    auto nv = values;
-    nv.set(vlen, true);
-    match(row, group, nv, vlen + 1, counts);
-    /* nv.set(vlen, false); */
-    /* match(row, group, nv, vlen + 1, counts); */
-};
 
 bool can_match(StringView row, const int group) {
 
@@ -92,7 +39,7 @@ void doit2(StringView row, int offset, const Ints &groups, int group_index, int 
 
         if (row[i - 1] != '#') {
 
-            auto str = row.substr(i);
+            auto str = row.substr(i, group + 1);
 
             auto match = can_match(str, group);
             /* log << str << " match " << group << "(" << group_index << ") = " << match << endl; */
@@ -141,7 +88,7 @@ struct Context {
 
             auto r = compute_arrangements(line);
 
-            log << line << " : " << r << endl;
+            /* log << line << " : " << r << endl; */
 
             result += r;
         }
@@ -208,8 +155,8 @@ void process(const char *filename) {
 }
 
 int main() {
-    /* process("sample2.txt"); */
-    process("sample.txt");
-    process("input.txt");
+    process("sample2.txt");
+    /* process("sample.txt"); */
+    /* process("input.txt"); */
     return 0;
 }
