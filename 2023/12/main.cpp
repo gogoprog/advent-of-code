@@ -23,12 +23,9 @@ bool can_match(StringView row, const int group) {
 
 using Result = Map<int, int>;
 
-    static Map<Pair<String, int>, Result> cache;
+static Map<int, Map<String, Result>> cache;
 
 void doit2(StringView row, int offset, const Ints &groups, int group_index, int count, int64_t &final_count) {
-
-    /* static Map<int, Map<String, CacheEntry>> cache; */
-
 
     if (group_index >= groups.size()) {
 
@@ -57,25 +54,6 @@ void doit2(StringView row, int offset, const Ints &groups, int group_index, int 
         offset++;
     }
 
-    for (auto &kv : cache) {
-        auto cachestr = kv.first.first;
-        /* log << cachestr << endl; */
-        auto g = kv.first.second;
-        if (cachestr.size() > 0 && (row.size() - offset >= cachestr.size()) && group == g &&
-            row.substr(offset, cachestr.size()) == cachestr) {
-            const auto &todos = kv.second;
-
-            /* log << "cache hit: '" << cachestr << "'" << endl; */
-
-            for (auto &kv : todos) {
-                auto pair = kv.first;
-                /* doit2(row, kv.first + offset, groups, group_index + 1, count * kv.second, final_count); */
-            }
-
-            /* return; */
-        }
-    }
-
     Result todos;
 
     int i;
@@ -86,18 +64,9 @@ void doit2(StringView row, int offset, const Ints &groups, int group_index, int 
             auto str = row.substr(i, group + 1);
 
             auto match = can_match(str, group);
-            /* log << str << " match " << group << "(" << group_index << ") = " << match << endl; */
 
             if (match) {
 
-                /* if (group_index == groups.size() - 1) { */
-
-                /*     auto rest = row.substr(i + group + 1); */
-
-                /*     if (rest.find('#') == StringView::npos) { */
-                /*         final_count = final_count + count; */
-                /*     } */
-                /* } else { */
                 auto next = i + group + 1 - offset;
 
                 if (row[next + offset] == '.') {
@@ -105,24 +74,148 @@ void doit2(StringView row, int offset, const Ints &groups, int group_index, int 
                 }
 
                 todos[next]++;
-                /* doit2(row, i + group + 1, groups, group_index + 1, count, final_count); */
-                /* } */
             }
             if (row[i] == '#')
                 break;
         }
     }
 
-    if (row[i - 1] != '?') {
-
-        auto str = String(row.substr(offset, i - offset));
-
-        /* cache[{str, group}] = todos; */
-        /* log << "cache add: '" << str << "'" << endl; */
-    }
-
     for (auto &kv : todos) {
         doit2(row, kv.first + offset, groups, group_index + 1, count * kv.second, final_count);
+    }
+};
+
+struct Solver {
+    struct Node {
+        int position;
+        int groupIndex;
+        int count;
+
+        Vector<Node *> nextNodes;
+    };
+
+    Array<Node, 128> nodes;
+    int nodesCount{0};
+    Map<int, Map<int, Node *>> nodesMap;
+
+    Vector<Node *> goodNodes;
+
+    Node *createNode(int position, int groupIndex, int count) {
+        auto node = &nodes[nodesCount];
+        nodesCount++;
+
+        node->position = position;
+        node->groupIndex = groupIndex;
+        node->count = count;
+
+        nodesMap[groupIndex][position] = node;
+
+        return node;
+    }
+
+    Node *getNode(int position, int group_index) {
+
+        if (nodesMap[group_index].contains(position)) {
+            return nodesMap[group_index][position];
+        }
+
+        return createNode(position, group_index, 0);
+    }
+
+    void solve(StringView row, const Ints groups) {
+
+        log << "starting " << row << endl;
+        Queue<Node *> q;
+
+        auto first = createNode(0, 0, 1);
+
+        q.push(first);
+
+        while (!q.empty()) {
+            auto node = q.front();
+            q.pop();
+
+            auto offset = node->position;
+            auto group_index = node->groupIndex;
+
+            auto group = groups[group_index];
+
+            log << "node with group " << group_index << " offset " << offset << endl;
+
+            if (group_index >= groups.size()) {
+
+                if (offset < row.size()) {
+
+                    auto rest = row.substr(offset);
+
+                    if (rest.find('#') == StringView::npos) {
+                        goodNodes.push_back(node);
+                    }
+                } else {
+                    goodNodes.push_back(node);
+                }
+
+                continue;
+            }
+
+            while (row[offset] == '.') {
+                offset++;
+            }
+
+            for (int i = offset; i < row.size(); i++) {
+
+                if (row[i - 1] != '#') {
+
+                    auto str = row.substr(i, group + 1);
+
+                    auto match = can_match(str, group);
+
+                    if (match) {
+
+                        auto next = i + group + 1;
+
+                        if (row[next] == '.') {
+                            next++;
+                        }
+
+                        auto next_node = getNode(next, group_index + 1);
+
+                        next_node->count++;
+
+                        if (next_node->count == 1) {
+                            node->nextNodes.push_back(next_node);
+                            q.push(next_node);
+                        }
+                        /* q.push(new_node); */
+                    }
+                    if (row[i] == '#')
+                        break;
+                }
+            }
+        }
+
+        for (auto node : goodNodes) {
+
+            log << "good node with group:" << node->groupIndex << " position:" << node->position
+                << " count: " << node->count << endl;
+        }
+    }
+
+    int compute(Node *node) {
+        auto result = node->count;
+
+        for (auto nextNode : node->nextNodes) {
+
+            result += node->count * compute(nextNode);
+        }
+
+        return result;
+    }
+
+    int computeResult() {
+
+        /* return goodNodes.size(); */
+        return compute(getNode(0, 0));
     }
 };
 
@@ -143,10 +236,14 @@ struct Context {
 
             final_row = '.' + final_row + '.';
 
-            log << final_row << endl;
-
-            cache.clear();
             doit2(final_row, 0, groups, 0, 1, count);
+
+            Solver solver;
+            solver.solve(final_row, groups);
+
+            if (count != solver.computeResult()) {
+                log << "failed: " << solver.computeResult() << " != " << count << "\n";
+            }
 
             return count;
         };
@@ -191,10 +288,7 @@ struct Context {
 
             final_row = "." + final_row + '.';
 
-            log << final_row << endl;
-
             int64_t count = 0;
-            cache.clear();
             doit2(final_row, 0, final_groups, 0, 1, count);
 
             return count;
@@ -202,11 +296,9 @@ struct Context {
 
         for (auto line : lines) {
 
-            log << "doing " << line << endl;
-
             auto r = compute_arrangements(line);
 
-            log << " : " << r << endl;
+            log << line << " : " << r << endl;
 
             result += r;
         }
@@ -220,13 +312,13 @@ void process(const char *filename) {
     {
         Context context;
         context.part1(lines);
-        context.part2(lines);
+        /* context.part2(lines); */
     }
 }
 
 int main() {
     /* process("sample2.txt"); */
     process("sample.txt");
-    process("input.txt");
+    /* process("input.txt"); */
     return 0;
 }
