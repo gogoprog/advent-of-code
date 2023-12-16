@@ -29,33 +29,6 @@ struct Solver {
         int groupIndex;
         Int count;
 
-        /* Set<Node *> nextNodes; */
-        /* Set<Node *> previousNodes; */
-
-        /*
-        bool canReach(const int group_index) {
-            if (group_index == groupIndex)
-                return true;
-
-            bool result = false;
-
-            for (auto node : nextNodes) {
-
-                result = result || node->canReach(group_index);
-            }
-
-            return result;
-        }
-
-        int compute() const {
-            auto result = 1;
-            for (auto node : previousNodes) {
-                result += node->compute();
-            }
-            return result;
-        }
-        */
-
         void print() {
             log << "node with group:" << groupIndex << " position:" << position << " count:" << count << "\n";
         }
@@ -66,9 +39,6 @@ struct Solver {
     Map<int, Map<int, Node *>> nodesMap;
 
     Set<Node *> finalNodes;
-    Set<Node *> goodNodes;
-
-    Map<int, Set<Node *>> goodNodesPerGroupIndex;
 
     Node *createNode(int position, int groupIndex, Int count) {
         auto node = &nodes[nodesCount];
@@ -92,45 +62,8 @@ struct Solver {
         return createNode(position, group_index, 0);
     }
 
-    /* void clean(Node *node, const int group_index) { */
-
-    /*     auto &nodes = node->nextNodes; */
-    /*     auto len = nodes.size(); */
-
-    /*     auto cont = true; */
-    /*     while (cont) { */
-    /*         cont = false; */
-
-    /*         for (auto next : nodes) { */
-    /*             if (!next->canReach(group_index)) { */
-    /*                 nodes.erase(next); */
-    /*                 cont = true; */
-    /*                 break; */
-    /*             } */
-    /*         } */
-    /*     } */
-
-    /*     for (auto next : nodes) { */
-    /*         clean(next, group_index); */
-    /*     } */
-    /* } */
-
-    /* void findGoodNodes(Node *node, int group_index) { */
-
-    /*     if (node->canReach(group_index)) { */
-    /*         goodNodes.insert(node); */
-
-    /*         goodNodesPerGroupIndex[node->groupIndex].insert(node); */
-    /*     } */
-
-    /*     for (auto next : node->nextNodes) { */
-    /*         findGoodNodes(next, group_index); */
-    /*     } */
-    /* } */
-
     void solve(StringView row, const Ints groups) {
 
-        /* log << "starting " << row << endl; */
         Queue<Node *> q;
 
         auto first = createNode(0, 0, 1);
@@ -193,29 +126,12 @@ struct Solver {
                         }
 
                         next_node->count += node->count;
-                        /* next_node->previousNodes.insert(node); */
-
-                        /* node->nextNodes.insert(next_node); */
                     }
                     if (row[i] == '#')
                         break;
                 }
             }
         }
-
-        /* findGoodNodes(getNode(0, 0), groups.size()); */
-        /* clean(getNode(0, 0), groups.size()); */
-
-        /* for (auto node : goodNodes) { */
-
-        /*     log << "good node with group:" << node->groupIndex << " position:" << node->position */
-        /*         << " count: " << node->count << endl; */
-        /* } */
-        /* for (auto node : finalNodes) { */
-
-        /*     log << "final node with group:" << node->groupIndex << " position:" << node->position */
-        /*         << " count: " << node->count << endl; */
-        /* } */
     }
 
     Int computeResult(const Ints groups) {
@@ -247,8 +163,6 @@ struct Context {
 
             final_row = '.' + final_row + '.';
 
-            /* doit2(final_row, 0, groups, 0, 1, count); */
-
             Solver solver;
             solver.solve(final_row, groups);
 
@@ -260,8 +174,6 @@ struct Context {
         for (auto line : lines) {
 
             auto r = compute_arrangements(line);
-
-            /* log << line << " : " << r << endl; */
 
             result += r;
         }
@@ -297,8 +209,6 @@ struct Context {
 
             final_row = "." + final_row + '.';
 
-            /* Int count = 0; */
-            /* doit2(final_row, 0, final_groups, 0, 1, count); */
             Solver solver;
             solver.solve(final_row, final_groups);
 
@@ -309,12 +219,7 @@ struct Context {
 
         int i = 0;
         for (auto line : lines) {
-
-            log << i++ << ": " << line << " :" << endl;
-
             auto r = compute_arrangements(line);
-
-            log << "        -> " << r << endl;
 
             result += r;
         }
