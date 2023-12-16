@@ -8,6 +8,7 @@
 #include <deque>
 #include <functional>
 #include <initializer_list>
+#include <inttypes.h>
 #include <iterator>
 #include <limits>
 #include <list>
@@ -442,13 +443,13 @@ class Logger {
         return *this;
     }
 
-    Logger &operator<<(uint64_t i) {
-        printf("%ld", i);
+    Logger &operator<<(int64_t i) {
+        printf("%" PRId64, i);
         return *this;
     }
 
-    Logger &operator<<(long i) {
-        printf("%ld", i);
+    Logger &operator<<(uint64_t i) {
+        printf("%" PRIu64, i);
         return *this;
     }
 
@@ -477,7 +478,7 @@ class Logger {
         return *this;
     }
 
-    template <typename A,typename B> Logger &operator<<(Map<A, B> map) {
+    template <typename A, typename B> Logger &operator<<(Map<A, B> map) {
         printf("[");
         auto first = true;
         for (auto kv : map) {
@@ -497,8 +498,7 @@ class Logger {
         return *this;
     }
 
-    template<typename A, typename B>
-    Logger &operator<<(Pair<A,B> c) {
+    template <typename A, typename B> Logger &operator<<(Pair<A, B> c) {
         printf("(%d, %d)", c.first, c.second);
         return *this;
     }

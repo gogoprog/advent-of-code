@@ -2,12 +2,7 @@
 
 using Ints = Vector<int>;
 
-int64_t factorial(int n) {
-    if (n == 0 || n == 1) {
-        return 1;
-    }
-    return n * factorial(n - 1);
-}
+using Int = uint64_t;
 
 bool can_match(StringView row, const int group) {
 
@@ -28,75 +23,11 @@ bool can_match(StringView row, const int group) {
     return false;
 }
 
-using Result = Map<int, int>;
-
-static Map<int, Map<String, Result>> cache;
-
-void doit2(StringView row, int offset, const Ints &groups, int group_index, int count, int64_t &final_count) {
-
-    if (group_index >= groups.size()) {
-
-        if (offset < row.size()) {
-
-            auto rest = row.substr(offset);
-
-            if (rest.find('#') == StringView::npos) {
-                final_count = final_count + count;
-            }
-        } else {
-
-            final_count = final_count + count;
-        }
-
-        return;
-    }
-
-    if (offset >= row.size()) {
-        return;
-    }
-
-    auto group = *(groups.begin() + group_index);
-
-    while (row[offset] == '.') {
-        offset++;
-    }
-
-    Result todos;
-
-    int i;
-    for (i = offset; i < row.size(); i++) {
-
-        if (row[i - 1] != '#') {
-
-            auto str = row.substr(i, group + 1);
-
-            auto match = can_match(str, group);
-
-            if (match) {
-
-                auto next = i + group + 1 - offset;
-
-                while (row[next + offset] == '.') {
-                    next++;
-                }
-
-                todos[next]++;
-            }
-            if (row[i] == '#')
-                break;
-        }
-    }
-
-    for (auto &kv : todos) {
-        doit2(row, kv.first + offset, groups, group_index + 1, count * kv.second, final_count);
-    }
-};
-
 struct Solver {
     struct Node {
         int position;
         int groupIndex;
-        int64_t count;
+        Int count;
 
         /* Set<Node *> nextNodes; */
         /* Set<Node *> previousNodes; */
@@ -130,7 +61,7 @@ struct Solver {
         }
     };
 
-    Array<Node, 128> nodes;
+    Array<Node, 4096> nodes;
     int nodesCount{0};
     Map<int, Map<int, Node *>> nodesMap;
 
@@ -139,7 +70,7 @@ struct Solver {
 
     Map<int, Set<Node *>> goodNodesPerGroupIndex;
 
-    Node *createNode(int position, int groupIndex, int count) {
+    Node *createNode(int position, int groupIndex, Int count) {
         auto node = &nodes[nodesCount];
         nodesCount++;
 
@@ -207,15 +138,12 @@ struct Solver {
         q.push(first);
 
         while (!q.empty()) {
+
             auto node = q.front();
             q.pop();
 
             auto offset = node->position;
             auto group_index = node->groupIndex;
-
-            auto group = groups[group_index];
-
-            /* log << "node with group:" << group_index << " position:" << offset << endl; */
 
             if (group_index >= groups.size()) {
 
@@ -232,6 +160,11 @@ struct Solver {
 
                 continue;
             }
+            if (offset >= row.size()) {
+                continue;
+            }
+
+            auto group = groups[group_index];
 
             while (row[offset] == '.') {
                 offset++;
@@ -285,9 +218,9 @@ struct Solver {
         /* } */
     }
 
-    int64_t computeResult(const Ints groups) {
+    Int computeResult(const Ints groups) {
 
-        auto result = 0;
+        Int result = 0;
 
         for (auto node : finalNodes) {
             result += node->count;
@@ -300,7 +233,7 @@ struct Solver {
 struct Context {
 
     void part1(auto lines) {
-        auto result{0};
+        Int result{0};
 
         auto compute_arrangements = [&](auto line) {
             auto row = line | rv::split_sv(' ') | rv::get0;
@@ -309,7 +242,7 @@ struct Context {
             Vector<int> groups;
             rs::copy(groups_v, std::back_inserter(groups));
 
-            int64_t count = 0;
+            Int count = 0;
             String final_row = String(row);
 
             final_row = '.' + final_row + '.';
@@ -337,7 +270,7 @@ struct Context {
     }
 
     void part2(auto lines) {
-        int64_t result{0};
+        Int result{0};
 
         auto compute_arrangements = [&](auto line) {
             auto row = line | rv::split_sv(' ') | rv::get0;
@@ -364,7 +297,7 @@ struct Context {
 
             final_row = "." + final_row + '.';
 
-            /* int64_t count = 0; */
+            /* Int count = 0; */
             /* doit2(final_row, 0, final_groups, 0, 1, count); */
             Solver solver;
             solver.solve(final_row, final_groups);
