@@ -2,6 +2,13 @@
 
 using Ints = Vector<int>;
 
+int64_t factorial(int n) {
+    if (n == 0 || n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
 bool can_match(StringView row, const int group) {
 
     int i = 0;
@@ -92,13 +99,37 @@ struct Solver {
         int count;
 
         Vector<Node *> nextNodes;
+        Set<Node *> previousNodes;
+
+        bool canReach(const int group_index) {
+            if (group_index == groupIndex)
+                return true;
+
+            bool result = false;
+
+            for (auto node : nextNodes) {
+
+                result |= node->canReach(group_index);
+            }
+
+            return result;
+        }
+
+        int compute() const {
+            auto result = 1;
+            for (auto node : previousNodes) {
+                result += node->compute();
+            }
+            return result;
+        }
     };
 
     Array<Node, 128> nodes;
     int nodesCount{0};
     Map<int, Map<int, Node *>> nodesMap;
 
-    Vector<Node *> goodNodes;
+    Set<Node *> finalNodes;
+    Set<Node *> goodNodes;
 
     Node *createNode(int position, int groupIndex, int count) {
         auto node = &nodes[nodesCount];
@@ -122,6 +153,29 @@ struct Solver {
         return createNode(position, group_index, 0);
     }
 
+    void clean(Node *node, const int group_index) {
+
+        for (int i = node->nextNodes.size() - 1; i >= 0; i--) {
+            auto next = node->nextNodes[i];
+            if (!next->canReach(group_index)) {
+                node->nextNodes.erase(node->nextNodes.begin() + i);
+                // TODO
+            }
+            clean(node, group_index);
+        }
+    }
+
+    void findGoodNodes(Node *node, int group_index) {
+
+        if (node->canReach(group_index)) {
+            goodNodes.insert(node);
+        }
+
+        for (auto next : node->nextNodes) {
+            findGoodNodes(next, group_index);
+        }
+    }
+
     void solve(StringView row, const Ints groups) {
 
         log << "starting " << row << endl;
@@ -140,7 +194,7 @@ struct Solver {
 
             auto group = groups[group_index];
 
-            log << "node with group " << group_index << " offset " << offset << endl;
+            /* log << "node with group " << group_index << " offset " << offset << endl; */
 
             if (group_index >= groups.size()) {
 
@@ -149,10 +203,10 @@ struct Solver {
                     auto rest = row.substr(offset);
 
                     if (rest.find('#') == StringView::npos) {
-                        goodNodes.push_back(node);
+                        finalNodes.insert(node);
                     }
                 } else {
-                    goodNodes.push_back(node);
+                    finalNodes.insert(node);
                 }
 
                 continue;
@@ -181,18 +235,20 @@ struct Solver {
                         auto next_node = getNode(next, group_index + 1);
 
                         next_node->count++;
+                        next_node->previousNodes.insert(node);
 
                         if (next_node->count == 1) {
                             node->nextNodes.push_back(next_node);
                             q.push(next_node);
                         }
-                        /* q.push(new_node); */
                     }
                     if (row[i] == '#')
                         break;
                 }
             }
         }
+
+        findGoodNodes(getNode(0, 0), groups.size());
 
         for (auto node : goodNodes) {
 
@@ -201,21 +257,51 @@ struct Solver {
         }
     }
 
-    int compute(Node *node) {
-        auto result = node->count;
+    int64_t compute(Node *node) {
 
-        for (auto nextNode : node->nextNodes) {
+        if (node->previousNodes.size() == 0)
+            return 1;
 
-            result += node->count * compute(nextNode);
+        auto result = node->previousNodes.size();
+
+        log << "node " << node->previousNodes.size() << endl;
+
+        for (auto pnode : node->previousNodes) {
+
+            result *= node->previousNodes.size() * compute(pnode);
         }
 
         return result;
     }
 
-    int computeResult() {
+    /* int64_t compute2(Node *node) { */
+    /*     auto result = 1; */
 
-        /* return goodNodes.size(); */
-        return compute(getNode(0, 0));
+    /*     for (auto nnode : node->nextNodes) { */
+
+    /*         result *= compute2(nnode); */
+    /*     } */
+
+    /*     return result; */
+    /* } */
+
+    /* int64_t compute3(Node *node) { */
+
+    /* int64_t result = node->nextNodes.size() * compute( */
+
+    /* return result; */
+    /* } */
+
+    int64_t computeResult() {
+
+        int64_t result = 1;
+
+        for (auto node : goodNodes) {
+            result *= node->count;
+        }
+
+
+        return result;
     }
 };
 
@@ -241,8 +327,10 @@ struct Context {
             Solver solver;
             solver.solve(final_row, groups);
 
-            if (count != solver.computeResult()) {
-                log << "failed: " << solver.computeResult() << " != " << count << "\n";
+            auto r = solver.computeResult();
+
+            if (count != r) {
+                log << "failed: " << r << " != " << count << "\n";
             }
 
             return count;
