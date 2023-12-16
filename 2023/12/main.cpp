@@ -98,9 +98,10 @@ struct Solver {
         int groupIndex;
         int64_t count;
 
-        Set<Node *> nextNodes;
-        Set<Node *> previousNodes;
+        /* Set<Node *> nextNodes; */
+        /* Set<Node *> previousNodes; */
 
+        /*
         bool canReach(const int group_index) {
             if (group_index == groupIndex)
                 return true;
@@ -122,6 +123,7 @@ struct Solver {
             }
             return result;
         }
+        */
 
         void print() {
             log << "node with group:" << groupIndex << " position:" << position << " count:" << count << "\n";
@@ -159,41 +161,41 @@ struct Solver {
         return createNode(position, group_index, 0);
     }
 
-    void clean(Node *node, const int group_index) {
+    /* void clean(Node *node, const int group_index) { */
 
-        auto &nodes = node->nextNodes;
-        auto len = nodes.size();
+    /*     auto &nodes = node->nextNodes; */
+    /*     auto len = nodes.size(); */
 
-        auto cont = true;
-        while (cont) {
-            cont = false;
+    /*     auto cont = true; */
+    /*     while (cont) { */
+    /*         cont = false; */
 
-            for (auto next : nodes) {
-                if (!next->canReach(group_index)) {
-                    nodes.erase(next);
-                    cont = true;
-                    break;
-                }
-            }
-        }
+    /*         for (auto next : nodes) { */
+    /*             if (!next->canReach(group_index)) { */
+    /*                 nodes.erase(next); */
+    /*                 cont = true; */
+    /*                 break; */
+    /*             } */
+    /*         } */
+    /*     } */
 
-        for (auto next : nodes) {
-            clean(next, group_index);
-        }
-    }
+    /*     for (auto next : nodes) { */
+    /*         clean(next, group_index); */
+    /*     } */
+    /* } */
 
-    void findGoodNodes(Node *node, int group_index) {
+    /* void findGoodNodes(Node *node, int group_index) { */
 
-        if (node->canReach(group_index)) {
-            goodNodes.insert(node);
+    /*     if (node->canReach(group_index)) { */
+    /*         goodNodes.insert(node); */
 
-            goodNodesPerGroupIndex[node->groupIndex].insert(node);
-        }
+    /*         goodNodesPerGroupIndex[node->groupIndex].insert(node); */
+    /*     } */
 
-        for (auto next : node->nextNodes) {
-            findGoodNodes(next, group_index);
-        }
-    }
+    /*     for (auto next : node->nextNodes) { */
+    /*         findGoodNodes(next, group_index); */
+    /*     } */
+    /* } */
 
     void solve(StringView row, const Ints groups) {
 
@@ -257,11 +259,10 @@ struct Solver {
                             q.push(next_node);
                         }
 
-                        /* next_node->count++; */
                         next_node->count += node->count;
-                        next_node->previousNodes.insert(node);
+                        /* next_node->previousNodes.insert(node); */
 
-                        node->nextNodes.insert(next_node);
+                        /* node->nextNodes.insert(next_node); */
                     }
                     if (row[i] == '#')
                         break;
@@ -269,8 +270,8 @@ struct Solver {
             }
         }
 
-        findGoodNodes(getNode(0, 0), groups.size());
-        clean(getNode(0, 0), groups.size());
+        /* findGoodNodes(getNode(0, 0), groups.size()); */
+        /* clean(getNode(0, 0), groups.size()); */
 
         /* for (auto node : goodNodes) { */
 
@@ -320,7 +321,6 @@ struct Context {
 
             auto r = solver.computeResult(groups);
 
-
             return r;
         };
 
@@ -328,7 +328,7 @@ struct Context {
 
             auto r = compute_arrangements(line);
 
-            log << line << " : " << r << endl;
+            /* log << line << " : " << r << endl; */
 
             result += r;
         }
@@ -371,15 +371,17 @@ struct Context {
 
             auto r = solver.computeResult(final_groups);
 
-
             return r;
         };
 
+        int i = 0;
         for (auto line : lines) {
+
+            log << i++ << ": " << line << " :" << endl;
 
             auto r = compute_arrangements(line);
 
-            log << line << " : " << r << endl;
+            log << "        -> " << r << endl;
 
             result += r;
         }
