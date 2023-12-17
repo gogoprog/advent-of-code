@@ -29,93 +29,123 @@ struct Context {
         int lastDir{-1};
         int loss{0};
 
-        Vector<Coord> path;
-
         bool operator<(const Node &other) const {
-            if (position.x == other.position.x) {
-                return position.y < other.position.y;
+
+            if (loss == other.loss) {
+                auto a = position.x + position.y;
+                auto b = other.position.x + other.position.y;
+
+                return a > b;
             }
-            return position.x < other.position.x;
+            return loss > other.loss;
         }
     };
 
-    int solve() {
-        Queue<Node> q;
+    template <int PART> int solve() {
+        PriorityQueue<Node> q;
 
-        int best{1000000};
+        int best{10000000};
 
         Node best_node;
 
         Node start{{0, 0}};
         Coord goal{width - 1, height - 1};
 
-        Map<Coord, int> visited;
+        Map<Coord, Map<int, int>> visited;
 
         q.push(start);
 
         while (!q.empty()) {
-            const auto node = q.front();
+            const auto node = q.top();
             q.pop();
 
-            /* if (node.loss > best) */
-            /* continue; */
-
-            auto &v = visited[node.position];
-            if (v == 0 || node.loss <= v) {
+            auto &v = visited[node.position][node.lastDir * 10000 + node.steps];
+            if (v == 0 || node.loss < v) {
                 v = node.loss;
             } else {
                 continue;
             }
 
             if (node.position == goal) {
+
+                if constexpr (PART == 2) {
+                    if (node.steps < 3) {
+                        continue;
+                    }
+                }
+
                 if (node.loss < best) {
                     best = node.loss;
                     best_node = node;
-                    log << "yup: " << node.loss << endl;
                 }
             } else {
                 int d = 0;
+                int id = 0;
+                auto ld = node.lastDir;
                 for (auto &dir : dirs) {
+                    d = id;
+                    id++;
                     auto npos = node.position + dir;
+
+                    if ((ld == N && d == S) || (ld == S && d == N) || (ld == E && d == W) || (ld == W && d == E)) {
+                        continue;
+                    }
 
                     if (isValid(npos)) {
                         auto copy = node;
 
-                        if (copy.lastDir == d) {
-                            copy.steps++;
+                        if constexpr (PART == 1) {
+                            if (copy.lastDir == d) {
+                                copy.steps++;
+                            } else {
+                                copy.steps = 0;
+                            }
+
+                            if (copy.steps < 3) {
+                                copy.lastDir = d;
+                                copy.position = npos;
+                                copy.loss += getChar(npos) - '0';
+
+                                q.push(copy);
+                            }
                         } else {
-                            copy.steps = 0;
-                        }
 
-                        if (copy.steps < 3) {
-                            copy.lastDir = d;
-                            copy.position = npos;
-                            copy.loss += getChar(npos) - '0';
+                            if (ld != -1 && copy.steps < 3) {
+                                if (d != ld) {
+                                    continue;
+                                }
+                            }
 
-                            copy.path.push_back(npos);
+                            if (copy.lastDir == d) {
+                                copy.steps++;
+                            } else {
+                                copy.steps = 0;
+                            }
 
-                            q.push(copy);
+                            if (copy.steps < 10) {
+                                copy.lastDir = d;
+                                copy.position = npos;
+                                copy.loss += getChar(npos) - '0';
+
+                                q.push(copy);
+                            }
                         }
                     }
-
-                    d++;
                 }
             }
         }
-
-        log << best_node.path << endl;
 
         return best;
     }
 
     void part1() {
-        auto result = solve();
+        auto result = solve<1>();
 
         log << "Part1: " << result << endl;
     }
 
     void part2() {
-        auto result{0};
+        auto result = solve<2>();
 
         log << "Part2: " << result << endl;
     }
@@ -134,6 +164,7 @@ void process(const char *filename) {
 
 int main() {
     process("sample.txt");
-    /* process("input.txt"); */
+    process("sample2.txt");
+    process("input.txt");
     return 0;
 }
