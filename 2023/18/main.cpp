@@ -6,9 +6,6 @@ constexpr Array<Coord, 4> dirs = {Coord{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
 struct Dig {
     int direction;
     int meters;
-
-    int direction2;
-    int meters2;
 };
 
 template <> struct std::hash<Coord> {
@@ -19,6 +16,7 @@ template <> struct std::hash<Coord> {
 
 struct Context {
     Vector<Dig> digs;
+    Vector<Dig> digs2;
 
     void parse(auto lines) {
         auto result{0};
@@ -49,27 +47,29 @@ struct Context {
 
             dig.meters = meters;
 
+            auto &dig2 = digs2.emplace_back();
+
             switch (colorsv[7]) {
                 case '3':
-                    dig.direction2 = U;
+                    dig2.direction = U;
                     break;
                 case '1':
-                    dig.direction2 = D;
+                    dig2.direction = D;
                     break;
                 case '2':
-                    dig.direction2 = L;
+                    dig2.direction = L;
                     break;
                 case '0':
-                    dig.direction2 = R;
+                    dig2.direction = R;
                     break;
             }
 
             auto str = colorsv.substr(2, 5);
-            std::from_chars(str.data(), str.data() + 5, dig.meters2, 16);
+            std::from_chars(str.data(), str.data() + 5, dig2.meters, 16);
         }
     }
 
-    void part1() {
+    int solve0(Vector<Dig> &digs) {
         auto result{0};
 
         UnorderedMap<Coord, bool> borders;
@@ -116,61 +116,177 @@ struct Context {
         result = borders.size() + visited.size();
 
         /* for(int y = -100; y < 10; y++) { */
-        /*     for(int x = 0; x < 180; x++) { */
+        /*     for(int x = 0; x < 100; x++) { */
         /*         log << (borders.find({x, y})!= borders.end()? '#' : '.'); */
         /*     } */
         /*     log << '\n'; */
         /* } */
 
-        log << "Part1: " << result << endl;
+        return result;
     }
 
-    void part2() {
-        auto result{0};
+    uint64_t solve(Vector<Dig> &digs) {
+        uint64_t result{0};
 
-        UnorderedMap<Coord, bool> borders;
-        Coord current{0, 0};
-        borders[current] = true;
+        Vector<Line> lines;
 
-        for (auto &dig : digs) {
+        uint64_t total_removed = 0;
+        bool removing = true;
 
-            const auto &delta = dirs[dig.direction2];
+        while (removing) {
+            auto len = digs.size();
+            removing = false;
 
-            for (int i = 0; i < dig.meters2; i++) {
-                current += delta;
-                borders[current] = true;
-            }
-        }
+            for (int d = len - 1; d >= 0; d--) {
 
-        UnorderedMap<Coord, bool> visited;
-
-        Queue<Coord> q;
-
-        q.push({1, 1});
-
-        log << "filling..." << endl;
-
-        while (!q.empty()) {
-            const auto coord = q.front();
-            q.pop();
-
-            if (visited.find(coord) != visited.end()) {
-                continue;
+                if (digs[d].meters == 0) {
+                    /* digs.erase(digs.begin() + d); */
+                    /* log << "Clean dig" << d << endl; */
+                }
             }
 
-            visited[coord] = true;
+            len = digs.size();
+            /* for (int d = 0; d < len; d++) { */
+            /*     auto &dig = digs[d]; */
+            /*     auto &dig1 = digs[(d + 1) % len]; */
 
-            for (auto dir : dirs) {
-                auto new_coord = coord + dir;
+            /*     if(dig.direction == dig1.direction) { */
 
-                if (borders.find(new_coord) == borders.end()) {
-                    q.push(new_coord);
+
+            /*         removing = true; */
+            /*         break; */
+            /*     } */
+            /* } */
+
+            if(removing) continue;
+
+            len = digs.size();
+
+            /* lines.resize(len); */
+
+            /* auto current = Point{0, 0}; */
+            /* for (int d = 0; d < len; d++) { */
+            /*     auto &dig = digs[d]; */
+            /*     auto next = current + dirs[dig.direction] * dig.meters; */
+            /*     lines[d] = {current, next}; */
+            /*     current = next; */
+            /* } */
+
+            for (int d = 0; d < len; d++) {
+                auto &dig = digs[d];
+                auto &dig1 = digs[(d + 1) % len];
+                auto &dig2 = digs[(d + 2) % len];
+
+                uint64_t width, height, extracted = 0;
+
+                if ((dig.direction == R && dig1.direction == D && dig2.direction == L) ||
+                    (dig.direction == L && dig1.direction == U && dig2.direction == R)) {
+                    width = std::min(dig.meters, dig2.meters);
+                    height = dig1.meters + 1;
+                    extracted = width * height;
+
+                    dig.meters -= width;
+                    dig2.meters -= width;
+
+                    total_removed += extracted;
+                }
+
+                if ((dig.direction == D && dig1.direction == L && dig2.direction == U) ||
+                    (dig.direction == U && dig1.direction == R && dig2.direction == D)) {
+                    width = dig1.meters + 1;
+                    height = std::min(dig.meters, dig2.meters);
+
+                    extracted = width * height;
+
+                    dig.meters -= height;
+                    dig2.meters -= height;
+
+                    total_removed += extracted;
+                }
+
+                if (extracted) {
+                    /* log << "Removed " << width << " x " << height << " = " << extracted << " (" << total_removed <<
+                     * ")" */
+                    /*     << endl; */
+                    removing = true;
+                    break;
                 }
             }
         }
 
-        result = borders.size() + visited.size();
+        result = total_removed;
 
+        log << "Total removed: " << total_removed << endl;
+        log << "Rest: " << digs.size() << endl;
+
+        if (1 && digs.size() > 0) {
+
+            UnorderedMap<Coord, bool> borders;
+
+            Coord current{0, 0};
+
+            borders[current] = true;
+
+            for (auto &dig : digs) {
+
+                const auto &delta = dirs[dig.direction];
+
+                for (int i = 0; i < dig.meters; i++) {
+                    current += delta;
+                    borders[current] = true;
+
+                    log << current << endl;
+                }
+            }
+
+            for (int y = -10; y < 10; y++) {
+                for (int x = -10; x < 20; x++) {
+                    log << (borders.find({x, y}) != borders.end() ? '#' : '.');
+                }
+                log << '\n';
+            }
+
+            UnorderedMap<Coord, bool> visited;
+
+            Queue<Coord> q;
+
+            q.push({1, 1});
+
+            while (!q.empty()) {
+                const auto coord = q.front();
+                q.pop();
+
+                if (visited.find(coord) != visited.end()) {
+                    continue;
+                }
+
+                visited[coord] = true;
+
+                for (auto dir : dirs) {
+                    auto new_coord = coord + dir;
+
+                    if (borders.find(new_coord) == borders.end()) {
+                        q.push(new_coord);
+                    }
+                }
+            }
+
+            result += borders.size() + visited.size();
+        }
+
+        return result;
+    }
+
+    void part1() {
+        auto result = solve0(digs);
+
+        auto r2 = solve(digs);
+        log << "Part1: " << r2 << endl;
+        log << "Part1: " << result << endl;
+    }
+
+    void part2() {
+        auto result = solve(digs2);
         log << "Part2: " << result << endl;
     }
 };
@@ -187,7 +303,7 @@ void process(const char *filename) {
 }
 
 int main() {
-    /* process("sample.txt"); */
-    process("input.txt");
+    process("sample.txt");
+    /* process("input.txt"); */
     return 0;
 }
