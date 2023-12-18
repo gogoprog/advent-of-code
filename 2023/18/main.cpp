@@ -144,13 +144,25 @@ struct Context {
                     auto &dig2 = digs[d2];
                     auto corner = lines[d].second;
 
+                    Rect rect;
                     int width, height;
                     int64_t extracted = 0;
 
+                    auto rect_is_valid = [&]() {
+                        for (auto l2 = 0; l2 < len; l2++) {
+                            if (l2 != d && l2 != d1 && l2 != d2 && l2 != d3) {
+
+                                if (rect.hit(lines[l2])) {
+                                    return false;
+                                }
+                            }
+                        }
+
+                        return true;
+                    };
+
                     if ((dig.direction == R && dig1.direction == D && dig2.direction == L) ||
                         (dig.direction == L && dig1.direction == U && dig2.direction == R)) {
-
-                        Rect rect;
 
                         width = std::min(dig.meters, dig2.meters);
                         height = dig1.meters + 1;
@@ -166,19 +178,7 @@ struct Context {
 
                         rect.size = {width, height};
 
-                        bool skip = false;
-
-                        for (auto l2 = 0; l2 < len; l2++) {
-                            if (l2 != d && l2 != d1 && l2 != d2 && l2 != d3) {
-
-                                if (rect.hit(lines[l2])) {
-                                    skip = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!skip) {
+                        if (rect_is_valid()) {
 
                             extracted = width * (int64_t)height;
                             dig.meters -= width;
@@ -190,8 +190,6 @@ struct Context {
 
                     else if ((dig.direction == D && dig1.direction == L && dig2.direction == U) ||
                              (dig.direction == U && dig1.direction == R && dig2.direction == D)) {
-
-                        Rect rect;
 
                         width = dig1.meters + 1;
                         height = std::min(dig.meters, dig2.meters);
@@ -207,21 +205,7 @@ struct Context {
 
                         rect.size = {width, height};
 
-                        bool skip = false;
-
-                        for (auto l2 = 0; l2 < len; l2++) {
-                            if (l2 != d && l2 != d1 && l2 != d2 && l2 != d3) {
-
-                                if (rect.hit(lines[l2])) {
-                                    skip = true;
-
-                                    /* log << "skip!" << endl; */
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!skip) {
+                        if (rect_is_valid()) {
 
                             extracted = width * (int64_t)height;
 
