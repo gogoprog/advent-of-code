@@ -499,7 +499,11 @@ class Logger {
     }
 
     template <typename A, typename B> Logger &operator<<(Pair<A, B> c) {
-        printf("(%d, %d)", c.first, c.second);
+        printf("(");
+        *this << c.first;
+        printf(", ");
+        *this << c.second;
+        printf(")");
         return *this;
     }
 
