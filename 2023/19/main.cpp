@@ -1,6 +1,6 @@
 #include "../../common_fast.h"
 
-using Int = int;
+using Int = uint64_t;
 
 struct Rating {
     Map<char, Int> values;
@@ -23,6 +23,8 @@ struct Rule {
         log << part << op << value << ":" << target << endl;
     }
 };
+
+enum Result { ACCEPT, REJECT, SEND };
 
 struct Workflow {
     String name;
@@ -56,6 +58,18 @@ struct Workflow {
             } else {
                 return rule.target;
             }
+        }
+    }
+
+    Result compute(Rating &rating, String &target) {
+        String ret = compute(rating);
+        if (ret[0] == 'A') {
+            return ACCEPT;
+        } else if (ret[0] == 'R') {
+            return REJECT;
+        } else {
+            target = ret;
+            return SEND;
         }
     }
 };
@@ -145,18 +159,19 @@ struct Context {
             auto cont = true;
 
             while (cont) {
-                auto ret = current->compute(rating);
-
-                if (ret[0] == 'A') {
-
-                    result += rating.compute();
-
-                    cont = false;
-
-                } else if (ret[0] == 'R') {
-                    cont = false;
-                } else {
-                    current = &workflowsMap[ret];
+                String target;
+                auto r = current->compute(rating, target);
+                switch (r) {
+                    case ACCEPT:
+                        result += rating.compute();
+                        cont = false;
+                        break;
+                    case REJECT:
+                        cont = false;
+                        break;
+                    case SEND:
+                        current = &workflowsMap[target];
+                        break;
                 }
             }
         }
@@ -165,7 +180,76 @@ struct Context {
     }
 
     void part2() {
-        auto result{0};
+        Int result{0};
+
+        struct Node {
+            String flow;
+            Map<char, Pair<Int, Int>> values;
+        };
+
+        Node start;
+        start.flow = "in";
+        start.values['x'] = {0, 4000};
+        start.values['m'] = {0, 4000};
+        start.values['a'] = {0, 4000};
+        start.values['s'] = {0, 4000};
+
+        Queue<Node> q;
+
+        q.push(start);
+
+        auto accept = [&](auto &node) {
+            Int r = 1;
+
+            for (auto &kv : node.values) {
+
+                r *= (kv.second.second - kv.second.first);
+            }
+
+            result += r;
+        };
+
+        while (!q.empty()) {
+            auto node = q.front();
+            q.pop();
+
+            auto flow = &workflowsMap[node.flow];
+
+            for (auto &rule : flow->rules) {
+
+                if (rule.op) {
+                    auto &val = node.values[rule.part];
+                    auto copy = node;
+                    auto &new_val = copy.values[rule.part];
+                    switch (rule.op) {
+                        case '<':
+                            new_val.first = std::max(new_val.first, rule.value);
+                            val.second = std::min(val.second, rule.value);
+                            break;
+                        case '>':
+                            new_val.second = std::min(new_val.second, rule.value);
+                            val.first = std::max(val.first, rule.value);
+                            break;
+                    }
+
+                    if (rule.target[0] == 'A') {
+                        accept(node);
+                    } else if (rule.target[0] == 'R') {
+                    } else {
+                        copy.flow = rule.target;
+                        q.push(copy);
+                    }
+                } else {
+                    if (rule.target[0] == 'A') {
+                        accept(node);
+                    } else if (rule.target[0] == 'R') {
+                    } else {
+                        node.flow = rule.target;
+                        q.push(node);
+                    }
+                }
+            }
+        }
 
         log << "Part2: " << result << endl;
     }
