@@ -1,6 +1,6 @@
 #include "../../common_fast.h"
 
-using Int = uint64_t;
+using Int = int64_t;
 
 struct Rating {
     Map<char, Int> values;
@@ -189,10 +189,10 @@ struct Context {
 
         Node start;
         start.flow = "in";
-        start.values['x'] = {0, 4000};
-        start.values['m'] = {0, 4000};
-        start.values['a'] = {0, 4000};
-        start.values['s'] = {0, 4000};
+        start.values['x'] = {1, 4000};
+        start.values['m'] = {1, 4000};
+        start.values['a'] = {1, 4000};
+        start.values['s'] = {1, 4000};
 
         Queue<Node> q;
 
@@ -202,8 +202,13 @@ struct Context {
             Int r = 1;
 
             for (auto &kv : node.values) {
+                auto &pair = kv.second;
+                auto b = pair.second;
+                auto a = pair.first;
 
-                r *= (kv.second.second - kv.second.first);
+                if (b > a) {
+                    r *= (b - a) + 1;
+                }
             }
 
             result += r;
@@ -221,19 +226,20 @@ struct Context {
                     auto &val = node.values[rule.part];
                     auto copy = node;
                     auto &new_val = copy.values[rule.part];
+
                     switch (rule.op) {
-                        case '<':
-                            new_val.first = std::max(new_val.first, rule.value);
+                        case '>':
+                            new_val.first = std::max(new_val.first, rule.value + 1);
                             val.second = std::min(val.second, rule.value);
                             break;
-                        case '>':
-                            new_val.second = std::min(new_val.second, rule.value);
+                        case '<':
+                            new_val.second = std::min(new_val.second, rule.value - 1);
                             val.first = std::max(val.first, rule.value);
                             break;
                     }
 
                     if (rule.target[0] == 'A') {
-                        accept(node);
+                        accept(copy);
                     } else if (rule.target[0] == 'R') {
                     } else {
                         copy.flow = rule.target;
