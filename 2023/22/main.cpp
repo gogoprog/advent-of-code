@@ -57,8 +57,8 @@ struct Context {
         }
 
         auto collides = [&](auto &pos, auto &extent, auto other_index) {
-            auto other_pos = positions[other_index];
-            auto other_extent = extents[other_index];
+            const auto &other_pos = positions[other_index];
+            const auto &other_extent = extents[other_index];
 
             for (auto c = 0; c < 3; c++) {
 
@@ -107,7 +107,7 @@ struct Context {
                 if (!collides_all(new_pos, extent, i, -1)) {
                     positions[i] = new_pos;
                     falling = true;
-                    break;
+                    /* break; */
                 }
             }
         }
@@ -120,12 +120,11 @@ struct Context {
 
             for (auto i = 0; i < len; i++) {
                 auto new_pos = positions[i];
-                auto extent = extents[i];
+                auto &extent = extents[i];
 
                 new_pos.z -= 1;
 
                 if (!collides_all(new_pos, extent, i, b)) {
-                    /* positions[i] = new_pos; */
                     falling = true;
                     break;
                 }
@@ -201,7 +200,7 @@ struct Context {
                 if (!collides_all(new_pos, extent, i, -1)) {
                     positions[i] = new_pos;
                     falling = true;
-                    break;
+                    /* break; */
                 }
             }
         }
@@ -224,7 +223,7 @@ struct Context {
 
                 for (auto i = 0; i < len; i++) {
                     auto new_pos = positions[i];
-                    auto extent = extents[i];
+                    auto & extent = extents[i];
 
                     new_pos.z -= 1;
 
@@ -232,7 +231,7 @@ struct Context {
                         fallings.insert(i);
                         positions[i] = new_pos;
                         falling = true;
-                        break;
+                        /* break; */
                     }
                 }
             }
@@ -257,6 +256,6 @@ void process(const char *filename) {
 
 int main() {
     process("sample.txt");
-    /* process("input.txt"); */
+    process("input.txt");
     return 0;
 }
