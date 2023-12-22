@@ -211,22 +211,38 @@ struct Context {
             }
         }
 
+        using Pair64 = Pair<int64_t, int64_t>;
+
         auto compute = [&](auto from, auto to) {
-            int64_t result = 0;
+            Pair64 result;
+            int64_t offset = 0;
+            int64_t interval = 0;
             int64_t i = 0;
+
+            int step = 0;
 
             while (true) {
                 Queue<Module::Pulse> q;
 
-                q.push({from->id, to->id, LOW});
+                q.push({from->id, broadcaster->id, LOW});
 
                 while (!q.empty()) {
                     auto pulse = q.front();
                     q.pop();
 
-                    if (pulse.to == rx_id && pulse.value == LOW) {
-                        result = i;
-                        break;
+                    if (pulse.to == to->id && pulse.value == LOW) {
+
+                        if (step == 0) {
+                            offset = i;
+                            log << "offset: " << offset << endl;
+                            step++;
+                        } else {
+                            interval = i - offset;
+
+                            log << "interval: " << interval << endl;
+
+                            /* return Pair64{offset, interval}; */
+                        }
                     }
 
                     auto to = *(modules.begin() + pulse.to);
@@ -238,14 +254,14 @@ struct Context {
 
                 ++i;
 
-                if (i > 1000000) {
+                if (i > 10000) {
                     log << "whoops" << endl;
 
-                    return int64_t(-1);
+                    return Pair64{-1, -1};
                 }
 
-                if (result)
-                    break;
+                /* if (result) */
+                /* break; */
             }
 
             return result;
@@ -267,6 +283,7 @@ struct Context {
             auto target = q.front();
             q.pop();
 
+            /*
             bool has_cache = false;
             int64_t from_cache = 1;
 
@@ -280,6 +297,11 @@ struct Context {
                             has_cache = true;
                             from_cache = (cache[target->inputs[0]] + 1) / 2 - 1;
                             break;
+
+                        default: {
+                            has_cache = true;
+                            from_cache = cache[target->inputs[0]];
+                        } break;
                     }
                 }
             } else if (inputs.size() > 1) {
@@ -296,20 +318,22 @@ struct Context {
                 }
             }
 
-            log << button->name << " - " << target->name << " ..." << endl;
             if (has_cache) {
                 log << "from cache : " << from_cache << endl;
                 cache[target] = from_cache;
                 continue;
             }
+            */
+
+            log << button->name << " - " << target->name << " /" << q.size() << " ..." << endl;
             auto r = compute(button, target);
             log << "from compu : " << r << endl;
 
-            if (r == -1) {
-                q.push(target);
-            } else {
-                cache[target] = r;
-            }
+            /* if (r. == -1) { */
+            /*     q.push(target); */
+            /* } else { */
+            /*     cache[target] = r; */
+            /* } */
         }
 
         log << "Part2: " << result << endl;
