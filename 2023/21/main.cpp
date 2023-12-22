@@ -164,35 +164,22 @@ template <int STEPS> struct Context {
 
     int64_t part2(auto max_steps) {
 
-        int64_t reachable = 0;
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                auto coord = Coord{x, y};
-                if (getChar(coord) != '#') {
-
-                    auto delta = coord - start;
-                    if ((delta.manhattan() % 2) != 0) {
-                        reachable++;
-                    }
-                }
-            }
-        }
-
-        log << width << 'x' << height << ':' << reachable << endl;
-
-        int64_t size = int(max_steps/ width);
-
-        log << "size= " << size << endl;
-
+        int64_t size = int(max_steps / width);
         auto left = max_steps % size;
+
+        log << "size: " << size << endl;
 
         Point east{0, start.y};
         Point west{width - 1, start.y};
         Point north{start.x, 0};
         Point south{start.x, height - 1};
 
-        int64_t reachables_from_ne = compute(Vector<Coord>{north, east}, left);
+        int64_t reachable = compute({start}, width * 2.5);
+        log << "reachable: " << reachable << endl;
+        int64_t reachable2 = compute({west}, width + left);
+        log << "reachable2: " << reachable2 << endl;
+
+        int64_t reachables_from_ne = compute({north, east}, left);
         int64_t reachables_from_nw = compute({north, west}, left);
         int64_t reachables_from_se = compute({south, east}, left);
         int64_t reachables_from_sw = compute({south, west}, left);
@@ -202,18 +189,17 @@ template <int STEPS> struct Context {
         log << "from se " << reachables_from_se << endl;
         log << "from sw " << reachables_from_sw << endl;
 
-        int64_t full = 2 * size * size + 2 * size + 1;
+        int64_t full = 2 * (size-1) * (size-1) + 2 * (size-1) + 1;
         int64_t result = full * reachable;
 
         result += compute({north}, left);
         result += compute({south}, left);
         result += compute({east}, left);
         result += compute({west}, left);
-        result += (size - 2) * reachables_from_ne;
-        result += (size - 2) * reachables_from_se;
-        result += (size - 2) * reachables_from_nw;
-        result += (size - 2) * reachables_from_sw;
-
+        result += (size - 1) * reachables_from_ne;
+        result += (size - 1) * reachables_from_se;
+        result += (size - 1) * reachables_from_nw;
+        result += (size - 1) * reachables_from_sw;
 
         /* int steps = computeMinSteps(start, {0, 0}); */
         /* log << "steps = " << steps << '\n'; */
@@ -259,6 +245,9 @@ int main() {
     // too low      309558893560000
     // too low      315902313510000
 
+
+
+
     // incorrect
     //              315903843707200
     //              315903911283350
@@ -266,10 +255,12 @@ int main() {
     //              630905800837200
     //              630907331034400
     //              630916745267200
+    //              631647207259409
+    //              631640962678625
+    //              631647207259409
+    //              631647207275025
     //              631810909228611
     //             1263609254040000
 
-    // to test
-    //              630907439467200
     return 0;
 }
