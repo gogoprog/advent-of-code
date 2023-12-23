@@ -212,6 +212,7 @@ struct Context {
         Array<Coord8, 2> points;
         int length;
         bool goal{false};
+        Int id;
     };
 
     Vector<Road> roads;
@@ -262,6 +263,7 @@ struct Context {
                 road->points[1] = node.position;
                 roadmap[road->points[0]].push_back({road, 0});
                 roadmap[road->points[1]].push_back({road, 1});
+                road->id = roads.size() - 1;
                 /* log << "road: " << road->points[0] << " -> " << road->points[1] << "\n"; */
                 return road;
             };
@@ -304,7 +306,7 @@ struct Context {
                         auto copy = Node{valid, node.position};
                         copy.visited.insert(valid);
                         copy.visited.insert(node.position);
-                        copy.steps++;
+                        /* copy.steps++; */
                         q.push(copy);
                     }
                 }
@@ -324,20 +326,22 @@ struct Context {
 
         /*     log << endl; */
         /* } */
+
+        log << roads.size() << " roads\n";
     }
 
     int solve2() {
 
         struct Node {
-            Road *currentRoad;
+            Int currentRoadId;
             Int currentPoint;
-            Set<Road *> visited;
-            Int length{0};
+            Set<Int> visited;
+            int16_t length{0};
         };
 
         Queue<Node> q;
 
-        auto start_node = Node{&roads.front(), 1, {&roads.front()}, Int(roads[0].length - 1)};
+        auto start_node = Node{roads.front().id, 1, {roads.front().id}, int16_t(roads[0].length - 1)};
 
         q.push(start_node);
 
@@ -347,21 +351,24 @@ struct Context {
             const auto node = q.front();
             q.pop();
 
-            const auto position = node.currentRoad->points[node.currentPoint];
+            const auto position = roads[node.currentRoadId].points[node.currentPoint];
 
-            if (node.currentRoad->goal) {
-                /* log << "found" << endl; */
-                best = node.length;
+            if (roads[node.currentRoadId].goal) {
+
+                if (node.length > best) {
+                    best = node.length;
+                    log << "found " << best << endl;
+                }
                 continue;
             }
 
             for (auto pair : roadmap[position]) {
-                if (!node.visited.contains(pair.first)) {
+                if (!node.visited.contains(pair.first->id)) {
                     auto copy = node;
-                    copy.currentRoad = pair.first;
+                    copy.currentRoadId = pair.first->id;
                     copy.currentPoint = 1 - pair.second;
                     copy.length += pair.first->length;
-                    copy.visited.insert(pair.first);
+                    copy.visited.insert(pair.first->id);
                     q.push(copy);
                 }
             }
