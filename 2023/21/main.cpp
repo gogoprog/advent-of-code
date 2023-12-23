@@ -112,30 +112,26 @@ template <int STEPS> struct Context {
         return solution.size();
     }
 
-    void part1() {
-
-        auto result = compute({start}, STEPS);
-
-        log << "Part1: " << result << endl;
-    }
-
-    int computeMinSteps(const Coord &start, const Coord &end) {
+    int compute2(const Vector<Coord> &starts, const int max_steps) {
         struct Node {
             Coord position;
             int steps;
         };
 
-        Map<Coord, bool> visited;
         Queue<Node> q;
+        Map<Coord, Map<int, bool>> visited;
+        Map<Coord, bool> solution;
 
-        q.push({start, 0});
+        for (auto start : starts) {
+            q.push({start, 0});
+        }
 
         while (!q.empty()) {
 
             const auto node = q.front();
             q.pop();
 
-            auto &v = visited[node.position];
+            auto &v = visited[node.position][node.steps];
 
             if (v) {
                 continue;
@@ -143,8 +139,9 @@ template <int STEPS> struct Context {
 
             v = true;
 
-            if (node.position == end) {
-                return node.steps;
+            if (node.steps == max_steps) {
+                solution[node.position] = true;
+                continue;
             }
 
             for (auto dir : dirs) {
@@ -159,59 +156,65 @@ template <int STEPS> struct Context {
             }
         }
 
-        return -1;
+        return solution.size();
     }
 
-    int64_t part2(auto max_steps) {
+    void part1() {
 
-        int64_t size = int(max_steps / width);
-        auto left = max_steps % size;
+        auto result = compute({start}, STEPS);
 
-        log << "size: " << size << endl;
+        log << "Part1: " << result << endl;
+    }
 
-        Point east{0, start.y};
-        Point west{width - 1, start.y};
-        Point north{start.x, 0};
-        Point south{start.x, height - 1};
+    void part2(auto max_steps) {
 
-        int64_t reachable = compute({start}, width * 2.5);
-        log << "reachable: " << reachable << endl;
-        int64_t reachable2 = compute({west}, width + left);
-        log << "reachable2: " << reachable2 << endl;
+        if (max_steps < 1000000) {
+            log << "Force  (" << max_steps << ") : " << compute2({start}, max_steps) << endl;
+        }
 
-        int64_t reachables_from_ne = compute({north, east}, left);
-        int64_t reachables_from_nw = compute({north, west}, left);
-        int64_t reachables_from_se = compute({south, east}, left);
-        int64_t reachables_from_sw = compute({south, west}, left);
+        Int64 previous;
+        Int64 previous_delta;
 
-        log << "from ne " << reachables_from_ne << endl;
-        log << "from nw " << reachables_from_nw << endl;
-        log << "from se " << reachables_from_se << endl;
-        log << "from sw " << reachables_from_sw << endl;
+        Int64 delta_delta = 0;
+        Int64 last = 0;
+        Int64 last_delta = 0;
 
-        int64_t full = 2 * (size-1) * (size-1) + 2 * (size-1) + 1;
-        int64_t result = full * reachable;
+        for (int i = 0; i < 3; ++i) {
+            auto steps2 = i * width + width / 2;
 
-        result += compute({north}, left);
-        result += compute({south}, left);
-        result += compute({east}, left);
-        result += compute({west}, left);
-        result += (size - 1) * reachables_from_ne;
-        result += (size - 1) * reachables_from_se;
-        result += (size - 1) * reachables_from_nw;
-        result += (size - 1) * reachables_from_sw;
+            auto r = compute2({start}, steps2);
 
-        /* int steps = computeMinSteps(start, {0, 0}); */
-        /* log << "steps = " << steps << '\n'; */
+            if (i != 0) {
+                auto delta = r - previous;
+                if (i > 1) {
+                    delta_delta = delta - previous_delta;
+                    last = r;
+                    last_delta = delta;
+                    break;
+                }
+                previous_delta = delta;
+            }
 
-        /* result = r; */
-        /* result += visited.size() * 4 * (ww - 1); */
+            previous = r;
+        }
 
-        /* result = compute(start, max_steps); */
+        Int64 start = width * 2 + width / 2;
+        Int64 result = last;
+        Int64 delta = last_delta;
 
-        log << "Part2 (" << max_steps << ") : " << result << endl;
+        while (true) {
 
-        return result;
+            start += width;
+
+            delta += delta_delta;
+            result += delta;
+
+            if (start == max_steps) {
+                break;
+            }
+        }
+
+        log << "Part2  (" << max_steps << ") : " << result << endl;
     }
 };
 
@@ -231,6 +234,12 @@ template <int steps> void process(const char *filename) {
             /* context.part2(500); */
             /* context.part2(1000); */
             /* context.part2(5000); */
+        } else if constexpr (steps == 7) {
+            context.part2(115);
+            context.part2(126);
+            context.part2(137);
+            context.part2(148);
+            context.part2(159);
         } else {
             context.part2(26501365);
         }
@@ -239,14 +248,12 @@ template <int steps> void process(const char *filename) {
 
 int main() {
     /* process<6>("sample.txt"); */
+    process<7>("sample2.txt");
     process<64>("input.txt");
 
     // too low      154779446780000
     // too low      309558893560000
     // too low      315902313510000
-
-
-
 
     // incorrect
     //              315903843707200

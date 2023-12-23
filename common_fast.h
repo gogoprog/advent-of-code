@@ -49,6 +49,8 @@ using lli = long long int;
 template <class S> using Function = std::function<S>;
 template <class V> using UniquePtr = std::unique_ptr<V>;
 
+using Int64 = int64_t;
+
 struct Point {
     union {
         struct {
