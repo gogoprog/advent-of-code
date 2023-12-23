@@ -31,6 +31,11 @@ Coord8 operator+(const Coord8 &a, const Coord &b) {
     return {Int(a.x + b.x), Int(a.y + b.y)};
 }
 
+Logger &operator<<(Logger &logger, Coord8 c) {
+    printf("(%d, %d)", c.x, c.y);
+    return logger;
+}
+
 enum Directions { N, E, S, W };
 constexpr Array<Coord, 4> dirs = {Coord{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
 
@@ -63,10 +68,13 @@ struct Context {
         rs::copy(_lines, std::back_inserter(lines));
         width = lines[0].size();
         height = lines.size();
+
+        analyze();
     }
 
     struct Node {
         Coord8 position;
+        Coord8 origin;
         int16_t steps{0};
         Set<Coord8> visited;
     };
@@ -79,26 +87,18 @@ struct Context {
         Node start{{1, 0}};
         Coord8 goal{Int(width - 2), Int(height - 1)};
 
-        /* Map<Coord, int> visited; */
-
         q.push(start);
 
         while (!q.empty()) {
             const auto node = q.front();
             q.pop();
 
-            /* auto &v = visited[node.position]; */
-            /* if (v == 0 || node.steps < v) { */
-            /* v = node.steps; */
-            /* } else { */
-            /* continue; */
-            /* } */
-
             if (node.position == goal) {
 
                 if (node.steps > best) {
                     best = node.steps;
-                    log << "best: " << best << "\n";
+                    /* log << "best: " << best << "\n"; */
+                    /* log << node.visited.size() << endl; */
                 }
             }
 
@@ -208,6 +208,135 @@ struct Context {
         return best;
     }
 
+    struct Road {
+        Array<Coord8, 2> points;
+        int length;
+        bool goal{false};
+    };
+
+    Vector<Road> roads;
+
+    Map<Coord8, Vector<Pair<Road *, int>>> roadmap;
+
+    void analyze() {
+        Queue<Node> q;
+
+        Node start{{1, 0}, {1, 0}};
+        Coord8 goal{Int(width - 2), Int(height - 1)};
+
+        q.push(start);
+
+        roads.reserve(1024);
+
+        Vector<Coord8> valids;
+
+        Map<Coord8, bool> visited;
+
+        while (!q.empty()) {
+            const auto node = q.front();
+            q.pop();
+
+            auto &v = visited[node.position];
+            if (v) {
+                continue;
+            }
+            v = true;
+
+            valids.resize(0);
+
+            auto add_road = [&]() {
+                auto road = &roads.emplace_back();
+                road->length = node.steps;
+                road->points[0] = node.origin;
+                road->points[1] = node.position;
+                roadmap[road->points[0]].push_back({road, 0});
+                roadmap[road->points[1]].push_back({road, 1});
+                return road;
+            };
+
+            if (node.position == goal) {
+                auto r = add_road();
+                r->goal = true;
+            }
+
+            for (const auto &dir : dirs) {
+                auto npos = node.position + dir;
+
+                if (isValid2(npos)) {
+                    valids.push_back(npos);
+                }
+            }
+
+            if (valids.size() <= 2) {
+                for (auto &valid : valids) {
+                    if (!node.visited.contains(valid)) {
+                        auto copy = node;
+                        copy.position = valid;
+                        copy.steps++;
+                        copy.visited.insert(valid);
+                        q.push(copy);
+                    }
+                }
+            } else {
+                add_road();
+
+                log << "cross detected! " << node.position << endl;
+                for (auto &valid : valids) {
+                    if (!node.visited.contains(valid)) {
+                        auto copy = Node{valid, node.position};
+                        copy.visited.insert(valid);
+                        copy.visited.insert(node.position);
+                        q.push(copy);
+                    }
+                }
+            }
+        }
+    }
+
+    int solve2() {
+
+        struct Node {
+            Road *currentRoad;
+            Int currentPoint;
+            Set<Road *> visited;
+            Int length{0};
+        };
+
+        Queue<Node> q;
+
+        auto start_node = Node{&roads.front(), 1, {&roads.front()}, Int(roads[0].length)};
+
+        q.push(start_node);
+
+        auto best = 0;
+
+        while (!q.empty()) {
+            const auto node = q.front();
+            q.pop();
+
+            const auto position = node.currentRoad->points[node.currentPoint];
+
+            if (node.currentRoad->goal) {
+                log << "found" << endl;
+                best = node.length;
+                continue;
+            }
+
+            for (auto pair : roadmap[position]) {
+                if (!node.visited.contains(pair.first)) {
+                    auto copy = node;
+                    copy.currentRoad = pair.first;
+                    copy.currentPoint = 1 - pair.second;
+                    copy.length += pair.first->length;
+                    copy.visited.insert(pair.first);
+                    q.push(copy);
+                }
+            }
+        }
+
+        return best;
+    }
+
     void part1() {
         auto result = solve<1>();
 
@@ -216,6 +345,9 @@ struct Context {
 
     void part2() {
         auto result = solve<2>();
+
+        auto r = solve2();
+        log << r << endl;
 
         log << "Part2: " << result << endl;
     }
@@ -234,6 +366,6 @@ void process(const char *filename) {
 
 int main() {
     process("sample.txt");
-    process("input.txt");
+    /* process("input.txt"); */
     return 0;
 }
