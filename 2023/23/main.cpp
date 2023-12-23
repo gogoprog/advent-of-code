@@ -236,21 +236,33 @@ struct Context {
             const auto node = q.front();
             q.pop();
 
-            auto &v = visited[node.position];
-            if (v) {
-                continue;
-            }
-            v = true;
-
             valids.resize(0);
 
             auto add_road = [&]() {
+                for (auto pair : roadmap[node.position]) {
+                    auto road = pair.first;
+                    auto p = pair.second;
+
+                    if (road->points[p - 1] == node.origin) {
+                        return road;
+                    }
+                }
+                for (auto pair : roadmap[node.origin]) {
+                    auto road = pair.first;
+                    auto p = pair.second;
+
+                    if (road->points[p - 1] == node.position) {
+                        return road;
+                    }
+                }
+
                 auto road = &roads.emplace_back();
-                road->length = node.steps;
+                road->length = node.steps + 1;
                 road->points[0] = node.origin;
                 road->points[1] = node.position;
                 roadmap[road->points[0]].push_back({road, 0});
                 roadmap[road->points[1]].push_back({road, 1});
+                /* log << "road: " << road->points[0] << " -> " << road->points[1] << "\n"; */
                 return road;
             };
 
@@ -268,6 +280,7 @@ struct Context {
             }
 
             if (valids.size() <= 2) {
+
                 for (auto &valid : valids) {
                     if (!node.visited.contains(valid)) {
                         auto copy = node;
@@ -280,17 +293,37 @@ struct Context {
             } else {
                 add_road();
 
-                log << "cross detected! " << node.position << endl;
+                /* log << "cross detected! " << node.position << endl; */
                 for (auto &valid : valids) {
+                    auto &v = visited[valid];
+                    if (v) {
+                        continue;
+                    }
+                    v = true;
                     if (!node.visited.contains(valid)) {
                         auto copy = Node{valid, node.position};
                         copy.visited.insert(valid);
                         copy.visited.insert(node.position);
+                        copy.steps++;
                         q.push(copy);
                     }
                 }
             }
         }
+
+        /* for (Int y = 0; y < height; y++) { */
+        /*     for (Int x = 0; x < width; x++) { */
+        /*         if (getChar(Coord8{x, y}) == '#') { */
+        /*             log << '#'; */
+        /*         } else if (roadmap.contains(Coord8{x, y})) { */
+        /*             log << 'X'; */
+        /*         } else { */
+        /*             log << '.'; */
+        /*         } */
+        /*     } */
+
+        /*     log << endl; */
+        /* } */
     }
 
     int solve2() {
@@ -304,7 +337,7 @@ struct Context {
 
         Queue<Node> q;
 
-        auto start_node = Node{&roads.front(), 1, {&roads.front()}, Int(roads[0].length)};
+        auto start_node = Node{&roads.front(), 1, {&roads.front()}, Int(roads[0].length - 1)};
 
         q.push(start_node);
 
@@ -317,7 +350,7 @@ struct Context {
             const auto position = node.currentRoad->points[node.currentPoint];
 
             if (node.currentRoad->goal) {
-                log << "found" << endl;
+                /* log << "found" << endl; */
                 best = node.length;
                 continue;
             }
@@ -344,10 +377,9 @@ struct Context {
     }
 
     void part2() {
-        auto result = solve<2>();
+        /* auto result = solve<2>(); */
 
-        auto r = solve2();
-        log << r << endl;
+        auto result = solve2();
 
         log << "Part2: " << result << endl;
     }
@@ -366,6 +398,6 @@ void process(const char *filename) {
 
 int main() {
     process("sample.txt");
-    /* process("input.txt"); */
+    process("input.txt");
     return 0;
 }
