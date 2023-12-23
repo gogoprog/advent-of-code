@@ -333,19 +333,28 @@ struct Context {
     int solve2() {
 
         struct Node {
-            Int currentRoadId;
-            Int currentPoint;
+            Int currentRoadId:7;
+            Int currentPoint:1;
             Set<Int> visited;
-            int16_t length{0};
         };
 
         Queue<Node> q;
 
-        auto start_node = Node{roads.front().id, 1, {roads.front().id}, int16_t(roads[0].length - 1)};
+        auto start_node = Node{roads.front().id, 1, {roads.front().id}};
 
         q.push(start_node);
 
         auto best = 0;
+
+        auto compute_length = [&](auto & node) {
+            int result = 0;
+
+            for(auto id : node.visited) {
+                result += roads[id].length;
+            }
+
+            return result;
+        };
 
         while (!q.empty()) {
             const auto node = q.front();
@@ -355,8 +364,9 @@ struct Context {
 
             if (roads[node.currentRoadId].goal) {
 
-                if (node.length > best) {
-                    best = node.length;
+                auto len = compute_length(node);
+                if (len > best) {
+                    best = len;
                     log << "found " << best << endl;
                 }
                 continue;
@@ -367,14 +377,13 @@ struct Context {
                     auto copy = node;
                     copy.currentRoadId = pair.first->id;
                     copy.currentPoint = 1 - pair.second;
-                    copy.length += pair.first->length;
                     copy.visited.insert(pair.first->id);
                     q.push(copy);
                 }
             }
         }
 
-        return best;
+        return best - 1;
     }
 
     void part1() {
