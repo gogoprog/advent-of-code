@@ -213,6 +213,10 @@ struct Context {
         int length;
         bool goal{false};
         Int id;
+
+        bool connect(const Coord8 &c) const {
+            return points[0] == c || points[1] == c;
+        }
     };
 
     Vector<Road> roads;
@@ -328,13 +332,30 @@ struct Context {
         /* } */
 
         log << roads.size() << " roads\n";
+
+        for (auto kv : roadmap) {
+
+            auto a = kv.first;
+            for (auto kv2 : roadmap) {
+                auto b = kv2.first;
+
+                if (a != b) {
+
+                    for (auto &road : roads) {
+                        if (road.connect(a) && road.connect(b)) {
+                            log << "found for " << a << " and " << b << "\n";
+                        }
+                    }
+                }
+            }
+        }
     }
 
     int solve2() {
 
         struct Node {
-            Int currentRoadId:7;
-            Int currentPoint:1;
+            Int currentRoadId : 7;
+            Int currentPoint : 1;
             Set<Int> visited;
         };
 
@@ -346,10 +367,10 @@ struct Context {
 
         auto best = 0;
 
-        auto compute_length = [&](auto & node) {
+        auto compute_length = [&](auto &node) {
             int result = 0;
 
-            for(auto id : node.visited) {
+            for (auto id : node.visited) {
                 result += roads[id].length;
             }
 

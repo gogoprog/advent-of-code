@@ -119,15 +119,15 @@ Point operator/(const Point &a, const int b) {
 
 using Line = Pair<Point, Point>;
 
-struct Point3 {
+template <typename INT = int> struct Point3 {
     union {
         struct {
-            int x;
-            int y;
-            int z;
+            INT x;
+            INT y;
+            INT z;
         };
         struct {
-            int coords[3];
+            INT coords[3];
         };
     };
 
@@ -177,12 +177,20 @@ struct Point3 {
     }
 };
 
-Point3 operator-(const Point3 &a, const Point3 &b) {
+template <typename INT> Point3<INT> operator-(const Point3<INT> &a, const Point3<INT> &b) {
     return {a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
-Point3 operator+(const Point3 &a, const Point3 &b) {
+template <typename INT> Point3<INT> operator+(const Point3<INT> &a, const Point3<INT> &b) {
     return {a.x + b.x, a.y + b.y, a.z + b.z};
+}
+
+template <typename INT> Point3<INT> operator*(const Point3<INT> &a, const INT b) {
+    return {a.x * b, a.y * b};
+}
+
+template <typename INT> Point3<INT> operator*(const INT b, const Point3<INT> &a) {
+    return {a.x * b, a.y * b};
 }
 
 struct Point4 {
@@ -231,7 +239,7 @@ struct Point4 {
 
 using Coord = Point;
 using Coord2 = Point;
-using Coord3 = Point3;
+using Coord3 = Point3<int>;
 using Coord4 = Point4;
 
 template <typename A, typename B> B convert(const A a) {
@@ -465,6 +473,11 @@ class Logger {
         return *this;
     }
 
+    Logger &operator<<(double v) {
+        printf("%.6f", v);
+        return *this;
+    }
+
     template <typename T> Logger &operator<<(Vector<T> vs) {
         printf("[");
         auto first = true;
@@ -500,8 +513,19 @@ class Logger {
         return *this;
     }
 
-    Logger &operator<<(Point3 c) {
+    Logger &operator<<(Point3<int> c) {
         printf("(%d, %d, %d)", c.x, c.y, c.z);
+        return *this;
+    }
+
+    Logger &operator<<(Point3<Int64> c) {
+        printf("(");
+        *this << c.x;
+        printf(", ");
+        *this << c.y;
+        printf(", ");
+        *this << c.z;
+        printf(")");
         return *this;
     }
 
