@@ -183,16 +183,14 @@ struct Context {
     }
 
     void part2() {
-        const auto final = "js";
-        /* const auto final = "output"; */
+        /* const auto final = "js"; */
+        const auto final = "rx";
 
         if (!modulesMap.contains(final)) {
             return;
         }
 
         log << modules.size() << endl;
-
-        int64_t result{0};
 
         reset();
 
@@ -213,13 +211,18 @@ struct Context {
 
         using Pair64 = Pair<int64_t, int64_t>;
 
-        auto compute = [&](auto from, auto to) {
-            Pair64 result;
+        auto compute = [&](auto from, auto to, int8 target_pulse, int pulse_from) {
+            int result = -1;
             int64_t offset = 0;
             int64_t interval = 0;
-            int64_t i = 0;
+            int i = 1;
 
             int step = 0;
+
+            int last = 0;
+            int lastinterval = 0;
+
+            reset();
 
             while (true) {
                 Queue<Module::Pulse> q;
@@ -230,18 +233,11 @@ struct Context {
                     auto pulse = q.front();
                     q.pop();
 
-                    if (pulse.to == to->id && pulse.value == LOW) {
+                    if (pulse.to == to->id && pulse.value == target_pulse) {
 
-                        if (step == 0) {
-                            offset = i;
-                            log << "offset: " << offset << endl;
-                            step++;
-                        } else {
-                            interval = i - offset;
-
-                            log << "interval: " << interval << endl;
-
-                            /* return Pair64{offset, interval}; */
+                        if (pulse.from == pulse_from) {
+                            /* log << i << endl; */
+                            return i;
                         }
                     }
 
@@ -254,10 +250,10 @@ struct Context {
 
                 ++i;
 
-                if (i > 10000) {
+                if (i > 100000) {
                     log << "whoops" << endl;
 
-                    return Pair64{-1, -1};
+                    return -1;
                 }
 
                 /* if (result) */
@@ -267,73 +263,21 @@ struct Context {
             return result;
         };
 
-        Vector<Module *> visitOrder;
-        broadcaster->visit(visitOrder);
-
-        Queue<Module *> q;
-
-        Map<Module *, int64_t> cache;
-
-        for (auto module : visitOrder) {
-            q.push(module);
+        {
+            /* auto r = compute(button, rx, LOW); */
+            /* log << rx->name << " = " << r << endl; */
         }
 
-        while (!q.empty()) {
+        int64_t result = 1;
 
-            auto target = q.front();
-            q.pop();
+        for (auto input : rx->inputs[0]->inputs) {
 
-            /*
-            bool has_cache = false;
-            int64_t from_cache = 1;
+            int64_t r = compute(button, rx->inputs[0], HIGH, input->id);
 
-            auto &inputs = target->inputs;
+            log << input->id << " = " << r << endl;
 
-            if (inputs.size() == 1) {
+            result = std::lcm(result, r);
 
-                if (cache.contains(inputs[0])) {
-                    switch (target->type) {
-                        case FLIPFLOP:
-                            has_cache = true;
-                            from_cache = (cache[target->inputs[0]] + 1) / 2 - 1;
-                            break;
-
-                        default: {
-                            has_cache = true;
-                            from_cache = cache[target->inputs[0]];
-                        } break;
-                    }
-                }
-            } else if (inputs.size() > 1) {
-                has_cache = true;
-
-                for (auto input : inputs) {
-                    if (cache.contains(input)) {
-                        from_cache = std::lcm(from_cache, cache[input]);
-
-                    } else {
-                        has_cache = false;
-                        break;
-                    }
-                }
-            }
-
-            if (has_cache) {
-                log << "from cache : " << from_cache << endl;
-                cache[target] = from_cache;
-                continue;
-            }
-            */
-
-            log << button->name << " - " << target->name << " /" << q.size() << " ..." << endl;
-            auto r = compute(button, target);
-            log << "from compu : " << r << endl;
-
-            /* if (r. == -1) { */
-            /*     q.push(target); */
-            /* } else { */
-            /*     cache[target] = r; */
-            /* } */
         }
 
         log << "Part2: " << result << endl;
