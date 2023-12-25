@@ -7,6 +7,12 @@ struct Result {
     double y;
 };
 
+struct Result3 {
+    double x;
+    double y;
+    double z;
+};
+
 struct Hailstone {
     Point3<Int64> position;
     Point3<Int64> velocity;
@@ -30,6 +36,36 @@ static bool intersectionXY(const P &from1, const P &to1, const P &from2, const P
 
     result.x = from1.x + lambda * dX;
     result.y = from1.y + lambda * dY;
+
+    return true;
+}
+
+static bool intersectionXYZ(const P &from1, const P &to1, const P &from2, const P &to2, Result3 &result) {
+    auto dX = to1.x - from1.x;
+    auto dY = to1.y - from1.y;
+    double dZ = to1.z - from1.z;
+    double determinant = dX * (to2.y - from2.y) * (to2.z - from2.z) - dY * (to2.x - from2.x) * (to2.z - from2.z) +
+                         dZ * (to2.x - from2.x) * (to2.y - from2.y);
+
+    if (determinant <= 0) {
+        return false;
+    }
+
+    double lambda = ((to2.y - from2.y) * (to2.z - from1.z) + (from2.x - to2.x) * (to2.y - from1.y) +
+                     (from2.z - to2.z) * (to2.x - from1.x)) /
+                    determinant;
+    double gamma =
+        ((from1.y - to1.y) * (to2.x - from1.x) + dX * (to2.y - from1.y) + dY * (to2.z - from1.z)) / determinant;
+    double beta =
+        ((from1.z - to1.z) * (to2.x - from1.x) + dX * (to2.z - from1.z) + dZ * (to2.y - from1.y)) / determinant;
+
+    /* if (lambda < 0 || gamma > 0 || beta > 0) { */
+    /*     return false; */
+    /* } */
+
+    result.x = from1.x + lambda * dX;
+    result.y = from1.y + lambda * dY;
+    result.z = from1.z + lambda * dZ;
 
     return true;
 }
@@ -67,10 +103,8 @@ struct Context {
         }
     }
 
-    void part1(auto lines) {
+    void part1() {
         Int64 min, max;
-
-        parse(lines);
 
         if (hailstones.size() < 10) {
             min = 7;
@@ -113,8 +147,30 @@ struct Context {
         log << "Part1: " << result << endl;
     }
 
-    void part2(auto lines) {
-        auto result{0};
+    void part2() {
+
+        Int64 result{0};
+
+        P rock_position{0, 0, 0};
+        P rock_velocity{0, 0, 0};
+
+        for (auto &hs : hailstones) {
+
+            for(int i = 0; i< 10; ++i) {
+
+            }
+
+            /*
+                    Result3 iresult;
+
+                    if (intersectionXYZ(from1, to1, from2, to2, iresult)) {
+
+                        log << "inter result " << iresult.x << " " << iresult.y << " " << iresult.z  << "\n";
+                    }
+                }
+            }
+            */
+        }
 
         log << "Part2: " << result << endl;
     }
@@ -125,13 +181,14 @@ void process(const char *filename) {
     auto lines = rs::split_string_view(getFileContent(filename), '\n');
     {
         Context context;
-        context.part1(lines);
-        context.part2(lines);
+        context.parse(lines);
+        context.part1();
+        context.part2();
     }
 }
 
 int main() {
-    /* process("sample.txt"); */
-    process("input.txt");
+    process("sample.txt");
+    /* process("input.txt"); */
     return 0;
 }
