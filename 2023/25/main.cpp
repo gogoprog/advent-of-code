@@ -30,6 +30,7 @@ struct Groups {
 struct Context {
 
     Vector<String> names;
+    Map<int, Set<int>> connections;
 
     int getId(StringView name) {
 
@@ -44,8 +45,51 @@ struct Context {
         return names.size() - 1;
     }
 
+    int compute(int start, int end) {
+
+        int result{0};
+
+        struct Node {
+            int current;
+            int steps{0};
+        };
+
+        Queue<Node> q;
+
+        q.push({start});
+
+        Map<int, int> visited;
+
+        while (!q.empty()) {
+            const auto node = q.front();
+            q.pop();
+
+            auto &v = visited[node.current];
+            if (v == 0 || v > node.steps) {
+                v = node.steps;
+            } else {
+                continue;
+            }
+
+            if (node.current == end) {
+                result = node.steps;
+                continue;
+            }
+
+            for (auto connection : connections[node.current]) {
+                if (!(node.current == start && connection == end)) {
+                    auto copy = node;
+                    copy.current = connection;
+                    copy.steps++;
+                    q.push(copy);
+                }
+            }
+        }
+
+        return result;
+    }
+
     void part1(auto lines) {
-        Map<int, Set<int>> connections;
         auto result{0};
 
         for (auto line : lines) {
@@ -125,7 +169,7 @@ struct Context {
         };
 
         for (auto &kv : connections) {
-            log << kv.first << " -> " << kv.second.size() << " | " << kv.second << "\n";
+            /* log << kv.first << " -> " << kv.second.size() << " | " << kv.second << "\n"; */
         }
 
         /* log << count_groups() << endl; */
@@ -147,10 +191,18 @@ struct Context {
         struct Entry {
             Set<int> pair;
             size_t common;
-            size_t notcommon;
+            int value;
+
+            int getFirst() const {
+                return *pair.begin();
+            }
+
+            int getSecond() const {
+                return *(pair.rbegin());
+            }
 
             bool operator<(const Entry &other) const {
-                return other.notcommon < notcommon;
+                return other.value < value;
             }
         };
 
@@ -165,18 +217,11 @@ struct Context {
                         if (!possibilities.contains({kv.first, kv2.first})) {
 
                             auto r = count_common(kv.second, kv2.second);
-                            auto r2 = kv.second.size() + kv2.second.size() - r;
-                            /* log << kv.first << " & " << kv2.first << " = " << r << " | " << r2 << "\n"; */
-                            /* commons[{kv.first, kv2.first}] = r; */
+
+                            auto r2 = compute(kv.first, kv2.first);
 
                             entries.push_back({{kv.first, kv2.first}, r, r2});
-                            if (r == 0) {
-                                /* entries.push_back({{kv.first, kv2.first}, r, r2}); */
-                                /* log << kv.first << kv.second.size() << " -> " << kv2.first << kv2.second.size() <<
-                                 * "\n";
-                                 */
-                                /* log << kv.first << " & " << kv2.first << " = " << r << " | " << r2 << "\n"; */
-                            }
+
                             possibilities.insert({kv.first, kv2.first});
                         }
                     }
@@ -186,56 +231,25 @@ struct Context {
 
         std::sort(entries.begin(), entries.end());
 
-        entries.resize(std::min<int>(entries.size(), 200));
+        auto &a = entries[0].pair;
+        auto &b = entries[1].pair;
+        auto &c = entries[2].pair;
 
-        for (auto entry : entries) {
-            log << entry.pair << " | " << entry.common << " | " << entry.notcommon << "\n";
+        disconnections.clear();
+
+        disconnect(*a.begin(), *std::next(a.begin()));
+        disconnect(*b.begin(), *std::next(b.begin()));
+        disconnect(*c.begin(), *std::next(c.begin()));
+
+        int r;
+        auto total = count_groups(r);
+
+        if (total == 2) {
+            /* log << "yep : " << a << b << c << "\n"; */
+            result = r;
+            log << "Part1: " << result << endl;
+            return;
         }
-
-        auto len = entries.size();
-
-        Set<Set<int>> done;
-
-        for (int i = 0; i < len; ++i) {
-            for (int j = 0; j < len; ++j) {
-                for (int k = 0; k < len; ++k) {
-                    if (i != k && i != j) {
-
-                        if (!done.contains({i, j, k})) {
-
-                            done.insert({i, j, k});
-
-                            auto &a = entries[i].pair;
-                            auto &b = entries[j].pair;
-                            auto &c = entries[k].pair;
-
-                            disconnections.clear();
-
-                            disconnect(*a.begin(), *std::next(a.begin()));
-                            disconnect(*b.begin(), *std::next(b.begin()));
-                            disconnect(*c.begin(), *std::next(c.begin()));
-
-                            int r;
-                            auto total = count_groups(r);
-
-                            if (total == 2) {
-                                log << i << " & " << j << " & " << k << endl;
-                                log << "yep : " << a << b << c << "\n";
-                                result = r;
-                                log << "Part1: " << result << endl;
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    void part2(auto lines) {
-        auto result{0};
-
-        log << "Part2: " << result << endl;
     }
 };
 
@@ -245,7 +259,6 @@ void process(const char *filename) {
     {
         Context context;
         context.part1(lines);
-        context.part2(lines);
     }
 }
 
