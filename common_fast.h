@@ -186,11 +186,11 @@ template <typename INT> Point3<INT> operator+(const Point3<INT> &a, const Point3
 }
 
 template <typename INT> Point3<INT> operator*(const Point3<INT> &a, const INT b) {
-    return {a.x * b, a.y * b};
+    return {a.x * b, a.y * b, a.z * b};
 }
 
 template <typename INT> Point3<INT> operator*(const INT b, const Point3<INT> &a) {
-    return {a.x * b, a.y * b};
+    return {a.x * b, a.y * b, a.z * b};
 }
 
 struct Point4 {

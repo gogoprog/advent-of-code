@@ -14,9 +14,60 @@ struct Result3 {
 };
 
 struct Hailstone {
-    Point3<Int64> position;
-    Point3<Int64> velocity;
+    int id;
+    P position;
+    P velocity;
+
+    P getPosition(const Int64 time) const {
+        return position + velocity * time;
+    }
 };
+
+inline double dot(const P &u, const P &v) {
+    return u.x * v.x + u.y * v.y + u.z * v.z;
+}
+
+inline double norm2(const P &v) {
+    return v.x * v.x + v.y * v.y + v.z * v.z;
+}
+
+inline double norm(const P &v) {
+    return sqrt(norm2(v));
+}
+
+inline P cross(const P &b, const P &c) // cross product
+{
+    return {b.y * c.z - c.y * b.z, b.z * c.x - c.z * b.x, b.x * c.y - c.x * b.y};
+}
+
+bool intersection(const P &a1, const P &a2, const P &b1, const P &b2, P &ip) {
+    P da = a2 - a1;
+    P db = b2 - b1;
+    P dc = b1 - a1;
+
+    if (dot(dc, cross(da, db)) != 0.0) // lines are not coplanar
+        return false;
+
+    auto s = dot(cross(dc, db), cross(da, db)) / norm2(cross(da, db));
+
+    auto is = Int64(s);
+    if (s == is) {
+
+        if (b1 + is * db == a1 + is * da) {
+            ip = a1 + is * da;
+            return true;
+        }
+    }
+
+    return false;
+
+    /* if (s >= 0.0 && s <= 1.0) { */
+    /* ip = a1 + da * P{s, s, s}; */
+    /* return true; */
+    /* } */
+
+    /* return false; */
+}
 
 static bool intersectionXY(const P &from1, const P &to1, const P &from2, const P &to2, Result &result) {
     auto dX = to1.x - from1.x;
@@ -63,6 +114,8 @@ static bool intersectionXYZ(const P &from1, const P &to1, const P &from2, const 
     /*     return false; */
     /* } */
 
+    log << lambda << " " << gamma << "" << beta << endl;
+
     result.x = from1.x + lambda * dX;
     result.y = from1.y + lambda * dY;
     result.z = from1.z + lambda * dZ;
@@ -98,7 +151,10 @@ struct Context {
         hailstones.resize(0);
         rs::copy(lines | to_hailstones, std::back_inserter(hailstones));
 
-        for (auto hs : hailstones) {
+        int id = 0;
+        for (auto &hs : hailstones) {
+            hs.id = id;
+            ++id;
             /* log << hs.position << " " << hs.velocity << "\n"; */
         }
     }
@@ -151,25 +207,59 @@ struct Context {
 
         Int64 result{0};
 
-        P rock_position{0, 0, 0};
-        P rock_velocity{0, 0, 0};
+        Set<P> velocities;
 
         for (auto &hs : hailstones) {
 
-            for(int i = 0; i< 10; ++i) {
+            for (auto &other_hs : hailstones) {
+                if (&hs != &other_hs) {
 
-            }
+                    Int64 time = 0;
 
-            /*
-                    Result3 iresult;
+                    while (true) {
 
-                    if (intersectionXYZ(from1, to1, from2, to2, iresult)) {
+                        for (auto time2 = 1; time2 < 100; ++time2) {
 
-                        log << "inter result " << iresult.x << " " << iresult.y << " " << iresult.z  << "\n";
+                            auto pos1 = hs.getPosition(time);
+                            auto pos2 = other_hs.getPosition(time + time2);
+                            auto delta = pos2 - pos1;
+
+                            auto count = 0;
+
+                            for (auto &hs2 : hailstones) {
+                                /* Result3 iresult; */
+                                P iresult;
+
+                                if (intersection(pos1, pos1 + delta, hs2.getPosition(time), hs2.getPosition(time + 1),
+                                                 iresult)) {
+
+                                    ++count;
+                                }
+                            }
+
+                            static int bestcount = 0;
+                            if (count > bestcount) {
+                                bestcount = count;
+                                log << "bestcount: " << bestcount << endl;
+                            }
+
+                            if (count == hailstones.size()) {
+                                log << "winrar : " << delta << " at time " << time << endl;
+
+                                auto v = delta;
+                                auto pos = pos1 - v * time;
+
+                                result = pos.x + pos.y + pos.z;
+                            }
+                        }
+
+                        ++time;
+                        if (time > 100) {
+                            break;
+                        }
                     }
                 }
             }
-            */
         }
 
         log << "Part2: " << result << endl;
@@ -189,6 +279,6 @@ void process(const char *filename) {
 
 int main() {
     process("sample.txt");
-    /* process("input.txt"); */
+    process("input.txt");
     return 0;
 }
