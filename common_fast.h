@@ -131,7 +131,7 @@ template <typename INT = int> struct Point3 {
         };
     };
 
-    int &operator[](const int c) {
+    INT &operator[](const int c) {
         return coords[c];
     }
 
@@ -497,6 +497,21 @@ class Logger {
 
     Logger &operator<<(double v) {
         printf("%.6f", v);
+        return *this;
+    }
+
+    template <typename T, long unsigned int S> Logger &operator<<(Array<T, S> & vs) {
+        printf("[");
+        auto first = true;
+        for (auto v : vs) {
+            if (!first) {
+                printf(", ");
+            } else {
+                first = false;
+            }
+            *this << v;
+        }
+        printf("]");
         return *this;
     }
 

@@ -199,92 +199,99 @@ struct Context {
 
         auto len = hailstones.size();
 
-        for (int i = 0; i < 10; ++i) {
-            P center{0, 0, 0};
+        Array<Map<Int64, Int64>, 3> possib;
 
-            for (auto &hs : hailstones) {
-                center += hs.getPosition(i);
-            }
-
-            double x = center.x / (double)len;
-            double y = center.y / (double)len;
-            double z = center.z / (double)len;
-
-            log << "center at " << i << " = " << x << "," << y << "," << z << endl;
-        }
-
-        {
-            Point3<double> a1, a2, a3;
-            Point3<double> d1, d2, d3;
-            a1 = hailstones[0].position;
-            a2 = hailstones[1].position;
-            a3 = hailstones[2].position;
-
-            d1 = hailstones[0].velocity;
-            d2 = hailstones[1].velocity;
-            d3 = hailstones[2].velocity;
-
-            d1.normalize();
-            d2.normalize();
-            d3.normalize();
-
-            auto n1 = cross(d1, d2);
-            auto n2 = cross(n1, d3);
-
-            /* auto p = (a1 + a2) / 2; */
-
-            log << n1 << d3 << endl;
-
-            log << n1 << endl;
-            log << n2 << endl;
-
-            auto n3 = n1 + n2;
-
-            for (int i = 0; i < 60; ++i) {
-
-                log << n3 * i << endl;
-            }
-
-            return;
-        }
+        P maxdeltas{100000, 100000, 10000};
 
         for (auto &hs : hailstones) {
 
             for (auto &other_hs : hailstones) {
                 if (&hs != &other_hs) {
 
-                    {
+                    for (int i = 0; i < 3; ++i) {
 
-                        auto shortest =
-                            shortestDistance(hs.position, hs.velocity, other_hs.position, other_hs.velocity);
+                        if (hs.velocity[i] == other_hs.velocity[i]) {
+                            auto delta = hs.position[i] - other_hs.position[i];
+                            log << "yep " << i << " : " << hs.velocity[i] << " -> " << delta << endl;
 
-                        log << "Shortest = " << shortest << endl;
+                            delta = std::abs(delta);
 
-                        continue;
+                            if (possib[i][hs.velocity[i]] == 0) {
+
+                                possib[i][hs.velocity[i]] = delta;
+                            }
+
+                            possib[i][hs.velocity[i]] = std::min(possib[i][hs.velocity[i]], delta);
+                            /* maxdeltas[i] = std::min(maxdeltas[i], delta); */
+                        }
                     }
+                }
+            }
+
+            /* break; */
+        }
+
+        auto find_v = [](Map<Int64, Int64> &values) {
+
+            log << values << endl;
+            for (auto &kv : values) {
+
+                auto iniv = kv.first;
+
+                for (int i = 1; i <= kv.second; ++i) {
+                    auto newv = iniv + i;
+
+                    auto count = 0;
+
+                    for (auto &kv2 : values) {
+                        auto delta = newv - kv2.first;
+
+                        if (delta > 0 && (kv.second % delta) == 0) {
+                            count++;
+                        }
+                    }
+
+                    log << count << endl;
+
+                    if (count == values.size()) {
+                        log << "yep " << newv << endl;
+                        break;
+                    }
+                }
+            }
+        };
+
+        /* log << factors << endl; */
+        log << possib << endl;
+
+        find_v(possib[0]);
+        find_v(possib[1]);
+        find_v(possib[2]);
+
+        return;
+
+        auto test = [&](auto &velo) {
+            for (auto &hs : hailstones) {
+                for (auto &other_hs : hailstones) {
+                    auto pos = hs.position;
 
                     Int64 time = 0;
 
                     while (true) {
 
-                        for (auto time2 = 1; time2 < 10; ++time2) {
+                        for (auto time2 = 1; time2 < 100; ++time2) {
 
                             auto pos1 = hs.getPosition(time);
-                            auto pos2 = other_hs.getPosition(time + time2);
-                            auto delta = pos2 - pos1;
-
                             auto count = 0;
 
                             for (auto &hs2 : hailstones) {
+                                /* Result3 iresult; */
                                 P iresult;
 
-                                if (intersection(pos1, pos1 + delta, hs2.getPosition(time), hs2.getPosition(time + 1),
+                                if (intersection(pos1, pos1 + velo, hs2.getPosition(time), hs2.getPosition(time + 1),
                                                  iresult)) {
 
                                     ++count;
-                                    log << "time: " << time << endl;
-                                    log << "time2: " << time2 << endl;
-                                    /* log << "count: " << count << endl; */
                                 }
                             }
 
@@ -295,18 +302,37 @@ struct Context {
                             }
 
                             if (count == hailstones.size()) {
-                                log << "winrar : " << delta << " at time " << time << endl;
+                                log << "winrar : " << velo << " at time " << time << endl;
 
-                                auto v = delta;
-                                auto pos = pos1 - v * time;
+                                auto pos = pos1 - velo * time;
 
                                 result = pos.x + pos.y + pos.z;
                             }
                         }
 
                         ++time;
-                        if (time > 1000000) {
+                        if (time > 100) {
                             break;
+                        }
+                    }
+                }
+            }
+        };
+
+        for (int x = -maxdeltas.x; x <= maxdeltas.x; ++x) {
+
+            if (x && ((maxdeltas.x % x) == 0)) {
+
+                for (int y = -maxdeltas.y; y <= maxdeltas.y; ++y) {
+
+                    if (y && (maxdeltas.y % y) == 0) {
+
+                        for (int z = -maxdeltas.z; z <= maxdeltas.z; ++z) {
+
+                            if (z && (maxdeltas.z % z) == 0) {
+                                log << x << " " << y << " " << z << endl;
+                                result++;
+                            }
                         }
                     }
                 }
