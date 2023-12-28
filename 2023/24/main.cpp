@@ -35,8 +35,7 @@ inline double norm(const P &v) {
     return sqrt(norm2(v));
 }
 
-inline P cross(const P &b, const P &c) // cross product
-{
+template <typename T> inline Point3<T> cross(const Point3<T> &b, const Point3<T> &c) {
     return {b.y * c.z - c.y * b.z, b.z * c.x - c.z * b.x, b.x * c.y - c.x * b.y};
 }
 
@@ -51,6 +50,7 @@ bool intersection(const P &a1, const P &a2, const P &b1, const P &b2, P &ip) {
     auto s = dot(cross(dc, db), cross(da, db)) / norm2(cross(da, db));
 
     auto is = Int64(s);
+
     if (s == is) {
 
         if (b1 + is * db == a1 + is * da) {
@@ -67,6 +67,28 @@ bool intersection(const P &a1, const P &a2, const P &b1, const P &b2, P &ip) {
     /* } */
 
     /* return false; */
+}
+
+double shortestDistance(const P &line1_start, const P &line1_direction, const P &line2_start,
+                        const P &line2_direction) {
+    P p1_to_p2 = (line2_start - line1_start);
+    double d1 = dot(line1_direction, line1_direction);
+    double d2 = dot(line1_direction, line2_direction);
+    double d3 = dot(line2_direction, line2_direction);
+    double d4 = dot(line1_direction, p1_to_p2);
+    double d5 = dot(line2_direction, p1_to_p2);
+
+    double t = (d4 * d2 - d5 * d1) / (d1 * d3 - d2 * d2);
+
+    Point3<double> closestPoint1{line1_start.x + t * line1_direction.x, line1_start.y + t * line1_direction.y,
+                                 line1_start.z + t * line1_direction.z};
+
+    Point3<double> closestPoint2{line2_start.x + (d5 + t * d2) * line2_direction.x,
+                                 line2_start.y + (d5 + t * d2) * line2_direction.y,
+                                 line2_start.z + (d5 + t * d2) * line2_direction.z};
+
+    auto delta = closestPoint2 - closestPoint1;
+    return delta.squareLength();
 }
 
 static bool intersectionXY(const P &from1, const P &to1, const P &from2, const P &to2, Result &result) {
@@ -87,38 +109,6 @@ static bool intersectionXY(const P &from1, const P &to1, const P &from2, const P
 
     result.x = from1.x + lambda * dX;
     result.y = from1.y + lambda * dY;
-
-    return true;
-}
-
-static bool intersectionXYZ(const P &from1, const P &to1, const P &from2, const P &to2, Result3 &result) {
-    auto dX = to1.x - from1.x;
-    auto dY = to1.y - from1.y;
-    double dZ = to1.z - from1.z;
-    double determinant = dX * (to2.y - from2.y) * (to2.z - from2.z) - dY * (to2.x - from2.x) * (to2.z - from2.z) +
-                         dZ * (to2.x - from2.x) * (to2.y - from2.y);
-
-    if (determinant <= 0) {
-        return false;
-    }
-
-    double lambda = ((to2.y - from2.y) * (to2.z - from1.z) + (from2.x - to2.x) * (to2.y - from1.y) +
-                     (from2.z - to2.z) * (to2.x - from1.x)) /
-                    determinant;
-    double gamma =
-        ((from1.y - to1.y) * (to2.x - from1.x) + dX * (to2.y - from1.y) + dY * (to2.z - from1.z)) / determinant;
-    double beta =
-        ((from1.z - to1.z) * (to2.x - from1.x) + dX * (to2.z - from1.z) + dZ * (to2.y - from1.y)) / determinant;
-
-    /* if (lambda < 0 || gamma > 0 || beta > 0) { */
-    /*     return false; */
-    /* } */
-
-    log << lambda << " " << gamma << "" << beta << endl;
-
-    result.x = from1.x + lambda * dX;
-    result.y = from1.y + lambda * dY;
-    result.z = from1.z + lambda * dZ;
 
     return true;
 }
@@ -207,18 +197,77 @@ struct Context {
 
         Int64 result{0};
 
-        Set<P> velocities;
+        auto len = hailstones.size();
+
+        for (int i = 0; i < 10; ++i) {
+            P center{0, 0, 0};
+
+            for (auto &hs : hailstones) {
+                center += hs.getPosition(i);
+            }
+
+            double x = center.x / (double)len;
+            double y = center.y / (double)len;
+            double z = center.z / (double)len;
+
+            log << "center at " << i << " = " << x << "," << y << "," << z << endl;
+        }
+
+        {
+            Point3<double> a1, a2, a3;
+            Point3<double> d1, d2, d3;
+            a1 = hailstones[0].position;
+            a2 = hailstones[1].position;
+            a3 = hailstones[2].position;
+
+            d1 = hailstones[0].velocity;
+            d2 = hailstones[1].velocity;
+            d3 = hailstones[2].velocity;
+
+            d1.normalize();
+            d2.normalize();
+            d3.normalize();
+
+            auto n1 = cross(d1, d2);
+            auto n2 = cross(n1, d3);
+
+            /* auto p = (a1 + a2) / 2; */
+
+            log << n1 << d3 << endl;
+
+            log << n1 << endl;
+            log << n2 << endl;
+
+            auto n3 = n1 + n2;
+
+            for (int i = 0; i < 60; ++i) {
+
+                log << n3 * i << endl;
+            }
+
+            return;
+        }
 
         for (auto &hs : hailstones) {
 
             for (auto &other_hs : hailstones) {
                 if (&hs != &other_hs) {
 
+                    {
+
+                        auto shortest =
+                            shortestDistance(hs.position, hs.velocity, other_hs.position, other_hs.velocity);
+
+                        log << "Shortest = " << shortest << endl;
+
+                        continue;
+                    }
+
                     Int64 time = 0;
 
                     while (true) {
 
-                        for (auto time2 = 1; time2 < 100; ++time2) {
+                        for (auto time2 = 1; time2 < 10; ++time2) {
 
                             auto pos1 = hs.getPosition(time);
                             auto pos2 = other_hs.getPosition(time + time2);
@@ -227,13 +276,15 @@ struct Context {
                             auto count = 0;
 
                             for (auto &hs2 : hailstones) {
-                                /* Result3 iresult; */
                                 P iresult;
 
                                 if (intersection(pos1, pos1 + delta, hs2.getPosition(time), hs2.getPosition(time + 1),
                                                  iresult)) {
 
                                     ++count;
+                                    log << "time: " << time << endl;
+                                    log << "time2: " << time2 << endl;
+                                    /* log << "count: " << count << endl; */
                                 }
                             }
 
@@ -254,7 +305,7 @@ struct Context {
                         }
 
                         ++time;
-                        if (time > 100) {
+                        if (time > 1000000) {
                             break;
                         }
                     }
@@ -279,6 +330,6 @@ void process(const char *filename) {
 
 int main() {
     process("sample.txt");
-    process("input.txt");
+    /* process("input.txt"); */
     return 0;
 }

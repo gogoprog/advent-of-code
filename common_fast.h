@@ -175,6 +175,28 @@ template <typename INT = int> struct Point3 {
     int manhattan() const {
         return std::abs(x) + std::abs(y) + std::abs(z);
     }
+
+    INT squareLength() const {
+        return x * x + y * y + z * z;
+    }
+
+    INT length() const {
+        return std::sqrt(x * x + y * y + z * z);
+    }
+
+    void normalize() {
+        auto len = length();
+        x = INT(x / len);
+        y = INT(y / len);
+        z = INT(z / len);
+    }
+
+    template <typename O> Point3<INT> & operator=(const Point3<O> &other) {
+        x = other.x;
+        y = other.y;
+        z = other.z;
+        return *this;
+    }
 };
 
 template <typename INT> Point3<INT> operator-(const Point3<INT> &a, const Point3<INT> &b) {
@@ -185,7 +207,7 @@ template <typename INT> Point3<INT> operator+(const Point3<INT> &a, const Point3
     return {a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
-template <typename INT> Point3<INT> operator*(const Point3<INT> &a, const INT b) {
+template <typename INT, typename O> Point3<INT> operator*(const Point3<INT> &a, const O b) {
     return {a.x * b, a.y * b, a.z * b};
 }
 
@@ -518,7 +540,8 @@ class Logger {
         return *this;
     }
 
-    Logger &operator<<(Point3<Int64> c) {
+    template<typename T>
+    Logger &operator<<(Point3<T> c) {
         printf("(");
         *this << c.x;
         printf(", ");
