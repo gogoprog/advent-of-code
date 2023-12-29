@@ -197,6 +197,7 @@ template <typename INT = int> struct Point3 {
         z = other.z;
         return *this;
     }
+
 };
 
 template <typename INT> Point3<INT> operator-(const Point3<INT> &a, const Point3<INT> &b) {
@@ -207,8 +208,16 @@ template <typename INT> Point3<INT> operator+(const Point3<INT> &a, const Point3
     return {a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
+template <typename INT, typename O> Point3<INT> operator+(const Point3<INT> &a, const Point3<O> &b) {
+    return {a.x + b.x, a.y + b.y, a.z + b.z};
+}
+
 template <typename INT, typename O> Point3<INT> operator*(const Point3<INT> &a, const O b) {
     return {a.x * b, a.y * b, a.z * b};
+}
+
+template <typename INT, typename O> Point3<INT> operator/(const Point3<INT> &a, const O b) {
+    return {a.x / b, a.y / b, a.z / b};
 }
 
 template <typename INT> Point3<INT> operator*(const INT b, const Point3<INT> &a) {

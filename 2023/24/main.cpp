@@ -23,7 +23,7 @@ struct Hailstone {
     }
 };
 
-inline double dot(const P &u, const P &v) {
+inline double dot(const auto &u, const auto &v) {
     return u.x * v.x + u.y * v.y + u.z * v.z;
 }
 
@@ -48,6 +48,8 @@ bool intersection(const P &a1, const P &a2, const P &b1, const P &b2, P &ip) {
         return false;
 
     auto s = dot(cross(dc, db), cross(da, db)) / norm2(cross(da, db));
+
+    return true;
 
     auto is = Int64(s);
 
@@ -111,6 +113,17 @@ static bool intersectionXY(const P &from1, const P &to1, const P &from2, const P
     result.y = from1.y + lambda * dY;
 
     return true;
+}
+
+double findPlaneIntersectionTime(auto normal, Hailstone hs) {
+    Point3<double> pos, vel;
+    pos = hs.position;
+    auto a = dot(pos * -1, normal);
+
+    vel = hs.velocity;
+    auto b = dot(vel, normal);
+
+    return a / b;
 }
 
 struct Context {
@@ -201,8 +214,6 @@ struct Context {
 
         Array<Map<Int64, Int64>, 3> possib;
 
-        P maxdeltas{100000, 100000, 10000};
-
         for (auto &hs : hailstones) {
 
             for (auto &other_hs : hailstones) {
@@ -212,7 +223,7 @@ struct Context {
 
                         if (hs.velocity[i] == other_hs.velocity[i]) {
                             auto delta = hs.position[i] - other_hs.position[i];
-                            log << "yep " << i << " : " << hs.velocity[i] << " -> " << delta << endl;
+                            /* log << "yep " << i << " : " << hs.velocity[i] << " -> " << delta << endl; */
 
                             delta = std::abs(delta);
 
@@ -222,7 +233,6 @@ struct Context {
                             }
 
                             possib[i][hs.velocity[i]] = std::min(possib[i][hs.velocity[i]], delta);
-                            /* maxdeltas[i] = std::min(maxdeltas[i], delta); */
                         }
                     }
                 }
@@ -231,113 +241,168 @@ struct Context {
             /* break; */
         }
 
-        auto find_v = [](Map<Int64, Int64> &values) {
+        auto find_v = [](Pair<Int64, Int64> kv, Pair<Int64, Int64> kv2, Set<Int64> &out) {
+            auto iniv = kv.first;
 
-            log << values << endl;
-            for (auto &kv : values) {
+            /* log << kv << " vs " << kv2 << endl; */
 
-                auto iniv = kv.first;
+            for (Int64 i = 1; i <= std::sqrt(kv.second); ++i) {
+                auto newv = iniv + i;
 
-                for (int i = 1; i <= kv.second; ++i) {
-                    auto newv = iniv + i;
+                if ((kv.second % i) == 0) {
 
                     auto count = 0;
 
-                    for (auto &kv2 : values) {
-                        auto delta = newv - kv2.first;
+                    auto delta = newv - kv2.first;
 
-                        if (delta > 0 && (kv.second % delta) == 0) {
-                            count++;
-                        }
-                    }
-
-                    log << count << endl;
-
-                    if (count == values.size()) {
-                        log << "yep " << newv << endl;
-                        break;
+                    if (delta != 0 && (kv2.second % delta) == 0) {
+                        count++;
+                        /* log << "yep " << newv << " at " << count << endl; */
+                        out.insert(newv);
                     }
                 }
             }
         };
 
-        /* log << factors << endl; */
-        log << possib << endl;
+        P rock_velocity;
 
-        find_v(possib[0]);
-        find_v(possib[1]);
-        find_v(possib[2]);
+        for (int i = 0; i < 3; ++i) {
 
-        return;
+            Set<Int64> values;
+            for (auto &kv : possib[i]) {
+                for (auto &kv2 : possib[i]) {
 
-        auto test = [&](auto &velo) {
-            for (auto &hs : hailstones) {
-                for (auto &other_hs : hailstones) {
-                    auto pos = hs.position;
+                    if (&kv != &kv2) {
+                        Set<Int64> out;
 
-                    Int64 time = 0;
+                        find_v(kv, kv2, out);
 
-                    while (true) {
+                        if (values.size() == 0) {
+                            values = out;
+                        } else {
+                            Set<Int64> temp;
+                            std::set_intersection(values.begin(), values.end(), out.begin(), out.end(),
+                                                  std::inserter(temp, temp.begin()));
+                            values = temp;
 
-                        for (auto time2 = 1; time2 < 100; ++time2) {
-
-                            auto pos1 = hs.getPosition(time);
-                            auto count = 0;
-
-                            for (auto &hs2 : hailstones) {
-                                /* Result3 iresult; */
-                                P iresult;
-
-                                if (intersection(pos1, pos1 + velo, hs2.getPosition(time), hs2.getPosition(time + 1),
-                                                 iresult)) {
-
-                                    ++count;
-                                }
+                            if (values.size() == 1) {
+                                log << "yep => " << *values.begin() << endl;
+                                rock_velocity[i] = *values.begin();
+                                break;
                             }
-
-                            static int bestcount = 0;
-                            if (count > bestcount) {
-                                bestcount = count;
-                                log << "bestcount: " << bestcount << endl;
-                            }
-
-                            if (count == hailstones.size()) {
-                                log << "winrar : " << velo << " at time " << time << endl;
-
-                                auto pos = pos1 - velo * time;
-
-                                result = pos.x + pos.y + pos.z;
-                            }
-                        }
-
-                        ++time;
-                        if (time > 100) {
-                            break;
                         }
                     }
                 }
-            }
-        };
-
-        for (int x = -maxdeltas.x; x <= maxdeltas.x; ++x) {
-
-            if (x && ((maxdeltas.x % x) == 0)) {
-
-                for (int y = -maxdeltas.y; y <= maxdeltas.y; ++y) {
-
-                    if (y && (maxdeltas.y % y) == 0) {
-
-                        for (int z = -maxdeltas.z; z <= maxdeltas.z; ++z) {
-
-                            if (z && (maxdeltas.z % z) == 0) {
-                                log << x << " " << y << " " << z << endl;
-                                result++;
-                            }
-                        }
-                    }
+                if (values.size() == 1) {
+                    break;
                 }
             }
         }
+
+        log << rock_velocity << endl;
+
+        auto test = [&](auto &velo) {
+            for (auto &hs : hailstones) {
+
+                for (Int64 time = 1; time < 1000000000; ++time) {
+
+                    auto pos1 = hs.getPosition(time);
+                    auto count = 0;
+
+                    for (auto &hs2 : hailstones) {
+                        P iresult;
+
+                        if (intersection(pos1, pos1 + rock_velocity, hs2.getPosition(time), hs2.getPosition(time + 1),
+                                         iresult)) {
+
+                            ++count;
+                        }
+                    }
+
+                    static int bestcount = 0;
+                    if (count > bestcount) {
+                        bestcount = count;
+                        log << "bestcount: " << bestcount << endl;
+                    }
+
+                    if (count == hailstones.size()) {
+                        log << "winrar : " << velo << " at time " << time << endl;
+
+                        auto pos = pos1 - velo * time;
+
+                        result = pos.x + pos.y + pos.z;
+                    }
+                }
+            }
+        };
+
+        /* test(rock_velocity); */
+
+        auto origin = hailstones[0].position;
+        auto vorigin = hailstones[0].velocity;
+
+        auto zero = P{0, 0, 0};
+
+        log << origin << " " << vorigin << endl;
+
+        auto a = 10;
+        auto b = 20;
+        auto c = 30;
+
+        Hailstone hs_a;
+        hs_a.position = hailstones[a].position - origin;
+        hs_a.velocity = hailstones[a].velocity - vorigin;
+        Hailstone hs_b;
+        hs_b.position = hailstones[b].position - origin;
+        hs_b.velocity = hailstones[b].velocity - vorigin;
+        Hailstone hs_c;
+        hs_c.position = hailstones[c].position - origin;
+        hs_c.velocity = hailstones[c].velocity - vorigin;
+
+        Point3<__float128> pos1, pos2, normal, p2, p3, v2, v3, vel, pos;
+
+        pos1 = hs_a.getPosition(0);
+        pos2 = hs_a.getPosition(1);
+
+        normal = cross(pos1, pos2);
+
+        /* log << "normal = " << normal << endl; */
+
+        auto t2 = findPlaneIntersectionTime(normal, hs_b);
+        auto t3 = findPlaneIntersectionTime(normal, hs_c);
+
+        p2 = hs_b.position;
+        p3 = hs_c.position;
+
+        v2 = hs_b.velocity;
+        v3 = hs_c.velocity;
+
+        p2 = p2 + (v2 * t2);
+        p3 = p3 + (v3 * t3);
+
+        /* log << "p2-p3= " << (p2 - p3) << endl; */
+
+        vel = p2 - p3;
+
+        auto diff_t = t2 - t3;
+
+        vel = vel / diff_t;
+
+        /* vel = {200,-36,411}; */
+
+        /* log << "vel = " << vel << endl; */
+        pos = p2;
+        pos = pos - vel * t2;
+
+        /* log << "postemp: " << pos << endl; */
+
+        pos = pos + origin;
+        vel = vel + vorigin;
+
+        /* log << pos << endl; */
+        /* log << vel << endl; */
+
+        result = pos.x + pos.y + pos.z;
 
         log << "Part2: " << result << endl;
     }
@@ -356,6 +421,6 @@ void process(const char *filename) {
 
 int main() {
     process("sample.txt");
-    /* process("input.txt"); */
+    process("input.txt");
     return 0;
 }
