@@ -2,131 +2,162 @@
 
 struct Context {
 
-    enum ParseState { INSTR, A, COMMA, B, END };
+    enum ParseState { UNKNOWN, NEED_DIGIT, NEED_DIGIT_OR_CLOSE, NEED_DIGIT_OR_CLOSE_OR_COMMA };
 
-    template <bool useDoDont> void part(auto lines) {
-        auto result{0};
-        const String instr{"mul("};
+    struct Instruction {
+        Function<void(Vector<int> &)> func;
+        int argsCount;
+    };
 
-        ParseState state = INSTR;
-        int instrindex = 0;
+    struct ParseResult {
+        Vector<int> args;
+        StringView line;
+        int startIndex;
+        int endIndex;
+        bool valid{false};
+    };
+
+    struct Line {
+        Instruction instruction;
+        Vector<int> args;
+    };
+
+    static Vector<ParseResult> parseLine(const StringView &line) {
+        Vector<ParseResult> results;
+
+        ParseResult current_result;
+        ParseState state = UNKNOWN;
         String term;
-        int a;
-        int b;
         bool enabled = true;
 
         auto reset = [&]() {
-            instrindex = 0;
-            state = INSTR;
+            state = UNKNOWN;
             term = "";
+            current_result = {};
         };
 
-        auto validate = [&]() {
-            if constexpr (useDoDont) {
-                if (enabled) {
-                    result += a * b;
-                }
-            } else {
+        reset();
 
-                result += a * b;
-            }
-            /* log << "Found mul(" << a << ","<< b << ") -> " << result << " | " << enabled << endl; */
-        };
+        for (int i = 0; i < line.size(); ++i) {
+            auto c = line[i];
 
-        enabled = true;
+            switch (c) {
+                case '(':
+                    reset();
+                    state = NEED_DIGIT_OR_CLOSE;
+                    current_result.startIndex = i;
+                    break;
 
-        for (auto line : lines) {
-            reset();
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
 
-            for (int i = 0; i < line.size(); ++i) {
-                auto c = line[i];
-
-                /* log << c << " | " << state << endl; */
-
-                if constexpr (useDoDont) {
-                    if (i >= 4) {
-                        auto str = line.substr(i - 4, 4);
-                        if (str == "do()") {
-                            enabled = true;
-                        }
-                    }
-                    if (i >= 7) {
-                        auto str = line.substr(i - 7, 7);
-                        if (str == "don't()") {
-                            enabled = false;
-                        }
-                    }
-                }
-
-                switch (state) {
-                    case INSTR:
-                        if (c == instr[instrindex]) {
-                            instrindex++;
-                            if (instrindex == instr.size()) {
-                                state = A;
-                            }
-                        } else {
-                            reset();
-                        }
-                        break;
-                    case A:
-                        if (std::isdigit(c)) {
+                    switch (state) {
+                        case NEED_DIGIT:
+                        case NEED_DIGIT_OR_CLOSE:
+                        case NEED_DIGIT_OR_CLOSE_OR_COMMA:
                             term += c;
-                        } else {
-                            if (term.size() > 0) {
-                                a = parseInt(term);
-                                state = COMMA;
-                                --i;
-                            } else {
-                                reset();
+                            state = NEED_DIGIT_OR_CLOSE_OR_COMMA;
+                            break;
+                        default:
+                            reset();
+                            break;
+                    }
 
-                                --i;
+                    break;
+
+                case ')':
+                    switch (state) {
+                        case NEED_DIGIT_OR_CLOSE:
+                        case NEED_DIGIT_OR_CLOSE_OR_COMMA:
+                            if (term != "") {
+                                current_result.args.push_back(parseInt(term));
                             }
-                        }
-                        break;
-                    case COMMA:
-                        if (c == ',') {
-                            state = B;
+                            current_result.endIndex = i;
+                            current_result.line = line;
+                            results.push_back(current_result);
+                            reset();
+                            break;
+                        default:
+                            break;
+                    }
+                    reset();
+                    break;
+
+                case ',':
+                    switch (state) {
+                        case NEED_DIGIT_OR_CLOSE_OR_COMMA:
+                            current_result.args.push_back(parseInt(term));
                             term = "";
-                        } else {
+                            state = NEED_DIGIT;
+                            break;
+                        default:
                             reset();
-                            --i;
-                        }
-                        break;
-                    case B:
-                        if (std::isdigit(c)) {
-                            term += c;
-                        } else {
-                            if (term.size() > 0) {
-                                b = parseInt(term);
-                                state = END;
-                                --i;
-                            } else {
-                                reset();
-                                --i;
-                            }
-                        }
-                        break;
-                    case END:
-                        if (c == ')') {
-                            validate();
-                            reset();
-                        } else {
-                            reset();
-                            --i;
-                        }
-                        break;
-                }
+                            break;
+                    }
+                    break;
             }
         }
-
-        log << "Part1: " << result << endl;
+        return results;
     }
 
-    void part2(auto lines) {
+    template <bool useDoDont> void part(auto lines) {
         auto result{0};
+        bool enabled{true};
+        Map<String, Instruction> instructions;
 
-        log << "Part2: " << result << endl;
+        instructions["mul"] = {[&](const Vector<int> &args) {
+                                   if (enabled) {
+                                       result += args[0] * args[1];
+                                   }
+                               },
+                               2};
+
+        if constexpr (useDoDont) {
+            instructions["do"] = {[&](const Vector<int> &args) { enabled = true; }, 0};
+            instructions["don't"] = {[&](const Vector<int> &args) { enabled = false; }, 0};
+        }
+
+        auto resolve = [&](const auto &result) {
+            for (auto &kv : instructions) {
+                auto name = kv.first;
+
+                auto len = name.length();
+
+                if (result.startIndex >= len) {
+                    auto str = result.line.substr(result.startIndex - len, len);
+
+                    if (str == name) {
+                        return Line{kv.second, result.args};
+                    }
+                }
+            }
+
+            return Line{};
+        };
+
+        auto valid = [&](const auto &result) {
+            if (!result.instruction.func) {
+                return false;
+            }
+
+            return result.args.size() == result.instruction.argsCount;
+        };
+
+        auto program = lines | rv::transform(parseLine) | rv::join | rv::transform(resolve) | rv::filter(valid);
+
+        for (auto line : program) {
+            line.instruction.func(line.args);
+        }
+
+        log << "Result: " << result << endl;
     }
 };
 
