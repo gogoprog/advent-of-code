@@ -17,7 +17,8 @@ struct Context {
 
 void process(const char *filename) {
     log << "Processing " << filename << endl;
-    auto lines = rs::split_string_view(getFileContent(filename), '\n');
+    auto content = getFileContent(filename);
+    auto lines = rs::split_string_view(content, '\n');
     {
         Context context;
         context.part1(lines);
