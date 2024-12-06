@@ -191,13 +191,12 @@ template <typename INT = int> struct Point3 {
         z = INT(z / len);
     }
 
-    template <typename O> Point3<INT> & operator=(const Point3<O> &other) {
+    template <typename O> Point3<INT> &operator=(const Point3<O> &other) {
         x = other.x;
         y = other.y;
         z = other.z;
         return *this;
     }
-
 };
 
 template <typename INT> Point3<INT> operator-(const Point3<INT> &a, const Point3<INT> &b) {
@@ -509,7 +508,7 @@ class Logger {
         return *this;
     }
 
-    template <typename T, long unsigned int S> Logger &operator<<(Array<T, S> & vs) {
+    template <typename T, long unsigned int S> Logger &operator<<(Array<T, S> &vs) {
         printf("[");
         auto first = true;
         for (auto v : vs) {
@@ -564,8 +563,7 @@ class Logger {
         return *this;
     }
 
-    template<typename T>
-    Logger &operator<<(Point3<T> c) {
+    template <typename T> Logger &operator<<(Point3<T> c) {
         printf("(");
         *this << c.x;
         printf(", ");
@@ -644,9 +642,10 @@ inline constexpr __get<3> get3{};
 template <input_range _Range, int index> auto operator|(_Range &&__r, __get<index> s) {
     auto it = (__r.begin());
 
-    for (int i = 0; i < index; i++) {
-        it = std::next(it);
+    if constexpr (index > 0) {
+        it = std::next(it, index);
     }
+
     return *it;
 }
 
