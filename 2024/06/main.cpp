@@ -49,19 +49,20 @@ struct Context {
                 auto delta = deltas[dir];
                 auto nextpos = current + delta;
 
-                if (visited.contains({current, dir})) {
-                    return true;
-                }
-
-                visited.insert({current, dir});
-
                 if (!isValid(nextpos)) {
                     break;
                 } else {
                     if (isWalkable(nextpos) && nextpos != extra) {
                         current = nextpos;
                     } else {
+
                         dir = (dir + 1) % 4;
+
+                        if (visited.contains({current, dir})) {
+                            return true;
+                        }
+
+                        visited.insert({current, dir});
                     }
                 }
             }
@@ -87,9 +88,9 @@ struct Context {
 
                     auto extra = nextpos;
 
-                    if (extra != start) {
+                    if (extra != start && !visited.contains(extra)) {
                         if (!solutions.contains(extra)) {
-                            auto t = testLoop(start, 0, extra);
+                            auto t = testLoop(current, (dir + 1) % 4, extra);
 
                             if (t) {
                                 solutions.insert(extra);
