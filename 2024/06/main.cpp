@@ -1,5 +1,11 @@
 #include "../../common_fast.h"
 
+template <> struct std::hash<Pair<Coord, int>> {
+    std::size_t operator()(const Pair<Coord, int> &v) const {
+        return v.first.x + 10000 * v.first.y + v.second * 1000000;
+    }
+};
+
 struct Context {
 
     static constexpr Array<Point, 8> deltas = {Point{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
@@ -41,7 +47,7 @@ struct Context {
         parse(lines);
 
         auto testLoop = [&](const auto start, const auto _dir, const auto extra) {
-            Set<Pair<Coord, int>> visited;
+            UnorderedMap<Pair<Coord, int>, bool> visited;
             auto current = start;
             int dir = _dir;
 
@@ -55,14 +61,15 @@ struct Context {
                     if (isWalkable(nextpos) && nextpos != extra) {
                         current = nextpos;
                     } else {
-
                         dir = (dir + 1) % 4;
 
-                        if (visited.contains({current, dir})) {
+                        auto key = Pair<Coord, int>{current, dir};
+
+                        if (visited.contains(key)) {
                             return true;
                         }
 
-                        visited.insert({current, dir});
+                        visited[key] = true;
                     }
                 }
             }
