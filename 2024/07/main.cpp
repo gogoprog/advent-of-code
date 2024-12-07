@@ -9,9 +9,36 @@ struct Context {
         Vector<Int64> terms;
 
         Int64 process() const {
-
             return tryCompute({});
         }
+
+        /* Int64 process2() const { */
+        /*     Queue<Vector<int>> q; */
+
+        /*     q.push({}); */
+
+        /*     while (!q.empty()) { */
+        /*         const auto node = q.front(); */
+        /*         q.pop(); */
+
+        /*         if (node.size() == terms.size() - 1) { */
+        /*             auto value = compute(node); */
+        /*             if (value == result) { */
+        /*                 return value; */
+        /*             } */
+
+        /*         } else { */
+
+        /*             for (int op = 0; op < OPCOUNT; ++op) { */
+        /*                 auto copy = node; */
+        /*                 copy.push_back(op); */
+        /*                 q.push(copy); */
+        /*             } */
+        /*         } */
+        /*     } */
+
+        /*     return 0; */
+        /* } */
 
         Int64 tryCompute(const Vector<int> &ops) const {
 
@@ -20,6 +47,7 @@ struct Context {
                 if (value == result) {
                     return value;
                 }
+
             } else {
                 for (int op = 0; op < OPCOUNT; ++op) {
 
@@ -55,6 +83,10 @@ struct Context {
                         auto b = terms[i + 1];
                         current = parseInt(std::to_string(a) + std::to_string(b));
                         break;
+                }
+
+                if (current > result) {
+                    return 0;
                 }
             }
 
