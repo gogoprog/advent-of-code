@@ -470,6 +470,12 @@ inline int64_t parseInt(StringView line) {
     return result;
 }
 
+inline int64_t parsePositiveInt(StringView line) {
+    int64_t result;
+    std::from_chars(line.data(), line.data() + line.size(), result);
+    return result;
+}
+
 class Logger {
   public:
     Logger &operator<<(StringView str) {

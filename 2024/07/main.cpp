@@ -64,10 +64,8 @@ struct Context {
             return 0;
         };
 
-        Int64 compute(const Vector<int> &_ops) const {
+        inline Int64 compute(const Vector<int> &_ops) const {
             auto current = terms[0];
-
-            /* log << terms << endl; */
 
             for (int i = 0; i < _ops.size(); ++i) {
 
@@ -81,7 +79,17 @@ struct Context {
                     case CONCAT:
                         auto a = current;
                         auto b = terms[i + 1];
-                        current = parseInt(std::to_string(a) + std::to_string(b));
+
+                        int n = 10;
+                        for (int i = 1; i < 10; ++i) {
+                            if (n > b) {
+                                current = current * n + b;
+                                break;
+                            }
+
+                            n *= 10;
+                        }
+
                         break;
                 }
 
@@ -104,7 +112,7 @@ struct Context {
 
             auto first = parts | rv::get0;
 
-            eq.result = parseInt(first.substr(0, first.length() - 1));
+            eq.result = parsePositiveInt(first.substr(0, first.length() - 1));
 
             auto v = parts | rv::drop(1) | rv::to_ints;
 
