@@ -3,13 +3,13 @@
 struct Context {
 
     void part1(auto lines) {
-        auto result{0};
+        auto result{0_int64};
 
         log << "Part1: " << result << endl;
     }
 
     void part2(auto lines) {
-        auto result{0};
+        auto result{0_int64};
 
         log << "Part2: " << result << endl;
     }
