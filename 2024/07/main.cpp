@@ -4,12 +4,12 @@ struct Context {
 
     enum Operator : int { ADD = 0, MUL, CONCAT };
 
-    template <int OPCOUNT> struct Equation {
+    struct Equation {
         Int64 result;
         Vector<Int64> terms;
 
-        Int64 process() const {
-            return tryCompute({});
+        template <int OPCOUNT> Int64 process() const {
+            return tryCompute<OPCOUNT>({});
         }
 
         /* Int64 process2() const { */
@@ -40,10 +40,10 @@ struct Context {
         /*     return 0; */
         /* } */
 
-        Int64 tryCompute(const Vector<int> &ops) const {
+        template <int OPCOUNT> Int64 tryCompute(const Vector<int> &ops) const {
 
             if (terms.size() == ops.size() + 1) {
-                auto value = compute(ops);
+                auto value = compute<OPCOUNT>(ops);
                 if (value == result) {
                     return value;
                 }
@@ -53,7 +53,7 @@ struct Context {
 
                     auto copy = ops;
                     copy.push_back(op);
-                    auto r = tryCompute(copy);
+                    auto r = tryCompute<OPCOUNT>(copy);
 
                     if (r) {
                         return r;
@@ -64,7 +64,7 @@ struct Context {
             return 0;
         };
 
-        inline Int64 compute(const Vector<int> &_ops) const {
+        template <int OPCOUNT> inline Int64 compute(const Vector<int> &_ops) const {
             auto current = terms[0];
 
             for (int i = 0; i < _ops.size(); ++i) {
@@ -102,17 +102,17 @@ struct Context {
         }
     };
 
-    void part1(auto lines) {
-        auto result{0_int64};
+    Vector<Equation> equations;
 
+    void parse(auto lines) {
         auto to_equation = [](const auto &line) {
-            Equation<2> eq;
+            Equation eq;
 
             auto parts = line | rv::split_sv(' ');
 
             auto first = parts | rv::get0;
 
-            eq.result = parsePositiveInt(first.substr(0, first.length() - 1));
+            eq.result = first | rv::to_int;
 
             auto v = parts | rv::drop(1) | rv::to_ints;
 
@@ -121,9 +121,15 @@ struct Context {
             return eq;
         };
 
-        auto compute = [](const auto &eq) { return eq.process(); };
+        rs::copy(lines | rv::transform(to_equation), std::back_inserter(equations));
+    }
 
-        auto v = lines | rv::transform(to_equation) | rv::transform(compute);
+    void part1(auto lines) {
+        auto result{0_int64};
+
+        auto compute = [](const auto &eq) { return eq.template process<2>(); };
+
+        auto v = equations | rv::transform(compute);
 
         result = rs::fold_left(v, 0_int64, std::plus<>());
 
@@ -133,25 +139,9 @@ struct Context {
     void part2(auto lines) {
         auto result{0_int64};
 
-        auto to_equation = [](const auto &line) {
-            Equation<3> eq;
+        auto compute = [](const auto &eq) { return eq.template process<3>(); };
 
-            auto parts = line | rv::split_sv(' ');
-
-            auto first = parts | rv::get0;
-
-            eq.result = parseInt(first.substr(0, first.length() - 1));
-
-            auto v = parts | rv::drop(1) | rv::to_ints;
-
-            rs::copy(v, std::back_inserter(eq.terms));
-
-            return eq;
-        };
-
-        auto compute = [](const auto &eq) { return eq.process(); };
-
-        auto v = lines | rv::transform(to_equation) | rv::transform(compute);
+        auto v = equations | rv::transform(compute);
 
         result = rs::fold_left(v, 0_int64, std::plus<>());
 
@@ -165,6 +155,7 @@ void process(const char *filename) {
     auto lines = rs::split_string_view(content, '\n');
     {
         Context context;
+        context.parse(lines);
         context.part1(lines);
         context.part2(lines);
     }
