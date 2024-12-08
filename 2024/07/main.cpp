@@ -6,10 +6,16 @@ struct Context {
 
     struct Equation {
         Int64 result;
+        mutable Int64 cache{0};
+
         Vector<Int64> terms;
 
         template <int OPCOUNT> Int64 process() const {
-            return tryCompute<OPCOUNT>({});
+            if (cache)
+                return cache;
+            auto r = tryCompute<OPCOUNT>({});
+            cache = r;
+            return r;
         }
 
         /* Int64 process2() const { */
@@ -44,6 +50,7 @@ struct Context {
 
             if (terms.size() == ops.size() + 1) {
                 auto value = compute<OPCOUNT>(ops);
+
                 if (value == result) {
                     return value;
                 }
