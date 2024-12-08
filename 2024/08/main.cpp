@@ -1,35 +1,18 @@
 #include "../../common_fast.h"
 
 struct Context {
+    Grid grid;
 
     Map<char, Vector<Coord>> antennas;
-    StringViews lines;
-    int width, height;
 
-    bool isValid(Coord coord) const {
-        return coord.x >= 0 && coord.x < width && coord.y >= 0 && coord.y < height;
-    }
+    void parse(auto lines) {
+        grid.parse(lines);
 
-    inline char getChar(Coord coord) const {
-        return lines[coord.y][coord.x];
-    }
-
-    void parse(auto _lines) {
-        lines = {};
-        rs::copy(_lines, std::back_inserter(lines));
-        width = lines[0].size();
-        height = lines.size();
-
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
-                Coord coord{x, y};
-                char c = lines[y][x];
-
-                if (c != '.') {
-                    antennas[c].push_back(coord);
-                }
+        grid.for_each([&](auto coord, char c) {
+            if (c != '.') {
+                antennas[c].push_back(coord);
             }
-        }
+        });
     }
 
     void part1(auto lines) {
@@ -37,9 +20,7 @@ struct Context {
 
         Set<Coord> antinodes;
 
-        for (const auto &kv : antennas) {
-            auto &key = kv.first;
-            auto &values = kv.second;
+        for (const auto &[key, values] : antennas) {
 
             for (int i = 0; i < values.size(); ++i) {
                 for (int j = i + 1; j < values.size(); ++j) {
@@ -52,10 +33,10 @@ struct Context {
                         auto na = a - delta;
                         auto nb = b + delta;
 
-                        if (isValid(na)) {
+                        if (grid.isValid(na)) {
                             antinodes.insert(na);
                         }
-                        if (isValid(nb)) {
+                        if (grid.isValid(nb)) {
                             antinodes.insert(nb);
                         }
                     }
@@ -73,9 +54,7 @@ struct Context {
 
         Set<Coord> antinodes;
 
-        for (const auto &kv : antennas) {
-            auto &key = kv.first;
-            auto &values = kv.second;
+        for (const auto &[key, values] : antennas) {
 
             for (int i = 0; i < values.size(); ++i) {
                 for (int j = i + 1; j < values.size(); ++j) {
@@ -90,11 +69,11 @@ struct Context {
                         antinodes.insert(a);
                         antinodes.insert(b);
 
-                        while (isValid(na)) {
+                        while (grid.isValid(na)) {
                             antinodes.insert(na);
                             na = na - delta;
                         }
-                        while (isValid(nb)) {
+                        while (grid.isValid(nb)) {
                             antinodes.insert(nb);
                             nb += delta;
                         }

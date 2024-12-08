@@ -2,6 +2,10 @@
 
 struct Context {
 
+    void parse(auto lines) {
+
+    }
+
     void part1(auto lines) {
         auto result{0_int64};
 
@@ -21,6 +25,7 @@ void process(const char *filename) {
     auto lines = rs::split_string_view(content, '\n');
     {
         Context context;
+        context.parse(lines);
         context.part1(lines);
         context.part2(lines);
     }

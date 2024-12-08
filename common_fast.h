@@ -35,7 +35,7 @@ template <class V> using Vector = std::vector<V>;
 template <class V, int size> using Array = std::array<V, size>;
 template <class V> using Set = std::set<V>;
 template <class V> using UnorderedSet = std::unordered_set<V>;
-template <class T> using Grid = Map<int, Map<int, T>>;
+template <class T> using Grid2 = Map<int, Map<int, T>>;
 template <class V> using Queue = std::queue<V>;
 template <class V> using Dequeue = std::deque<V>;
 template <class V> using PriorityQueue = std::priority_queue<V>;
@@ -686,3 +686,45 @@ template <input_range _Range> auto operator|(_Range &&__r, __to_int s) {
 auto const split_string_view = [](auto view, char delim) { return rs::split_view(view, delim) | rv::to_string_views; };
 
 } // namespace std::ranges
+
+struct Grid {
+    StringViews lines;
+    int width, height;
+
+    inline bool isValid(const Coord coord) const {
+        return coord.x >= 0 && coord.x < width && coord.y >= 0 && coord.y < height;
+    }
+
+    inline char get(const Coord coord) const {
+        return lines[coord.y][coord.x];
+    }
+
+    void parse(auto _lines) {
+        lines = {};
+        rs::copy(_lines, std::back_inserter(lines));
+        width = lines[0].size();
+        height = lines.size();
+    }
+
+    void for_each(const std::function<void(const Coord, char)> &func) const {
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                Coord coord{x, y};
+                char c = lines[y][x];
+
+                func(coord, c);
+            }
+        }
+    }
+
+    Vector<Coord> genCoords() const {
+        Vector<Coord> result;
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                result.push_back({x, y});
+            }
+        }
+        return result;
+    }
+};
