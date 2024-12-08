@@ -13,57 +13,30 @@ struct Context {
         template <int OPCOUNT> Int64 process() const {
             if (cache)
                 return cache;
-            auto r = tryCompute<OPCOUNT>({});
+            auto r = tryCompute2<OPCOUNT>(0, terms[0]);
             cache = r;
             return r;
         }
 
-        /* Int64 process2() const { */
-        /*     Queue<Vector<int>> q; */
+        template <int OPCOUNT> Int64 tryCompute2(const int index, const Int64 value) const {
+            if (!value)
+                return 0;
 
-        /*     q.push({}); */
-
-        /*     while (!q.empty()) { */
-        /*         const auto node = q.front(); */
-        /*         q.pop(); */
-
-        /*         if (node.size() == terms.size() - 1) { */
-        /*             auto value = compute(node); */
-        /*             if (value == result) { */
-        /*                 return value; */
-        /*             } */
-
-        /*         } else { */
-
-        /*             for (int op = 0; op < OPCOUNT; ++op) { */
-        /*                 auto copy = node; */
-        /*                 copy.push_back(op); */
-        /*                 q.push(copy); */
-        /*             } */
-        /*         } */
-        /*     } */
-
-        /*     return 0; */
-        /* } */
-
-        template <int OPCOUNT> Int64 tryCompute(const Vector<int> &ops) const {
-
-            if (terms.size() == ops.size() + 1) {
-                auto value = compute<OPCOUNT>(ops);
-
+            if (terms.size() == index + 1) {
                 if (value == result) {
                     return value;
                 }
 
             } else {
-                for (int op = 0; op < OPCOUNT; ++op) {
+                if (value && value <= result) {
 
-                    auto copy = ops;
-                    copy.push_back(op);
-                    auto r = tryCompute<OPCOUNT>(copy);
+                    for (int op = 0; op < OPCOUNT; ++op) {
+                        auto newval = operation(value, op, terms[index + 1]);
+                        auto r = tryCompute2<OPCOUNT>(index + 1, newval);
 
-                    if (r) {
-                        return r;
+                        if (r) {
+                            return r;
+                        }
                     }
                 }
             }
@@ -71,41 +44,27 @@ struct Context {
             return 0;
         };
 
-        template <int OPCOUNT> inline Int64 compute(const Vector<int> &_ops) const {
-            auto current = terms[0];
+        static inline Int64 operation(const Int64 a, int op, const Int64 b) {
 
-            for (int i = 0; i < _ops.size(); ++i) {
-
-                switch (_ops[i]) {
-                    case ADD:
-                        current += terms[i + 1];
-                        break;
-                    case MUL:
-                        current *= terms[i + 1];
-                        break;
-                    case CONCAT:
-                        auto a = current;
-                        auto b = terms[i + 1];
-
-                        int n = 10;
-                        for (int i = 1; i < 10; ++i) {
-                            if (n > b) {
-                                current = current * n + b;
-                                break;
-                            }
-
-                            n *= 10;
+            switch (op) {
+                case ADD:
+                    return a + b;
+                case MUL:
+                    return a * b;
+                case CONCAT:
+                    int n = 10;
+                    for (int i = 1; i < 10; ++i) {
+                        if (n > b) {
+                            return a * n + b;
                         }
 
-                        break;
-                }
+                        n *= 10;
+                    }
 
-                if (current > result) {
-                    return 0;
-                }
+                    break;
             }
 
-            return current;
+            return 0;
         }
     };
 
