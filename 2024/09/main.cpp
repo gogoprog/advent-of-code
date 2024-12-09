@@ -4,52 +4,25 @@ struct Context {
     static constexpr int FREE = -1;
 
     struct Node {
-        Int64 id;
+        int id;
         int size;
     };
 
     Vector<Node> nodes;
-
-    bool hasGap() const {
-        bool last_is_free = false;
-        for (const auto &node : nodes) {
-            if (node.id == FREE) {
-                last_is_free = true;
-            } else {
-                if (last_is_free) {
-                    return true;
-                }
-                last_is_free = false;
-            }
-        }
-        return false;
-    }
-
-    int firstFirstGap() const {
-        bool last_is_free = false;
-        int i = 0;
-        for (const auto &node : nodes) {
-            if (node.id == FREE) {
-                last_is_free = true;
-            } else {
-                if (last_is_free) {
-                    return i;
-                }
-                last_is_free = false;
-            }
-            ++i;
-        }
-        return -1;
-    }
+    int idCount;
 
     static Int64 checksum(const auto nodes) {
+        Int64 result = 0;
+        int pos = 0;
 
-        Int64 result{0};
-        for (int i = 0; i < nodes.size(); ++i) {
+        for (const auto &node : nodes) {
+            for (int i = 0; i < node.size; ++i) {
 
-            auto id = nodes[i].id;
-            if (id != FREE) {
-                result += i * nodes[i].id;
+                if (node.id != FREE) {
+                    result += pos * node.id;
+                }
+
+                pos++;
             }
         }
 
@@ -85,6 +58,8 @@ struct Context {
             }
             ++l;
         }
+
+        idCount = id;
     }
 
     void part1() {
@@ -125,19 +100,13 @@ struct Context {
 
         /* draw(copynodes); */
 
-        int index = nodes.size() - 1;
-        while (nodes[index].id == FREE) {
-            --index;
-        }
-
-        int id = nodes[index].id;
+        int id = idCount - 1;
+        int index = copynodes.size() - 1;
 
         while (id >= 0) {
-            int index = 0;
-            for (index = 0; index < copynodes.size(); ++index) {
-                if (copynodes[index].id == id) {
-                    break;
-                }
+
+            while (copynodes[index].id != id) {
+                --index;
             }
 
             int free_index;
@@ -164,20 +133,9 @@ struct Context {
             /* draw(copynodes); */
         }
 
-        int pos = 0;
-
-        for (const auto &node : copynodes) {
-            for (int i = 0; i < node.size; ++i) {
-
-                if (node.id != FREE) {
-                    result += pos * node.id;
-                }
-
-                pos++;
-            }
-        }
-
         /* draw(copynodes); */
+
+        result = checksum(copynodes);
 
         log << "Part2: " << result << endl;
     }
