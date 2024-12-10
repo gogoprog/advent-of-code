@@ -706,7 +706,7 @@ struct Grid {
         height = lines.size();
     }
 
-    void for_each(const std::function<void(const Coord, char)> &func) const {
+    void for_each(const std::function<void(const Coord, const char)> &func) const {
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 Coord coord{x, y};
