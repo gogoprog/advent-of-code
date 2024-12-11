@@ -8,40 +8,80 @@ struct Context {
         int size;
     };
 
-    Vector<Node> nodes;
+    struct Nodes : public Vector<Node> {
+
+        Int64 checksum() const {
+            Int64 result = 0;
+            int pos = 0;
+
+            auto &nodes = *this;
+
+            for (const auto &node : nodes) {
+                for (int i = 0; i < node.size; ++i) {
+
+                    if (node.id != FREE) {
+                        result += pos * node.id;
+                    }
+
+                    pos++;
+                }
+            }
+
+            return result;
+        }
+
+        void draw() const {
+            for (const auto &node : *this) {
+                for (int i = 0; i < node.size; ++i) {
+                    if (node.id != FREE) {
+                        log << node.id;
+                    } else {
+                        log << '.';
+                    }
+                }
+            }
+
+            log << endl;
+        }
+
+        bool findFreeNode(int size, int start_index, int max_index, int &free_index) const {
+            bool found = false;
+            auto &nodes = *this;
+
+            for (free_index = start_index; free_index <= max_index; free_index++) {
+                if (nodes[free_index].id == FREE && nodes[free_index].size >= size) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        void moveNode(int source_index, int target_index, int size) {
+            auto &nodes = *this;
+            auto left = nodes[target_index].size - size;
+
+            auto left_source = nodes[source_index].size - size;
+
+            nodes[target_index].id = nodes[source_index].id;
+            nodes[target_index].size = size;
+
+            if (!left_source) {
+                nodes[source_index].id = FREE;
+            } else {
+                nodes[source_index].size = left_source;
+                nodes.insert(nodes.begin() + source_index + 1, {FREE, size - left_source});
+            }
+
+            if (left) {
+                nodes.insert(nodes.begin() + target_index + 1, {FREE, left});
+            }
+        }
+    };
+
+    Nodes nodes;
+
     int idCount;
-
-    static Int64 checksum(const auto nodes) {
-        Int64 result = 0;
-        int pos = 0;
-
-        for (const auto &node : nodes) {
-            for (int i = 0; i < node.size; ++i) {
-
-                if (node.id != FREE) {
-                    result += pos * node.id;
-                }
-
-                pos++;
-            }
-        }
-
-        return result;
-    }
-
-    static void draw(const auto nodes) {
-        for (const auto &node : nodes) {
-            for (int i = 0; i < node.size; ++i) {
-                if (node.id != FREE) {
-                    log << node.id;
-                } else {
-                    log << '.';
-                }
-            }
-        }
-
-        log << endl;
-    }
 
     void parse(auto line) {
         int id = 0;
@@ -65,43 +105,35 @@ struct Context {
     void part1() {
         auto result{0_int64};
 
-        int index = 0;
-        /*
+        auto copynodes = nodes;
+        int free_index = 0;
+        int index = copynodes.size() - 1;
 
-        while (hasGap()) {
-
-            Node last = nodes.back();
-            nodes.pop_back();
-
-            while (last.id == FREE) {
-                last = nodes.back();
-                nodes.pop_back();
+        while (true) {
+            while (copynodes[index].id == FREE) {
+                --index;
             }
 
-            Node current = nodes[index];
-
-            while (current.id != FREE) {
-                index++;
-                current = nodes[index];
+            if (copynodes.findFreeNode(1, free_index, index, free_index)) {
+                copynodes.moveNode(index, free_index, 1);
+                ++index;
+            } else {
+                break;
             }
-
-            nodes[index] = last;
         }
 
-        result = checksum(nodes);
-        */
+        result = copynodes.checksum();
 
         log << "Part1: " << result << endl;
     }
 
     void part2() {
         auto result{0_int64};
+
         auto copynodes = nodes;
-
-        /* draw(copynodes); */
-
         int id = idCount - 1;
         int index = copynodes.size() - 1;
+        int free_index;
 
         while (id >= 0) {
 
@@ -109,33 +141,14 @@ struct Context {
                 --index;
             }
 
-            int free_index;
-            bool found = false;
-
-            for (free_index = 0; free_index <= index; free_index++) {
-                if (copynodes[free_index].id == FREE && copynodes[free_index].size >= copynodes[index].size) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (found) {
-                auto left = copynodes[free_index].size - copynodes[index].size;
-                copynodes[free_index] = copynodes[index];
-                copynodes[index].id = FREE;
-
-                if (left) {
-                    copynodes.insert(copynodes.begin() + free_index + 1, {FREE, left});
-                }
+            if (copynodes.findFreeNode(copynodes[index].size, 0, index, free_index)) {
+                copynodes.moveNode(index, free_index, copynodes[index].size);
             }
 
             id--;
-            /* draw(copynodes); */
         }
 
-        /* draw(copynodes); */
-
-        result = checksum(copynodes);
+        result = copynodes.checksum();
 
         log << "Part2: " << result << endl;
     }
