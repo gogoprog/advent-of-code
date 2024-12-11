@@ -608,6 +608,21 @@ class Logger {
         return *this;
     }
 
+    template <typename T> Logger &operator<<(List<T> vs) {
+        printf("[");
+        auto first = true;
+        for (auto v : vs) {
+            if (!first) {
+                printf(", ");
+            } else {
+                first = false;
+            }
+            *this << v;
+        }
+        printf("]");
+        return *this;
+    }
+
     static inline Logger &getInstance() {
         static Logger logger;
         return logger;
