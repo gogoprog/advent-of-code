@@ -113,6 +113,10 @@ Point operator-(const Point &a, const Point &b) {
     return {a.x - b.x, a.y - b.y};
 }
 
+Point operator*(const Point &a, const Point b) {
+    return {a.x * b.x, a.y * b.y};
+}
+
 Point operator*(const Point &a, const int b) {
     return {a.x * b, a.y * b};
 }
@@ -721,13 +725,15 @@ struct Grid {
         height = lines.size();
     }
 
-    void for_each(const std::function<void(const Coord, const char)> &func) const {
+    void for_each(const std::function<bool(const Coord, const char)> &func) const {
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 Coord coord{x, y};
                 char c = lines[y][x];
 
-                func(coord, c);
+                if (!func(coord, c)) {
+                    return;
+                }
             }
         }
     }

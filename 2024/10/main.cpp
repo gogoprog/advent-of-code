@@ -55,6 +55,8 @@ struct Context {
             if (c == '0') {
                 result += process<1>(coord);
             }
+
+            return true;
         });
 
         log << "Part1: " << result << endl;
@@ -67,6 +69,7 @@ struct Context {
             if (c == '0') {
                 result += process<2>(coord);
             }
+            return true;
         });
 
         log << "Part2: " << result << endl;
