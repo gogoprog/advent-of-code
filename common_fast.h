@@ -55,22 +55,22 @@ constexpr std::int64_t operator"" _int64(unsigned long long v) {
     return static_cast<std::int64_t>(v);
 }
 
-struct Point {
+template <typename INT = int> struct Point {
     union {
         struct {
-            int x;
-            int y;
+            INT x;
+            INT y;
         };
         struct {
-            int coords[2];
+            INT coords[2];
         };
         struct {
-            int first;
-            int second;
+            INT first;
+            INT second;
         };
     };
 
-    int &operator[](const int c) {
+    INT &operator[](const INT c) {
         return coords[c];
     }
 
@@ -89,7 +89,7 @@ struct Point {
         return x < other.x;
     }
 
-    void set(const int x, const int y) {
+    void set(const INT x, const INT y) {
         this->x = x;
         this->y = y;
     }
@@ -100,32 +100,32 @@ struct Point {
         return *this;
     }
 
-    int manhattan() const {
+    INT manhattan() const {
         return std::abs(x) + std::abs(y);
     }
 };
 
-Point operator+(const Point &a, const Point &b) {
+template <typename INT> Point<INT> operator+(const Point<INT> &a, const Point<INT> &b) {
     return {a.x + b.x, a.y + b.y};
 }
 
-Point operator-(const Point &a, const Point &b) {
+template <typename INT> Point<INT> operator-(const Point<INT> &a, const Point<INT> &b) {
     return {a.x - b.x, a.y - b.y};
 }
 
-Point operator*(const Point &a, const Point b) {
+template <typename INT> Point<INT> operator*(const Point<INT> &a, const Point<INT> b) {
     return {a.x * b.x, a.y * b.y};
 }
 
-Point operator*(const Point &a, const int b) {
+template <typename INT> Point<INT> operator*(const Point<INT> &a, const int b) {
     return {a.x * b, a.y * b};
 }
 
-Point operator/(const Point &a, const int b) {
+template <typename INT> Point<INT> operator/(const Point<INT> &a, const int b) {
     return {a.x / b, a.y / b};
 }
 
-using Line = Pair<Point, Point>;
+using Line = Pair<Point<int>, Point<int>>;
 
 template <typename INT = int> struct Point3 {
     union {
@@ -275,8 +275,8 @@ struct Point4 {
     }
 };
 
-using Coord = Point;
-using Coord2 = Point;
+using Coord = Point<int>;
+using Coord2 = Point<int>;
 using Coord3 = Point3<int>;
 using Coord4 = Point4;
 
@@ -313,9 +313,9 @@ StringView getFileContent(const char *filename, const char delim = '\n') {
     return StringView(buffer, length - 1);
 }
 
-template <typename T> std::tuple<Point, Point> getMinMax(const Map<Point, T> &map) {
-    Point minPoint{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
-    Point maxPoint{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()};
+template <typename T> std::tuple<Coord, Coord> getMinMax(const Map<Coord, T> &map) {
+    Coord minPoint{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
+    Coord maxPoint{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()};
 
     for (auto &kv : map) {
         auto &pos = kv.first;
