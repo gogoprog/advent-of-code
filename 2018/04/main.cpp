@@ -7,6 +7,7 @@
 #include <map>
 #include <sstream>
 #include <vector>
+#include <array>
 
 using Time = std::tm;
 

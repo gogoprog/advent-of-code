@@ -1,22 +1,5 @@
 #include "../../common.h"
 
-struct Coord {
-    int x;
-    int y;
-
-    bool operator<(const Coord &other) const {
-        return x == other.x ? y < other.y : x < other.x;
-    }
-
-    bool operator==(const Coord &other) const {
-        return x == other.x && y == other.y;
-    }
-
-    bool operator!=(const Coord &other) const {
-        return !operator==(other);
-    }
-};
-
 struct Context {
     Grid<bool> space;
     Set<Coord> targets;

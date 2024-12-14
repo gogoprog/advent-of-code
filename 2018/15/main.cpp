@@ -3,14 +3,12 @@
 #include <cstring>
 #include <ctime>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <map>
 #include <numeric>
 #include <queue>
-#include <set>
-#include <sstream>
 #include <vector>
+#include <memory>
 
 template <class K, class V> using Map = std::map<K, V>;
 template <class V> using Vector = std::vector<V>;

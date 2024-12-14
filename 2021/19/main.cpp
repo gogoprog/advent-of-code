@@ -37,7 +37,7 @@ struct Context {
                     scanners.push_back({line});
                     scanners.back().id = scanners.size() - 1;
                 } else {
-                    scanners.back().beacons.push_back(parseVector3(line));
+                    scanners.back().beacons.push_back(parsePoint3(line));
                 }
             }
         }

@@ -4,7 +4,7 @@ struct Context;
 using Registers = Vector<unsigned int>;
 using Func = std::function<void(Context &ctx, int a, int b)>;
 
-struct Line {
+struct Line2 {
     Func func;
     int a;
     int b;
@@ -12,7 +12,7 @@ struct Line {
 
 struct Context {
     Registers registers;
-    Vector<Line> lines;
+    Vector<Line2> lines;
     int cursor{0};
 
     void run() {

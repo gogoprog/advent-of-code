@@ -61,13 +61,15 @@ using lli = long long int;
 template <class S> using Function = std::function<S>;
 template <class V> using UniquePtr = std::unique_ptr<V>;
 
-
 struct Point {
+    struct _xy { int x, y; }l;
+
     union {
         struct {
             int x;
             int y;
         };
+        _xy xy;
         struct {
             int coords[2];
         };

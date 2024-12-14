@@ -11,12 +11,6 @@ uint count(uint n) {
     return r;
 }
 
-struct Coord {
-    int x;
-    int y;
-    bool operator==(const Coord &other) const { return x == other.x && y == other.y; }
-};
-
 struct Context {
     int number;
     Coord target;

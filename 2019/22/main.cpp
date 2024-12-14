@@ -5,12 +5,9 @@
  */
 
 #include <bits/stdc++.h>
-#include <boost/multiprecision/cpp_int.hpp>
-using boost::multiprecision::cpp_int;
-
 #include "../../common.h"
 
-using bigint = cpp_int;
+using bigint = _BitInt(256);
 
 bigint modPow(bigint num, bigint pow, bigint mod) {
     bigint test;
@@ -130,7 +127,9 @@ void process2(const String filename, const ull size, const ull target, const ull
     offset %= size;
     auto card = (offset + target * increment) % size;
 
-    log << "Part2: " << card << endl;
+    log << "Part2: " << uint64_t(card >> 64) << uint64_t(card) << endl;
+
+    printf("Part2: %" PRId64 "%" PRId64 "\n", int64_t(card >> 64), int64_t(card));
 }
 
 int main() {

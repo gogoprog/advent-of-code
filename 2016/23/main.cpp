@@ -52,14 +52,14 @@ struct Arg {
 
 using Func = Function<void(State &, Arg, Arg)>;
 
-struct Line {
+struct PLine {
     String strInstr;
     Func instruction;
     Arg a;
     Arg b;
 };
 
-using Program = Vector<Line>;
+using Program = Vector<PLine>;
 
 Map<String, Func> funcs{
     {"cpy", [](auto &state, auto a, auto b) { b.get(state) = a.get(state); }},
@@ -96,7 +96,7 @@ struct Context {
         InputStringStream iss{line};
         iss >> i >> a >> b;
 
-        Line pgmLine{i};
+        PLine pgmLine{i};
 
         pgmLine.instruction = funcs[i];
 

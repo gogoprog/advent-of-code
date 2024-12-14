@@ -256,7 +256,7 @@ struct Operator {
             }
 
             if (c == 4) {
-                auto [x, y] = scaffold;
+                auto [x, y] = scaffold.xy;
                 result += x * y;
                 intersections[scaffold] = true;
             }

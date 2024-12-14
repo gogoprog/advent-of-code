@@ -10,13 +10,13 @@ struct State {
 };
 using Func = Function<void(State &, int, int)>;
 
-struct Line {
+struct Line2 {
     Func instruction;
     int a;
     int b;
 };
 
-using Program = Vector<Line>;
+using Program = Vector<Line2>;
 
 Map<String, Func> funcs{
     {"cpy", [](auto &state, auto a, auto b) { state.registers[b] = a; }},
@@ -46,7 +46,7 @@ struct Context {
         InputStringStream iss{line};
         iss >> i >> a >> b;
 
-        Line pgmLine;
+        Line2 pgmLine;
 
         if (i == "cpy" && isLetter(a)) {
             pgmLine.instruction = funcs["cpyr"];

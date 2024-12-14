@@ -17,7 +17,7 @@ struct Context {
         bool valid{false};
     };
 
-    struct Line {
+    struct PLine {
         Instruction instruction;
         Vector<int> args;
     };
@@ -135,12 +135,12 @@ struct Context {
                     auto str = result.line.substr(result.startIndex - len, len);
 
                     if (str == name) {
-                        return Line{kv.second, result.args};
+                        return PLine{kv.second, result.args};
                     }
                 }
             }
 
-            return Line{};
+            return PLine{};
         };
 
         auto valid = [&](const auto &result) {

@@ -11,14 +11,6 @@ String md5(const String input) {
     return mdString;
 }
 
-struct Coord {
-    int x;
-    int y;
-    bool operator==(const Coord &other) const {
-        return x == other.x && y == other.y;
-    }
-};
-
 struct Context {
     String passcode;
 
