@@ -474,6 +474,19 @@ inline int64_t parseInt(StringView line) {
     return result;
 }
 
+inline int32_t parseInt32(StringView line) {
+    int32_t result;
+    char c = *line.data();
+
+    if (c == '-') {
+        std::from_chars(line.data() + 1, line.data() + line.size(), result);
+        return -result;
+    }
+
+    std::from_chars(line.data(), line.data() + line.size(), result);
+    return result;
+}
+
 inline int64_t parsePositiveInt(StringView line) {
     int64_t result;
     std::from_chars(line.data(), line.data() + line.size(), result);
@@ -649,6 +662,11 @@ auto filter_empty = rv::filter([](auto range) {
 auto to_ints = rv::transform([](auto range) {
     auto line = getStringView(range);
     return parseInt(line);
+});
+
+auto to_int32s = rv::transform([](auto range) {
+    auto line = getStringView(range);
+    return parseInt32(line);
 });
 
 auto split_string_view = [](auto delim) { return rv::split(delim) | to_string_views; };
