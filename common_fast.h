@@ -279,6 +279,7 @@ using Coord = Point<int>;
 using Coord2 = Point<int>;
 using Coord3 = Point3<int>;
 using Coord4 = Point4;
+using Coords = Vector<Coord>;
 
 template <typename A, typename B> B convert(const A a) {
 }
