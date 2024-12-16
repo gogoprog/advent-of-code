@@ -1,6 +1,7 @@
 #include "../../common_fast.h"
 
-static constexpr Array<Point, 4> deltas = {Point{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
+static constexpr Array<Coord, 4> deltas = {Coord{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
+
 struct Context {
 
     Grid grid;
