@@ -57,10 +57,9 @@ struct Context {
             const auto node = q.front();
             q.pop();
 
-            auto & v = visited[{node.position, node.dir}];
+            auto &v = visited[{node.position, node.dir}];
 
-            if(v && v < node.score)
-            {
+            if (v && v < node.score) {
                 continue;
             }
 
@@ -69,7 +68,6 @@ struct Context {
             if (node.position == end) {
                 if (node.score < best) {
                     best = node.score;
-                    log << best << endl;
                 }
             }
 
@@ -85,6 +83,69 @@ struct Context {
 
     void part2() {
         auto result{0_int64};
+
+        struct Node {
+            Coord position;
+            int score;
+            char dir;
+            Vector<Coord> history;
+        };
+
+        Queue<Node> q;
+        int best = 1000000000;
+
+        Map<Pair<Coord, int>, int> visited;
+        Vector<Node> bests;
+
+        q.push({start, 0, E});
+
+        auto try_dir = [&](const Node node, const Coord npos, const int dir, const int score) {
+            if (!isWall(npos)) {
+                auto copy = node;
+                copy.score += score;
+                copy.position = npos;
+                copy.history.push_back(npos);
+                copy.dir = dir;
+                q.push(copy);
+            }
+        };
+
+        while (!q.empty()) {
+            const auto node = q.front();
+            q.pop();
+
+            auto &v = visited[{node.position, node.dir}];
+
+            if (v && v < node.score) {
+                continue;
+            }
+
+            visited[{node.position, node.dir}] = node.score;
+
+            if (node.position == end) {
+                if (node.score < best) {
+                    bests.resize(0);
+                    best = node.score;
+                    bests.push_back(node);
+                } else if (node.score == best) {
+                    bests.push_back(node);
+                }
+            }
+
+            try_dir(node, node.position + deltas[node.dir], node.dir, 1);
+            try_dir(node, node.position, (node.dir + 1) % 4, 1000);
+            try_dir(node, node.position, (node.dir + 3) % 4, 1000);
+        }
+
+        Set<Coord> places;
+
+        for (auto &node : bests) {
+            for (auto &p : node.history) {
+                places.insert(p);
+            }
+        }
+
+        result = places.size();
 
         log << "Part2: " << result << endl;
     }
