@@ -686,6 +686,8 @@ inline constexpr __get<0> get0{};
 inline constexpr __get<1> get1{};
 inline constexpr __get<2> get2{};
 inline constexpr __get<3> get3{};
+inline constexpr __get<4> get4{};
+inline constexpr __get<5> get5{};
 
 template <input_range _Range, int index> auto operator|(_Range &&__r, __get<index> s) {
     auto it = (__r.begin());
