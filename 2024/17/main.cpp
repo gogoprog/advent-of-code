@@ -1,15 +1,26 @@
 #include "../../common_fast.h"
 
+inline static Uint64 pow2(int n) {
+    Uint64 result = 1;
+    for (int i = 1; i < 16; ++i) {
+        if (i - 1 == n)
+            return result;
+        result *= 2;
+    }
+
+    return result;
+}
+
 struct Context {
 
     struct Registers {
         union {
             struct {
-                int a;
-                int b;
-                int c;
+                Uint64 a;
+                Uint64 b;
+                Uint64 c;
             };
-            int values[3];
+            Uint64 values[3];
         };
     };
 
@@ -17,8 +28,10 @@ struct Context {
         Registers registers;
         int cursor{0};
         Vector<int8_t> output;
+        Uint64 lastA;
+        Uint64 firstA;
 
-        int comboOperand(int operand) {
+        inline Uint64 comboOperand(int operand) const {
             if (operand <= 3) {
                 return operand;
             }
@@ -33,12 +46,9 @@ struct Context {
             log << "Register C: " << registers.c << endl;
             log << "Cursor: " << cursor << endl;
 
-            log << "Output: ";
-
-            for (auto o : output) {
-                log << o << ',';
-            }
-            log << endl;
+            log << "Output: " << output << endl;
+            log << "FirstA: " << firstA << endl;
+            log << "LastA: " << lastA << endl;
         }
 
         String getOutput() const {
@@ -56,6 +66,31 @@ struct Context {
 
             return result;
         }
+
+        inline int matchOutput(const Vector<int8_t> &other) const {
+            int i = -1;
+            for (i = 0; i < output.size(); ++i) {
+                if (other[i] != output[i])
+                    break;
+            }
+            return i;
+        }
+
+        inline bool matchOutput2(const Vector<int8_t> &other) const {
+            for (int i = 0; i < output.size(); ++i) {
+                if (other[i] != output[i])
+                    return false;
+            }
+            return true;
+        }
+
+        inline bool matchOutputReverse(const Vector<int8_t> &other) const {
+            for (int i = 0; i < output.size(); ++i) {
+                if (output[i] != other[i + other.size() - output.size()])
+                    return false;
+            }
+            return true;
+        }
     };
 
     using Instruction = Function<void(int operand)>;
@@ -68,6 +103,7 @@ struct Context {
     State initialState;
     State state;
     Program program;
+    Vector<int8_t> source;
     Array<Instruction, 8> instructions;
 
     void parse(auto lines) {
@@ -77,9 +113,21 @@ struct Context {
 
         instructions[0] = [&](auto operand) {
             // adv
+            auto olda = state.registers.a;
             auto num = state.registers.a;
-            auto den = std::pow(2, state.comboOperand(operand));
+            auto den = pow2(state.comboOperand(operand));
+            /* log << "Adv: " << num << " / " << den << endl; */
+            /* log << "den/" << den << endl; */
             state.registers.a = num / den;
+
+            if (state.firstA == 0) {
+                state.firstA = olda;
+            }
+
+            if (state.registers.a != 0) {
+                state.lastA = olda;
+                /* log << olda << endl; */
+            }
         };
         instructions[1] = [&](auto operand) {
             // bxl
@@ -110,17 +158,19 @@ struct Context {
         instructions[6] = [&](auto operand) {
             // bdv
             auto num = state.registers.a;
-            auto den = std::pow(2, state.comboOperand(operand));
+            auto den = pow2(state.comboOperand(operand));
             state.registers.b = num / den;
         };
         instructions[7] = [&](auto operand) {
             // cdv
             auto num = state.registers.a;
-            auto den = std::pow(2, state.comboOperand(operand));
+            auto den = pow2(state.comboOperand(operand));
             state.registers.c = num / den;
         };
 
         auto v = lines | rv::get4 | rv::split_sv(": ") | rv::get1 | rv::split_sv(',') | rv::to_ints;
+        rs::copy(v, std::back_inserter(source));
+
         int i = 0;
 
         for (auto n : v) {
@@ -153,8 +203,57 @@ struct Context {
         log << "Part1: " << state.getOutput() << endl;
     }
 
+    bool attempt(Uint64 start, int matching, int left, Uint64 &result) {
+        Uint64 i = start;
+
+        while (true) {
+            state = initialState;
+
+            state.registers.a = i;
+
+            /* log << i << endl; */
+
+            while (state.cursor < program.size()) {
+                auto &line = program[state.cursor];
+                line.instr(line.operand);
+                state.cursor++;
+            }
+
+            /* state.debug(); */
+
+            /* auto m = state.matchOutput(source); */
+
+            int m = 0;
+
+            if (state.matchOutputReverse(source)) {
+                m = state.output.size();
+            }
+
+            if (m > matching) {
+                if (left > 1) {
+                    /* state.debug(); */
+                    if (attempt(i * 8, m, left - (m - matching), result)) {
+                        return true;
+                    }
+                }
+            }
+
+            if (state.output == source) {
+                result = i;
+                return true;
+            }
+
+            i++;
+        }
+
+        return false;
+    }
+
     void part2(auto lines) {
-        auto result{0_int64};
+        Uint64 result = 0;
+        auto len = source.size();
+
+        attempt(1, 0, len, result);
 
         log << "Part2: " << result << endl;
     }
@@ -173,9 +272,10 @@ void process(const char *filename) {
 }
 
 int main() {
-    process("sample4.txt");
-    process("sample3.txt");
-    process("sample.txt");
+    process("sample5.txt");
+    /* process("sample4.txt"); */
+    /* process("sample3.txt"); */
+    /* process("sample.txt"); */
     process("input.txt");
     return 0;
 }

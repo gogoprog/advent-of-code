@@ -50,6 +50,7 @@ template <class S> using Function = std::function<S>;
 template <class V> using UniquePtr = std::unique_ptr<V>;
 
 using Int64 = int64_t;
+using Uint64 = uint64_t;
 
 constexpr std::int64_t operator"" _int64(unsigned long long v) {
     return static_cast<std::int64_t>(v);
