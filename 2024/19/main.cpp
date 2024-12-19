@@ -20,19 +20,17 @@ struct Context {
             return true;
         }
 
-        bool result = false;
         for (auto &pattern : patterns) {
             if (design.substr(pos, pattern.size()) == pattern) {
                 if (attempt(design, pos + pattern.size(), visited)) {
-                    /* return true; */
-                    result = true;
+                    return true;
                 }
             }
         }
 
         visited[pos] = 1;
 
-        return result;
+        return false;
     }
 
     void part1() {
@@ -48,23 +46,80 @@ struct Context {
         log << "Part1: " << result << endl;
     }
 
+    Uint64 countAttempts(const auto design) {
+        Uint64 result{0};
+
+        struct Node {
+            int pos;
+        };
+
+        Queue<Node> q;
+        q.push({0});
+
+        Map<int, bool> visited;
+        Map<int, Map<int, int>> relinks;
+
+        bool succeed = false;
+
+        while (!q.empty()) {
+
+            const auto node = q.front();
+            q.pop();
+
+            auto &v = visited[node.pos];
+
+            if (v)
+                continue;
+
+            v = true;
+
+            auto pos = node.pos;
+
+            if (pos == design.size()) {
+                succeed = true;
+            } else {
+                if (pos < design.size()) {
+                    for (auto &pattern : patterns) {
+                        if (design.substr(pos, pattern.size()) == pattern) {
+                            auto npos = pos + pattern.size();
+                            auto copy = node;
+                            copy.pos = npos;
+                            relinks[npos][pos]++;
+                            q.push(copy);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!succeed) {
+            return 0;
+        }
+
+        Map<int, Uint64> totals;
+
+        totals[design.size()] = 1;
+
+        for (int i = design.size(); i >= 0; i--) {
+            auto count = totals[i];
+
+            if (count) {
+                for (auto kv : relinks[i]) {
+                    totals[kv.first] += count * kv.second;
+                }
+            }
+        }
+
+        result = totals[0];
+
+        return result;
+    }
+
     void part2() {
-        auto result{0_int64};
+        Uint64 result{0};
 
         for (auto design : designs) {
-            Map<int, int> visited;
-            if (attempt(design, 0, visited)) {
-
-                Int64 value = 1;
-
-                for (int i = 0; i <= design.size(); ++i) {
-                    value *= visited[i] ? visited[i] : 1;
-                }
-
-                result += value;
-
-                /* log << value << endl; */
-            }
+            result += countAttempts(design);
         }
 
         log << "Part2: " << result << endl;
