@@ -7,6 +7,7 @@ template <int p1, int p2> struct Context {
     Coord start;
     Coord end;
     Map<Coord, int> noCheatVisited;
+    Map<Coord, Map<Coord, int>> times;
 
     void parse(auto lines) {
         grid.parse(lines);
@@ -27,7 +28,7 @@ template <int p1, int p2> struct Context {
         return grid.get(pos) != '#';
     }
 
-    int computeNoCheat() {
+    int computeTime(const Coord _start, const Coord _end) {
         int best{std::numeric_limits<int>::max()};
 
         struct Node {
@@ -39,9 +40,9 @@ template <int p1, int p2> struct Context {
         };
 
         PriorityQueue<Node> q;
-        q.push({start, 0});
+        q.push({_start, 0});
 
-        auto &visited = noCheatVisited;
+        Map<Coord, int> visited;
 
         while (!q.empty()) {
             auto node = q.top();
@@ -49,13 +50,19 @@ template <int p1, int p2> struct Context {
 
             auto &v = visited[node.pos];
 
-            if (v && v < node.time) {
+            if (v && v <= node.time) {
                 continue;
             }
 
             v = node.time;
 
-            if (node.pos == end) {
+            auto tte = times[_end][node.pos];
+
+            if (tte && tte != std::numeric_limits<int>::max()) {
+                if (node.time + tte < best) {
+                    best = node.time + tte;
+                }
+            } else if (node.pos == _end) {
                 if (node.time < best) {
                     best = node.time;
                 }
@@ -81,101 +88,32 @@ template <int p1, int p2> struct Context {
 
     template <int cheats> int computeCheats(const int mindiff) {
         int result = 0;
-        int base = computeNoCheat();
+        int base = computeTime(start, end);
 
-        log << "No cheat: " << base << endl;
-
-        struct Node {
-            Coord pos;
-            int time;
-            bool cheating;
-            int cheatLeft;
-            Coord cheatPos1;
-            Coord cheatPos2;
-
-            inline bool canCheat() const {
-                return cheatLeft > 0;
+        grid.for_each([&](auto pos, auto c) {
+            if (isValid(pos)) {
+                times[end][pos] = computeTime(pos, end);
+                times[start][pos] = computeTime(pos, start);
             }
 
-            inline bool operator<(const Node &other) const {
-                return time > other.time;
-            }
-        };
+            return true;
+        });
 
-        PriorityQueue<Node> q;
-        q.push({start, 0, false, cheats - 1, {0, 0}});
+        for (auto kv1 : times[start]) {
+            for (auto kv2 : times[end]) {
 
-        Map<Pair<Coord, Coord>, int> visited;
+                if (kv1.first != kv2.first) {
+                    auto delta = kv2.first - kv1.first;
+                    auto man = delta.manhattan();
 
-        Set<Pair<Coord, Coord>> solutions;
-
-        while (!q.empty()) {
-            auto node = q.top();
-            q.pop();
-
-            {
-                auto &v = noCheatVisited[node.pos];
-
-                if (v && v < node.time - mindiff) {
-                    continue;
-                }
-            }
-
-            auto &v = visited[{node.pos, node.cheatPos1}];
-
-            if (v && v <= node.time) {
-                continue;
-            }
-
-            if (solutions.contains({node.cheatPos1, node.cheatPos2})) {
-                continue;
-            }
-
-            v = node.time;
-
-            if (node.pos == end) {
-                if (node.time <= base - mindiff) {
-
-                    if (!solutions.contains({node.cheatPos1, node.cheatPos2})) {
-                        log << "Cheated at : " << node.cheatPos1 << " - " << node.cheatPos2 << " | ";
-                        log << "Saved : " << base - node.time << endl;
-                        solutions.insert({node.cheatPos1, node.cheatPos2});
-                    }
-                }
-            } else {
-
-                if (node.cheating && node.cheatLeft > 0) {
-                    node.cheatLeft--;
-                }
-
-                for (auto delta : deltas) {
-                    auto npos = node.pos + delta;
-
-                    if (grid.isValid(npos)) {
-                        if (isValid(npos)) {
-                            auto copy = node;
-                            copy.pos = npos;
-                            copy.time++;
-                            q.push(copy);
-                        } else {
-                            if (node.canCheat()) {
-                                auto copy = node;
-                                if (!copy.cheating) {
-                                    copy.cheatPos1 = npos;
-                                    copy.cheating = true;
-                                }
-                                copy.cheatPos2 = npos;
-                                copy.pos = npos;
-                                copy.time++;
-                                q.push(copy);
-                            }
+                    if (man <= cheats) {
+                        if (kv1.second + kv2.second + man <= base - mindiff) {
+                            result++;
                         }
                     }
                 }
             }
         }
-
-        result = solutions.size();
 
         return result;
     }
@@ -187,6 +125,9 @@ template <int p1, int p2> struct Context {
     }
 
     void part2() {
+        times.clear();
+        noCheatVisited.clear();
+
         auto result = computeCheats<20>(p2);
 
         log << "Part2: " << result << endl;
@@ -206,7 +147,8 @@ template <int p1, int p2> void process(const char *filename) {
 }
 
 int main() {
-    process<20, 20>("sample.txt");
-    /* process<100, 100>("input.txt"); */
+    process<20, 72>("sample.txt");
+    process<100, 100>("input.txt");
+
     return 0;
 }

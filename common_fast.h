@@ -71,37 +71,37 @@ template <typename INT = int> struct Point {
         };
     };
 
-    INT &operator[](const INT c) {
+    inline INT &operator[](const INT c) {
         return coords[c];
     }
 
-    bool operator==(const Point &other) const {
+    inline bool operator==(const Point &other) const {
         return x == other.x && y == other.y;
     }
 
-    bool operator!=(const Point &other) const {
+    inline bool operator!=(const Point &other) const {
         return !operator==(other);
     }
 
-    bool operator<(const Point &other) const {
+    inline bool operator<(const Point &other) const {
         if (x == other.x) {
             return y < other.y;
         }
         return x < other.x;
     }
 
-    void set(const INT x, const INT y) {
+    inline void set(const INT x, const INT y) {
         this->x = x;
         this->y = y;
     }
 
-    Point &operator+=(const Point &other) {
+    inline Point &operator+=(const Point &other) {
         x += other.x;
         y += other.y;
         return *this;
     }
 
-    INT manhattan() const {
+    inline INT manhattan() const {
         return std::abs(x) + std::abs(y);
     }
 };
