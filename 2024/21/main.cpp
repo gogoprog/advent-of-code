@@ -117,23 +117,21 @@ struct Context {
             return result;
         }
 
-        void getState(State &state, const int index = 0) {
-            state[index] = current;
-
-            if (previous) {
-                previous->getState(state, index + 1);
-            }
-        }
-
-        void applyState(const State state, const int index = 0) {
-            current = state[index];
-
-            if (previous) {
-                previous->applyState(state, index + 1);
-            }
-        }
+        Map<Pair<Coord, char>, Uint64> cache;
 
         void reverse(char value, Uint64 &result) {
+            auto key = Pair<Coord, char>{current, value};
+            auto it = cache.find(key);
+
+            /* if (next == nullptr) { */
+            if (it != cache.end()) {
+                /* log << current << " " << value << " "; */
+                /* log << it->second << " vs " ; */
+                current = pad[value];
+                result += it->second;
+                return;
+            }
+            /* } */
 
             Uint64 this_result = 0;
 
@@ -174,8 +172,7 @@ struct Context {
             Uint64 a = std::numeric_limits<Uint64>::max();
             Uint64 b = std::numeric_limits<Uint64>::max();
 
-            State state, after_a;
-            getState(state);
+            current = pad[value];
 
             if (can_y) {
                 this_result = 0;
@@ -185,9 +182,6 @@ struct Context {
                 a = this_result;
             }
 
-            getState(after_a);
-            applyState(state);
-
             if (can_x) {
                 this_result = 0;
                 process_delta_x();
@@ -196,15 +190,17 @@ struct Context {
                 b = this_result;
             }
 
-            if (a < b) {
-                applyState(after_a);
-            }
-
-            this_result = std::min(a, b);
-
-            current = pad[value];
+            this_result = std::min<Uint64>(a, b);
 
             result += this_result;
+
+            if (next == nullptr) {
+                if (it != cache.end() && it->second != this_result) {
+                    log << "Whoops, this result is not equal: " << it->second << " vs " << this_result << endl;
+                }
+            }
+
+            cache[key] = this_result;
         }
 
         bool canMoveXFirst(const Coord current, const Coord delta) const {
@@ -281,16 +277,9 @@ struct Context {
     }
 
     void reset() {
-
         for (auto &device : devices) {
             device.reset();
         }
-    }
-
-    int compute(auto code) {
-        int result = 0;
-
-        return result;
     }
 
     void part1() {
@@ -317,22 +306,23 @@ struct Context {
 
     void part2() {
 
-        for (int r = 1; r < 10; ++r) {
+        for (int robots = 20; robots <= 25; ++robots) {
+            log << "Robots = " << robots << endl;
 
             Uint64 result{0};
-            int robots = r;
 
             devices.clear();
-            devices.resize(robots + 2);
+            devices.resize(robots + 1);
 
-            for (int i = 0; i < robots + 1; ++i) {
+            for (int i = 0; i < robots; ++i) {
                 devices[i].init(dirPad, &devices[i + 1], {0, 0});
             }
 
-            devices[robots + 1].init(numPad, nullptr, {0, 3});
+            devices[robots].init(numPad, nullptr, {0, 3});
 
-            auto get_num = [](auto code) { return parseInt(code); };
+            auto get_num = [](auto code) { return parseUint64(code); };
 
+            /* result = devices.back().reverse("0"); */
             for (auto code : codes) {
                 reset();
                 auto b = get_num(code);
@@ -358,7 +348,6 @@ void process(const char *filename) {
 }
 
 int main() {
-    srand(time(0));
     process("sample.txt");
     process("input.txt");
     return 0;

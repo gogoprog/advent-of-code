@@ -476,6 +476,13 @@ inline int64_t parseInt(StringView line) {
     return result;
 }
 
+inline uint64_t parseUint64(StringView line) {
+    uint64_t result;
+    char c = *line.data();
+    std::from_chars(line.data(), line.data() + line.size(), result);
+    return result;
+}
+
 inline int32_t parseInt32(StringView line) {
     int32_t result;
     char c = *line.data();
