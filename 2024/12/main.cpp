@@ -1,6 +1,6 @@
 #include "../../common_fast.h"
 
-static constexpr Array<Point, 4> deltas = {Point{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
+static constexpr Array<Coord, 4> deltas = {Coord{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
 
 struct Context {
 
@@ -139,7 +139,7 @@ struct Context {
 
                         // right turn
                         {
-                            static constexpr Array<Point, 4> deltas = {Point{1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
+                            static constexpr Array<Coord, 4> deltas = {Coord{1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
                             auto test_node = Node{current.pos + deltas[current.dir], int8_t((current.dir + 1) % 4)};
                             if (perimeter.contains(test_node)) {
                                 current = test_node;

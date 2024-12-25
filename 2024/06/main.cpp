@@ -8,7 +8,7 @@ template <> struct std::hash<Pair<Coord, int>> {
 
 struct Context {
 
-    static constexpr Array<Point, 8> deltas = {Point{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
+    static constexpr Array<Coord, 8> deltas = {Coord{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
     StringViews lines;
     int width, height;
     Coord start;

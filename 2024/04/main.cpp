@@ -1,10 +1,10 @@
 #include "../../common_fast.h"
 
 struct Context {
-    static constexpr Array<Point, 8> deltas = {Point{0, -1}, {0, 1},  {-1, 0}, {1, 0},
+    static constexpr Array<Coord, 8> deltas = {Coord{0, -1}, {0, 1},  {-1, 0}, {1, 0},
                                                {1, 1},       {1, -1}, {-1, 1}, {-1, -1}};
 
-    static constexpr Array<Point, 4> corners = {Point{1, 1}, {1, -1}, {-1, -1}, {-1, 1}};
+    static constexpr Array<Coord, 4> corners = {Coord{1, 1}, {1, -1}, {-1, -1}, {-1, 1}};
 
     static constexpr String target = "XMAS";
 

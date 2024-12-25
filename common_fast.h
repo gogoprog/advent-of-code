@@ -754,14 +754,18 @@ struct Grid {
         height = lines.size();
     }
 
-    void for_each(const std::function<bool(const Coord, const char)> &func) const {
+    void for_each(auto func) const {
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 Coord coord{x, y};
                 char c = lines[y][x];
 
-                if (!func(coord, c)) {
-                    return;
+                if constexpr (std::is_same_v<decltype(func(coord,c)), bool>) {
+                    if (!func(coord, c)) {
+                        return;
+                    }
+                } else {
+                    func(coord, c);
                 }
             }
         }

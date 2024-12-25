@@ -26,3 +26,13 @@ $(OUTR): main.cpp
 
 clean:
 	rm -f $(OUTD) $(OUT) $(OUTR)
+
+run-debug:
+	./outd
+
+run-release:
+	./out
+
+run-retail:
+	./outr
+
