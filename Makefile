@@ -1,14 +1,10 @@
 DIRS := $(sort $(wildcard 20*/*))
 
-list:
-	$(foreach dir,$(DIRS),echo $(dir);)
+all: $(DIRS)
 
-build-debug:
-	$(foreach dir,$(DIRS),make -C $(dir) || exit;)
+$(DIRS):
+	make -C $@ $(MODE)
 
-build-release:
-	$(foreach dir,$(DIRS),make -C $(dir) release || exit;)
-	
-build-retail:
-	$(foreach dir,$(DIRS),make -C $(dir) retail || exit;)
+
+.PHONY: all $(DIRS)
 

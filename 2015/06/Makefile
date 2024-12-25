@@ -1,3 +1,2 @@
-all:
-	g++ main.cpp -o out -lcrypto
+include ../../common.mk
 

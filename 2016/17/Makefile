@@ -1,3 +1,3 @@
-all:
-	g++ main.cpp -o out -O3 -lcrypto
+include ../../common.mk
 
+LDFLAGS := -lcrypto
