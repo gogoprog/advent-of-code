@@ -1,8 +1,11 @@
 #include "../../common_fast.h"
 
+using P3 = Point3<>;
+
+
 struct Brick {
-    Point3 position;
-    Point3 extent;
+    P3 position;
+    P3 extent;
 };
 
 struct Context {
@@ -12,7 +15,7 @@ struct Context {
     void parse(auto lines) {
 
         auto to_point3s = rv::transform([](auto line) {
-            Point3 p;
+            P3 p;
 
             auto numbers = line | rv::split_sv(',') | rv::to_ints;
 
@@ -48,8 +51,8 @@ struct Context {
 
         auto len = initialBricks.size();
 
-        Vector<Point3> positions;
-        Vector<Point3> extents;
+        Vector<P3> positions;
+        Vector<P3> extents;
 
         for (auto b : initialBricks) {
             positions.push_back(b.position);
@@ -141,8 +144,8 @@ struct Context {
     void part2() {
         auto len = initialBricks.size();
 
-        Vector<Point3> positions;
-        Vector<Point3> extents;
+        Vector<P3> positions;
+        Vector<P3> extents;
 
         for (auto b : initialBricks) {
             positions.push_back(b.position);

@@ -7,7 +7,7 @@ SRCS = ../../backward.cpp main.cpp
 
 CXX = g++
 CXXFLAGS = -std=c++23
-LDFLAGS=
+LDFLAGS =
 
 debug: $(OUTD)
 

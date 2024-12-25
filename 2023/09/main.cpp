@@ -12,7 +12,7 @@ struct Context {
         do {
             auto current_row = rows[index];
             auto deltas =
-                current_row | rv::adjacent<2> | rv::transform([](auto pair) { return pair.second - pair.first; });
+                current_row | rv::adjacent<2> | rv::transform([](auto pair) { return std::get<1>(pair) - std::get<0>(pair); });
             auto &new_row = rows.emplace_back();
             rs::copy(deltas.begin(), deltas.end(), std::back_inserter(new_row));
 
