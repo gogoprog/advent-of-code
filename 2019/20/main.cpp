@@ -64,7 +64,8 @@ struct Maze {
             if (!addPortal(name, x + 2, y)) {
                 if (!addPortal(name, x, y - 1)) {
                     if (!addPortal(name, x, y + 2)) {
-                        throw "Impossible";
+                        /* throw "Impossible"; */
+                        assert(false);
                     }
                 }
             }
@@ -194,8 +195,7 @@ struct Maze {
     }
 };
 
-template<int part>
-void process(const String filename) {
+template <int part> void process(const String filename) {
     log << "Processing " << filename << endl;
     auto lines = getFileLines(filename);
 

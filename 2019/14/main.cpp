@@ -78,7 +78,7 @@ struct Computer {
             }
 
             if (total < 0) {
-                throw "wet";
+                assert(false);
             }
             return total;
         } else {

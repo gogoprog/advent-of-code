@@ -30,7 +30,7 @@ struct System {
                 }
         }
 
-        throw "nop";
+        assert(false);
 
         return from;
     }

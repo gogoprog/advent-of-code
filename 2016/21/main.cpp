@@ -29,7 +29,8 @@ struct Context {
                 instr.opCode = OpCode::swapLetter;
                 iss >> instr.x >> str >> str >> instr.y;
             } else {
-                throw "Impossible";
+                /* throw "Impossible"; */
+                assert(false);
             }
         } else if (first == "rotate") {
             if (second == "left") {
@@ -46,7 +47,8 @@ struct Context {
                 instr.opCode = OpCode::rotateBasedOnPosition;
                 iss >> str >> str >> str >> str >> instr.x;
             } else {
-                throw "Impossible";
+                /* throw "Impossible"; */
+                assert(false);
             }
         } else if (first == "reverse") {
             instr.opCode = OpCode::reverse;
@@ -59,7 +61,8 @@ struct Context {
             instr.x -= '0';
             instr.y -= '0';
         } else {
-            throw "Impossible";
+            /* throw "Impossible"; */
+            assert(false);
         }
     }
 

@@ -133,7 +133,7 @@ int isOrdered(const Node &left, const Node &right) {
         }
     }
 
-    throw "nop";
+    assert(false);
     return false;
 }
 

@@ -36,7 +36,7 @@ struct Machine {
                 return a;
             }
             default:
-                throw "shit";
+                assert(false);
         }
     }
 

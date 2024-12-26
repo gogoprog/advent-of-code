@@ -35,7 +35,8 @@ struct Machine {
                 return a;
             }
             default:
-                throw "shit";
+                /* throw "shit"; */
+                assert(false);
         }
     }
 

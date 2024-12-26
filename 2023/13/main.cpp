@@ -52,8 +52,8 @@ auto find_symmetry = [](auto lines) {
         }
     }
 
-
-    throw "oops";
+    /* throw "oops"; */
+    assert(false);
 
     return 0;
 };
@@ -109,12 +109,11 @@ auto find_symmetry2 = [](auto lines) {
         }
     }
 
-
-    throw "oops";
+    /* throw "oops"; */
+    assert(false);
 
     return 0;
 };
-
 
 struct Context {
 

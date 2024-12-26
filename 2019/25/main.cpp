@@ -54,7 +54,7 @@ struct Machine {
                 return program[relativeBase + a];
             }
             default:
-                throw "shit";
+                assert(false);
         }
     }
 
@@ -309,7 +309,7 @@ struct System {
             if (input == "south")
                 return S;
 
-            throw "Error";
+            assert(false);
         };
 
         auto lines = splitString(outputs);
@@ -325,7 +325,7 @@ struct System {
 
                 } else {
                     if (currentRoom->name != line) {
-                        throw "Error";
+                        assert(false);
                     }
                 }
             } else if (line == "Doors here lead:") {

@@ -136,7 +136,7 @@ struct Context {
             l++;
         }
 
-        throw "Nop";
+        assert(false);
         return -1;
     }
 

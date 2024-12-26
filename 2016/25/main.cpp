@@ -36,7 +36,7 @@ struct Arg {
             case Type::value:
                 return v;
         }
-        throw "No way";
+        assert(false);
     }
 
     int get(State &state) const {
@@ -46,7 +46,7 @@ struct Arg {
             case Type::value:
                 return v;
         }
-        throw "No way";
+        assert(false);
     }
 };
 

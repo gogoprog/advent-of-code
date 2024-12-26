@@ -538,7 +538,8 @@ template <class K, class V> class Dictionary {
         auto it = std::find(keys.begin(), keys.end(), key);
         auto index = 0;
         if (it == keys.end()) {
-            throw "No key found";
+            /* throw "No key found"; */
+            assert(false);
         } else {
             index = it - keys.begin();
         }

@@ -62,7 +62,7 @@ struct Machine {
                 return program[relativeBase + a];
             }
             default:
-                throw "shit";
+                assert(false);
         }
     }
 

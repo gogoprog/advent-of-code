@@ -31,7 +31,7 @@ struct Expression {
                 return eleft.compute(data) == eright.compute(data);
         }
 
-        throw "shit";
+        assert(false);
 
         return 0;
     }
