@@ -740,6 +740,10 @@ struct Grid {
     StringViews lines;
     int width, height;
 
+    Grid(auto _lines) {
+        parse(_lines);
+    }
+
     inline bool isValid(const Coord coord) const {
         return coord.x >= 0 && coord.x < width && coord.y >= 0 && coord.y < height;
     }
@@ -761,7 +765,7 @@ struct Grid {
                 Coord coord{x, y};
                 char c = lines[y][x];
 
-                if constexpr (std::is_same_v<decltype(func(coord,c)), bool>) {
+                if constexpr (std::is_same_v<decltype(func(coord, c)), bool>) {
                     if (!func(coord, c)) {
                         return;
                     }
