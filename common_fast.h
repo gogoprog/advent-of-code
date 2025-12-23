@@ -49,6 +49,8 @@ using lli = long long int;
 template <class S> using Function = std::function<S>;
 template <class V> using UniquePtr = std::unique_ptr<V>;
 
+using Int8 = int8_t;
+using Uint8 = uint8_t;
 using Int64 = int64_t;
 using Uint64 = uint64_t;
 
@@ -739,6 +741,9 @@ auto const split_string_view = [](auto view, char delim) { return rs::split_view
 struct Grid {
     StringViews lines;
     int width, height;
+
+    Grid() {
+    }
 
     Grid(auto _lines) {
         parse(_lines);
