@@ -187,7 +187,7 @@ template <typename INT = int> struct Point3 {
         return std::abs(x) + std::abs(y) + std::abs(z);
     }
 
-    INT squareLength() const {
+    Uint64 squareLength() const {
         return x * x + y * y + z * z;
     }
 
