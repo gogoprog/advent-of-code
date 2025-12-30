@@ -522,6 +522,11 @@ class Logger {
         return *this;
     }
 
+    Logger &operator<<(uint16_t i) {
+        printf("%d", i);
+        return *this;
+    }
+
     Logger &operator<<(int64_t i) {
         printf("%" PRId64, i);
         return *this;
@@ -547,7 +552,7 @@ class Logger {
         return *this;
     }
 
-    template <typename T, long unsigned int S> Logger &operator<<(Array<T, S> &vs) {
+    template <typename T, long unsigned int S> Logger &operator<<(const Array<T, S> &vs) {
         printf("[");
         auto first = true;
         for (auto v : vs) {
